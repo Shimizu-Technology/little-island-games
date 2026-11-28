@@ -1,3 +1,4 @@
+import { BoardTouchView } from '../../../gestures/BoardPan';
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Platform, View, useWindowDimensions, type ViewStyle } from "react-native";
 import Svg, { Path } from "react-native-svg";
@@ -503,7 +504,7 @@ function ShapeBoardV2({ session, stateV2: s, update, practice, assistance, sound
       {/* Draggable Active Piece Stage + Controls (side-by-side on compact phone so everything stays above the fold!) */}
       <View style={compact ? { flexDirection: "row", flexWrap: "wrap", gap: 8, alignItems: "center", justifyContent: "center" } : { gap: 10, alignItems: "center" }}>
         {!reveal && (
-          <View
+          <BoardTouchView enabled={active}
             testID="shape-active-piece"
             accessible
             accessibilityLabel={`Drag ${piece.name} to the outline`}
@@ -534,7 +535,7 @@ function ShapeBoardV2({ session, stateV2: s, update, practice, assistance, sound
             ]}
           >
             <PiecePreview atoms={currentCells} color={piece.color} cellSize={compact ? 16 : Math.min(32, Math.max(20, step - 4))} />
-          </View>
+          </BoardTouchView>
         )}
 
         {/* Controls: Turn, Flip, Undo, Help */}

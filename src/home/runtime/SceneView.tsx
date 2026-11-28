@@ -1,4 +1,5 @@
-import { WaterRipples, SwimBobDriver } from "./Swimming";
+import { swimWaterline } from '../floaty';
+import { WaterRipples, SwimBobDriver, UnderwaterLegs } from "./Swimming";
 import { roomPortalsClear } from "../roomHops";
 import { RoomPortals } from "./RoomPortals";
 import { KitchenBin } from "./KitchenBin";
@@ -197,6 +198,8 @@ const RestingEntity = memo(function RestingEntity({
     opacity: floatyId && restingFlags.value.rest.some(r => r.owner === floatyId && r.hide) ? 0 : 1,
   }));
   const frame = artFrame(entity);
+  const waterline = swimming && entity.character ? swimWaterline(entity.character.slot, entity.base, entity.facing, !!entity.floaty) : 0;
+  const sink = entity.waterOffset ?? -waterline;
   const floorDrink=entity.item && entity.attachment.kind==='floor' && capabilityOf(entity.item.item).edible==='drink';
   const drinkSize=entity.item ? itemSize(entity.item) : 0;
   const groundShadow={position:'absolute' as const,left:drinkSize*.32,top:drinkSize*.71,width:drinkSize*.36,height:drinkSize*.08,borderRadius:drinkSize*.1,backgroundColor:'#385451'};
@@ -207,6 +210,8 @@ const RestingEntity = memo(function RestingEntity({
   const owners = useMemo(() => ownerKey.split("|"), [ownerKey]);
   const anticipationTargets = useMemo(() => targetKey.split("|"), [targetKey]);
   const landingTargets = useMemo(() => landingKey.split("|"), [landingKey]);
+  const waterStyle = useAnimatedStyle(() => ({ opacity: firstRest(restingFlags.value, owners)?.hide || firstFollow(restingMotion.value, owners) ? 0 : 1 }));
+  const clipStyle = useAnimatedStyle(() => ({ height: swimming && !firstFollow(restingMotion.value, owners) ? waterline - frame.top : frame.height, overflow: "hidden" as const }));
   // HM-13: one shared resting state, changed only on pickup, press, target and front edges.
   // The motion channel carries per-frame values only while art follows before its overlay
   // is ready, or while something wobbles; otherwise nothing here runs during a drag.
@@ -256,7 +261,7 @@ const RestingEntity = memo(function RestingEntity({
         : owned ? [ownerPivot!.x, ownerPivot!.y, 0] : [-frame.left, -frame.top, 0],
       transform: [
         { translateX: follow ? follow.dx : 0 },
-        { translateY: follow ? follow.dy : (landing && !reduced ? -3 : 0) + (bob?.dy ?? 0) + (swimming && !reduced ? (swimBob.value * 2 - 1) * (entity.floaty ? 5 : 3.5) : 0) },
+        { translateY: follow ? follow.dy : sink + (landing && !reduced ? -3 : 0) + (bob?.dy ?? 0) + (swimming && !reduced ? (swimBob.value * 2 - 1) * (entity.floaty ? 5 : 3.5) : 0) },
         { rotate: `${follow ? follow.tilt : wobble + (swimming && !reduced ? (swimBob.value * 2 - 1) * (entity.floaty ? 2 : 4) : 0)}deg` },
         { scaleX: follow ? follow.sx : (pressed || landing ? 1.02 : 1) },
         { scaleY: follow ? follow.sy : (pressed ? entity.character ? .99 : 1.02 : landing ? 1.02 :
@@ -280,10 +285,10 @@ const RestingEntity = memo(function RestingEntity({
   }));
   const anticipate = useAnimatedStyle(() => ({ opacity: anticipating.value }));
   const mealShowing = !!meal && mealVisible;
-  const drawing=(<Animated.View style={style} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+  const drawing=(<Animated.View testID={swimming && entity.character ? `water-body-clip-${entity.character.slot}` : undefined} style={swimming ? [style, clipStyle] : style} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
         <View collapsable={false} pointerEvents="none" onLayout={() => { if (!front) acknowledgeLayout(entity.id, token); }}
           style={{ position: "absolute", opacity: 0, width: stamp.value, height: 1 }} />
-        {shadow && !front && <ShadowCast shadow={shadow} x={-frame.left} y={-frame.top} reduced={reduced} />}
+        {shadow && !front && !swimming && <ShadowCast shadow={shadow} x={-frame.left} y={-frame.top} reduced={reduced} />}
         <View collapsable={ownerId ? false : undefined} style={character ? undefined : { opacity: mealHeld ? 0 : 1 }}>
           {/* Keep the saved cup painted under the transient sip so the final
               frame can reveal it without mounting a new native SVG. */}
@@ -382,12 +387,6 @@ const RestingEntity = memo(function RestingEntity({
       ]}
     >
       {!from && floorDrink && <View testID={`drink-ground-shadow-${entity.id}`} pointerEvents="none" accessible={false} style={[groundShadow,{opacity:.16}]}/>}
-      {swimming && !front && entity.character && (
-        <>
-          <SwimBobDriver live={live} reduced={reduced} swimBob={swimBob} />
-          <WaterRipples slot={entity.character.slot} width={frame.width} height={frame.height} reduced={reduced} live={live} buoyant={!!entity.floaty} />
-        </>
-      )}
       {selected && !front && (
         <View
           pointerEvents="none"
@@ -405,6 +404,12 @@ const RestingEntity = memo(function RestingEntity({
         />
       )}
       {from ? <SetDownMotion key={token} id={entity.id} from={from} frame={frame} reduced={reduced} onFinished={finishSetDown} shadow={floorDrink?groundShadow:undefined}>{drawing}</SetDownMotion> : drawing}
+      {swimming && !front && entity.character && <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0, width: frame.width, height: frame.height }, waterStyle]}>
+        <SwimBobDriver live={live} reduced={reduced} swimBob={swimBob}/>
+        <UnderwaterLegs slot={entity.character.slot} width={frame.width} surface={sink + waterline - frame.top}/>
+        <WaterRipples slot={entity.character.slot} width={frame.width} height={frame.height} surface={sink + waterline - frame.top} reduced={reduced} live={live} buoyant={!!entity.floaty}/>
+      </Animated.View>}
+
     </View>
   );
 });

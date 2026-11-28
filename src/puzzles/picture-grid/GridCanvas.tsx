@@ -1,5 +1,6 @@
+import { createBoardPan, BoardPanView } from '../../gestures/BoardPan';
 import React, { useCallback, useContext, useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { releaseOffset, startOf, type TouchStart } from '../edges/touch';
 import { GridFeel, GridInteraction } from '../grid/preferences';
 import { theme } from '../../ui/theme';
@@ -76,7 +77,7 @@ export function GridCanvas({ layout, size, marks, clues, mode, active, moving, f
   }, [cell, size, hold]);
 
   // eslint-disable-next-line react-hooks/refs -- creation stores handlers. They read the refs only on input.
-  const responder = useMemo(() => PanResponder.create({
+  const responder = useMemo(() => createBoardPan({
     onStartShouldSetPanResponder: () => live.current.active && !live.current.moving,
     onPanResponderTerminationRequest: () => false,
     onPanResponderGrant: event => {
@@ -186,7 +187,7 @@ export function GridCanvas({ layout, size, marks, clues, mode, active, moving, f
               })}
             </View>)}
             {feel && pop && <feel.Pop left={pop.at % size * cell} top={Math.floor(pop.at / size) * cell} size={cell} nonce={pop.nonce}/>}
-            {active && !moving && <View {...responder.panHandlers} testID="picture-gesture-layer" collapsable={false}
+            {active && !moving && <BoardPanView pan={responder} enabled={active && !moving} {...(active && !moving ? responder.panHandlers : {})} testID="picture-gesture-layer" collapsable={false}
               accessible={false} importantForAccessibility="no" style={[StyleSheet.absoluteFill, gestureStyle]} />}
           </View>
         </ScrollView>

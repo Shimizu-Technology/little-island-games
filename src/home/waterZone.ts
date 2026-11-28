@@ -48,6 +48,12 @@ export function waterFloorMinY(room: RoomId): number {
   return 350;
 }
 
+/** New drops stay a little below the painted horizon. Validation keeps the published 256 floor. */
+export function waterSurfaceMinY(room: RoomId): number {
+  'worklet';
+  return room === 'tumon-beach' || room === 'cocos-island' ? 268 : waterFloorMinY(room);
+}
+
 export function waterShoreY(room: RoomId, x: number): number | undefined {
   if (room !== 'tumon-beach') return undefined;
   const clampedX = Math.max(0, Math.min(755, x));
@@ -65,7 +71,7 @@ export function isBeachWaterRoom(room: RoomId): boolean {
 
 export function isInWaterZone(room: RoomId, point: { x: number; y: number }): boolean {
   if (room === 'tumon-beach') {
-    if (point.x < 12 || point.x > 755 || point.y < 248) return false;
+    if (point.x < 12 || point.x > 755 || point.y < 256) return false;
     const shoreY = waterShoreY(room, point.x)!;
     return point.y <= shoreY;
   }

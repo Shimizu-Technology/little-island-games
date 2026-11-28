@@ -1,5 +1,6 @@
+import { BoardPanView, createBoardPan, nativeBoardPan, boardTouchStyle } from '../gestures/BoardPan';
 import React, { useMemo, useRef, useState } from "react";
-import { PanResponder, Pressable, View, useWindowDimensions } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, G, Path } from "react-native-svg";
 import { Text } from "../components/Text";
 import { Motif } from "../explore/ExploreArt";
@@ -160,7 +161,7 @@ export function SkyBoard({ state, act }: { state: LabState; act: (action: LabAct
     () =>
       // PanResponder stores callbacks; it does not read their refs during render.
       // eslint-disable-next-line react-hooks/refs
-      PanResponder.create({
+      createBoardPan({
         onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
         onMoveShouldSetPanResponderCapture: (_, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
         onPanResponderTerminationRequest: () => false,
@@ -170,15 +171,16 @@ export function SkyBoard({ state, act }: { state: LabState; act: (action: LabAct
           setTimeout(() => {
             suppressTap.current = false;
           }, 0);
-          if (Math.abs(g.dx) > 40) act({ type: "turn", by: g.dx < 0 ? 1 : -1 });
+          if (Math.abs(g.dx) > 40 && Math.abs(g.dx) > Math.abs(g.dy ?? 0) * 1.5) act({ type: "turn", by: g.dx < 0 ? 1 : -1 });
+          else if (nativeBoardPan && Math.hypot(g.dx, g.dy) < 8) act({ type: "turn", by: 1 });
         },
       }),
     [act]
   );
   return (
-    <View
+    <BoardPanView pan={gesture} enabled={true}
       {...gesture.panHandlers}
-      style={{ backgroundColor: "#283E59", borderRadius: 28, overflow: "hidden", paddingTop: 16 }}
+      style={{ ...boardTouchStyle, backgroundColor: "#283E59", borderRadius: 28, overflow: "hidden", paddingTop: 16 }}
     >
       <Svg width="100%" height={44} viewBox="0 0 400 44" accessible={false}>
         {[
@@ -205,7 +207,7 @@ export function SkyBoard({ state, act }: { state: LabState; act: (action: LabAct
         <SkyPicture turn={state.turn} />
       </Pressable>
       <Text style={[s.small, { color: "#FFF3D1", textAlign: "center", padding: 12 }]}>Tap or swipe Earth</Text>
-    </View>
+    </BoardPanView>
   );
 }
 

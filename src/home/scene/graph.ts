@@ -1,4 +1,5 @@
-import { floatyFrame } from "../floaty";
+import { isEntitySwimming, waterSurfaceMinY } from '../waterZone';
+import { floatyFrame, swimWaterline } from "../floaty";
 import { trashTarget } from "../kitchen";
 import { defaultGuamRoom, isGuamPlace } from "../locations";
 import { fridgeShelfOffset, storageCapacity, storageOpen } from '../storage';
@@ -221,6 +222,27 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
     transform(entity);
     if (entity.item) entity.catalogSamples = catalogSamples(entity);
   }
+  // Save contacts stay unchanged. Picking and aiming follow the submerged painted body.
+  const swimOffsets = new Map<string, number>();
+  for (const entity of Object.values(entities)) if (entity.character && isEntitySwimming(entity, { entities })) {
+    const offset = Math.max(0, waterSurfaceMinY(entity.room) - entity.contact.y) - swimWaterline(entity.character.slot, entity.base, entity.facing, !!entity.floaty);
+    swimOffsets.set(entity.id, offset);
+  }
+  for (const entity of Object.values(entities)) {
+    const offset = swimOffsets.get(entity.id) ?? (entity.parent ? swimOffsets.get(entity.parent) : undefined);
+    if (offset === undefined) continue;
+    entity.waterOffset = offset;
+    const shift = (b: Bounds): Bounds => ({ ...b, top: b.top + offset });
+    entity.hitProxies = entity.hitProxies.map(shift);
+    entity.shapes = entity.shapes?.map(shape => {
+      if (shape.kind === 'box') return { ...shape, top: shape.top + offset };
+      if (shape.kind === 'ellipse') return { ...shape, y: shape.y + offset };
+      if (shape.kind === 'capsule') return { ...shape, ay: shape.ay + offset, by: shape.by + offset };
+      return { ...shape, points: shape.points.map((v, i) => i % 2 ? v + offset : v) };
+    });
+    entity.occluders = entity.occluders?.map(shift);
+    if (entity.visual) entity.visual = { ...entity.visual, y: entity.visual.y + offset };
+  }
   const occlusionBands = Object.values(entities)
     .filter((e) => e.item?.layer === "furniture" && !e.parent && !e.item.staged)
     .flatMap((e) => (e.occluders ?? []).map((bounds) => ({ id: e.id, bounds: translatedBounds(bounds, e.contact), depth: e.depth })));
@@ -254,21 +276,22 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
     if (entity.character) {
       const c = entity.character;
       const anchors = anchorsFor(c.slot, entity.base, entity.facing, entity.action);
-      const hand = { x: entity.contact.x + anchors.hand.x, y: entity.contact.y + anchors.hand.y };
-      const mouth = roomPoint(entity.contact.x + anchors.mouth.x, entity.contact.y + anchors.mouth.y);
-      const face = { x: entity.contact.x + anchors.head.x, y: entity.contact.y + anchors.head.y, headRadius: species[c.slot].headRadius };
+      const sink = swimOffsets.get(entity.id) ?? 0;
+      const hand = { x: entity.contact.x + anchors.hand.x, y: entity.contact.y + anchors.hand.y + sink };
+      const mouth = roomPoint(entity.contact.x + anchors.mouth.x, entity.contact.y + anchors.mouth.y + sink);
+      const face = { x: entity.contact.x + anchors.head.x, y: entity.contact.y + anchors.head.y + sink, headRadius: species[c.slot].headRadius };
       const waist = floatyFrame(c.slot, entity.base, entity.facing);
       if (entity.attachment.kind !== "socket" && entity.base === "stand") targets.push({ id: `${entity.id}/wear-floaty`, kind: "floaty", owner: entity.id, floaty: true,
         attachment: { kind: "hand", character: entity.id, side: "right" },
         contact: entity.contact, projectedContact: entity.contact,
-        core: { left: entity.contact.x + entity.bounds.left, top: entity.contact.y + entity.bounds.top,
+        core: { left: entity.contact.x + entity.bounds.left, top: entity.contact.y + entity.bounds.top + sink,
           width: entity.bounds.width, height: Math.max(entity.bounds.height, waist.top + waist.height) },
         base: entity.base, facing: entity.facing,
         occupied: c.holding ? itemEntityId(room, c.holding) : undefined });
       for (const kind of ["hand", "mouth"] as const) {
         const point = kind === "hand" ? roomPoint(hand.x, hand.y) : mouth;
         const resultHand = anchorsFor(c.slot, entity.base, entity.facing, kind === "hand" ? "hold" : "drink").hand;
-        const projectedHand = roomPoint(entity.contact.x + resultHand.x, entity.contact.y + resultHand.y);
+        const projectedHand = roomPoint(entity.contact.x + resultHand.x, entity.contact.y + resultHand.y + sink);
         targets.push({
           id: `${entity.id}/${kind}`,
           kind,

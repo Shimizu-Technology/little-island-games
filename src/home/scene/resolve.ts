@@ -1,4 +1,4 @@
-import { waterFloorMinY } from "../waterZone";
+import { waterSurfaceMinY } from "../waterZone";
 import { floatyContact, floatyFrame } from "../floaty";
 import { rigSlot } from "../family";
 import type { RoomId } from "../catalogMore";
@@ -376,7 +376,8 @@ function exactFloorMove(index: RoomIndex, subject: SceneEntity, point: RoomPoint
   "worklet";
   const slot = subject.character?.slot;
   if (slot === undefined && !(subject.body?.portable && (!subject.children.length || subject.body.container) && subject.body.layer !== "wall")) return;
-  const beachMinY = waterFloorMinY(index.room);
+  // This is the bay surface contact; the renderer submerges the body below its waist.
+  const beachMinY = waterSurfaceMinY(index.room);
   const waterProp = !!subject.item && (subject.item.item === "swim-ring" || subject.item.item === "outrigger-canoe" || subject.item.item === "beach-surfboard" || subject.item.item === "sea-turtle");
   const floorContact = slot !== undefined ? standingContact(point, slot, beachMinY) : roomPoint(Math.max(8, Math.min(792, point.x)), Math.max(waterProp ? beachMinY : 350, Math.min(552, point.y)));
   const contact = slot !== undefined && subject.floaty ? floatyContact(floorContact, slot, subject.facing) : floorContact;
@@ -558,7 +559,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
     const target = winner.target;
     const ring = index.entities[target.owner];
     if (subject.character && ring?.item?.item === "swim-ring" && target.kind === "socket") {
-      const contact = floatyContact(standingContact(ring.contact, subject.character.slot, waterFloorMinY(index.room)), subject.character.slot, subject.facing);
+      const contact = floatyContact(standingContact(ring.contact, subject.character.slot, waterSurfaceMinY(index.room)), subject.character.slot, subject.facing);
       const move = rootMove(subject, index.room, { kind: "floor", room: index.room, at: contact }, contact, "stand");
       const proposal = makeProposal(index, subject, move, group.filter(e => e.id === subject.id), "floor", "Put on floaty", target);
       for (const child of group.slice(1)) {

@@ -1,5 +1,6 @@
+import { BoardTouchView } from '../../../gestures/BoardPan';
 import React, { useEffect, useRef, useState } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import Svg, { Circle, Ellipse, Path, Polyline, Text as SvgText } from "react-native-svg";
 import { Button, C, Copy, Heading, PressableScale } from "../../../components/ui";
 import { CoachSpot } from "../../Coach";
@@ -79,9 +80,10 @@ function Trace({ task, onTrace, done }: { task: Task; onTrace: (points: [number,
   const size = 256;
   return (
     <View style={{ alignItems: "center", gap: 12 }}>
-      <View
+      <BoardTouchView enabled={!done}
         accessibilityLabel={`Trace ${task.answer[0]} from the numbered start`}
         style={{
+          ...(Platform.OS === 'web' ? { touchAction: 'none' as const } : {}),
           width: size,
           height: size,
           borderRadius: 26,
@@ -164,7 +166,7 @@ function Trace({ task, onTrace, done }: { task: Task; onTrace: (points: [number,
             strokeLinejoin="round"
           />
         </Svg>
-      </View>
+      </BoardTouchView>
       <Copy style={{ fontSize: 14, textAlign: "center" }}>Finger trail, or use the numbered stops below.</Copy>
       <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6, maxWidth: 320 }}>
         {path.map((_, i) => (

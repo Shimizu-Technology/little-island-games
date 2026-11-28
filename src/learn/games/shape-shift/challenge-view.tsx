@@ -1,3 +1,4 @@
+import { BoardTouchView } from '../../../gestures/BoardPan';
 import React, { useMemo, useRef, useState } from "react";
 import { Platform, View, useWindowDimensions, type ViewStyle } from "react-native";
 import type { ChallengeViewProps } from "../../../challenge/types";
@@ -355,7 +356,7 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
           </View>
 
           {activePieceIdx >= 0 && (
-            <View
+            <BoardTouchView enabled={active}
               testID="shape-ch-active"
               accessible
               accessibilityLabel={`Drag piece ${activePieceIdx + 1} onto the outline`}
@@ -387,7 +388,7 @@ export function ChallengeBoard({ state, dispatch, active, width }: ChallengeView
               ]}
             >
               <PiecePreview atoms={activeCells} color={PIECE_COLORS[activePieceIdx % PIECE_COLORS.length]} cellSize={Math.min(32, step - 4)} />
-            </View>
+            </BoardTouchView>
           )}
         </>
       )}

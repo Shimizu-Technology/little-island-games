@@ -21,3 +21,17 @@ export function floatyContact(point: RoomPoint, slot: FamilySlot, facing: Facing
   const left = Math.min(body.left, ring.left), right = Math.max(body.left + body.width, ring.left + ring.width);
   return roomPoint(Math.max(8 - left, Math.min(792 - right, point.x)), point.y);
 }
+
+/** The lower ring rim (or mid-torso without a ring) meets the water, never the feet.
+ * Relative to the unchanged saved floor contact; shared by paint and touch geometry. */
+export function swimWaterline(slot: FamilySlot, base: CharacterBase, facing: Facing, buoyant: boolean): number {
+  'worklet';
+  if (buoyant) {
+    const ring = floatyFrame(slot, base, facing);
+    const body = anchorsFor(slot, base, facing).bounds;
+    // Small companions sit deeper inside the same ring; their feet must submerge too.
+    return Math.min(ring.top + ring.height * .9, body.top + body.height * .82);
+  }
+  const body = anchorsFor(slot, base, facing).bounds;
+  return body.top + body.height * .67;
+}

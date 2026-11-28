@@ -4,7 +4,7 @@ import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, wi
 import { HomeMotionContext } from './HomeMotionContext';
 
 /** Concentric glowing turquoise/white water ripples when a character is in the lagoon; gated by HomeMotionContext. */
-export const WaterRipples = memo(function WaterRipples({ slot, width, height, reduced, live, buoyant }: { slot: number; width: number; height: number; reduced: boolean; live: boolean; buoyant: boolean }) {
+export const WaterRipples = memo(function WaterRipples({ slot, width, height, reduced, live, buoyant, surface }: { slot: number; width: number; height: number; reduced: boolean; live: boolean; buoyant: boolean; surface?: number }) {
   const motionLive = React.useContext(HomeMotionContext);
   const animating = motionLive && live && !reduced;
   const pulse = useSharedValue(0);
@@ -34,18 +34,18 @@ export const WaterRipples = memo(function WaterRipples({ slot, width, height, re
   }));
   const ringW = Math.max(54, width * (buoyant ? 1.08 : .86));
   const ringH = Math.max(16, Math.min(26, height * 0.16));
-  const top = height * (buoyant ? .69 : .83) - ringH * .5;
+  const top = (surface ?? height * (buoyant ? .69 : .83)) - ringH * .5;
   return (
     <View testID={`water-ripples-${slot}`} pointerEvents="none" accessible={false}
       style={{ position: "absolute", left: (width - ringW) / 2, top, width: ringW, height: ringH, alignItems: "center", justifyContent: "center" }}>
-      <Animated.View style={[{ position: "absolute", width: ringW, height: ringH, borderRadius: ringW / 2, borderWidth: 2.5, borderColor: "#7CEAE8", backgroundColor: "rgba(124, 234, 232, 0.22)" }, outer]} />
+      <Animated.View style={[{ position: "absolute", width: ringW, height: ringH, borderRadius: '50%', borderWidth: 2.5, borderColor: "#7CEAE8", backgroundColor: "rgba(89, 210, 214, 0.38)" }, outer]} />
       <Animated.View testID={`swim-kicks-${slot}`} style={[{ position: "absolute", left: -10, top: -8, width: ringW + 20, height: 28 }, kicks]}>
         <View style={{ position: "absolute", left: 0, top: 6, width: 6, height: 10, borderRadius: 5, backgroundColor: "#E6FFFF", transform: [{ rotate: "-32deg" }] }}/>
         <View style={{ position: "absolute", right: 2, top: 0, width: 7, height: 11, borderRadius: 5, backgroundColor: "#CBFFFF", transform: [{ rotate: "32deg" }] }}/>
         <View style={{ position: "absolute", left: 12, top: 17, width: 15, height: 8, borderTopWidth: 3, borderColor: "#F2FFFF", borderRadius: 12 }}/>
         <View style={{ position: "absolute", right: 14, top: 18, width: 15, height: 8, borderTopWidth: 3, borderColor: "#F2FFFF", borderRadius: 12 }}/>
       </Animated.View>
-      <Animated.View style={[{ position: "absolute", width: ringW * 0.72, height: ringH * 0.68, borderRadius: ringW / 2, borderWidth: 2, borderColor: "#F2FFFF" }, inner]} />
+      <Animated.View style={[{ position: "absolute", width: ringW * 0.72, height: ringH * 0.68, borderRadius: '50%', borderWidth: 2, borderColor: "#F2FFFF" }, inner]} />
     </View>
   );
 });
@@ -77,3 +77,12 @@ export const SwimBobDriver = memo(function SwimBobDriver({
   return null;
 });
 
+
+/** A soft underwater silhouette, with no dry shoe detail. Foam is painted after the body. */
+export function UnderwaterLegs({ slot, width, surface }: { slot: number; width: number; surface: number }) {
+  return <View testID={`water-submerged-${slot}`} pointerEvents="none" accessible={false}
+    style={{ position: 'absolute', top: surface, left: width * .32, width: width * .36, height: 32, overflow: 'hidden' }}>
+    <View style={{ position: 'absolute', left: '18%', top: -9, width: '24%', height: 31, borderRadius: 12, backgroundColor: '#338E9E', opacity: .16, transform: [{ rotate: '12deg' }] }}/>
+    <View style={{ position: 'absolute', right: '18%', top: -9, width: '24%', height: 27, borderRadius: 12, backgroundColor: '#338E9E', opacity: .12, transform: [{ rotate: '-16deg' }] }}/>
+  </View>;
+}

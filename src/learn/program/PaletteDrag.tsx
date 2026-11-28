@@ -1,5 +1,5 @@
+import { createBoardPan, BoardPanView, boardTouchStyle } from '../../gestures/BoardPan';
 import React, { useLayoutEffect, useRef, useState } from 'react';
-import { PanResponder, View } from 'react-native';
 
 type Props = { children: React.ReactNode; disabled: boolean; start: () => void; move: (x: number, y: number) => void; drop: (x: number, y: number) => void; cancel: () => void; tap: () => void };
 /** Own palette touches before the host ScrollView can claim them. Keep one responder for
@@ -11,7 +11,7 @@ export function PaletteDrag(props: Props) {
   useLayoutEffect(() => { latest.current = props; });
   // PanResponder.create stores handlers; these ref reads happen only when a touch arrives.
   // eslint-disable-next-line react-hooks/refs
-  const [responder] = useState(() => PanResponder.create({
+  const [responder] = useState(() => createBoardPan({
     onStartShouldSetPanResponderCapture: () => !latest.current.disabled,
     onPanResponderGrant: () => {setPressed(true);latest.current.start();},
     onPanResponderMove: (_, gesture) => latest.current.move(gesture.moveX, gesture.moveY),
@@ -23,5 +23,5 @@ export function PaletteDrag(props: Props) {
     onPanResponderTerminationRequest: () => false,
     onPanResponderTerminate: () => {setPressed(false);latest.current.cancel();},
   }));
-  return <View style={{opacity:pressed?0.6:1,transform:[{scale:pressed?0.96:1}]}} testID="program-palette-drag" {...responder.panHandlers}>{props.children}</View>;
+  return <BoardPanView style={{...boardTouchStyle,opacity:pressed?0.6:1,transform:[{scale:pressed?0.96:1}]}} testID="program-palette-drag" pan={responder} enabled={!props.disabled} {...(!props.disabled ? responder.panHandlers : {})}>{props.children}</BoardPanView>;
 }

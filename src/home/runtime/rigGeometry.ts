@@ -57,12 +57,13 @@ function markers(entity: SceneEntity, carry = false): Record<Marker, { x: number
 export function carryBinding(entity: SceneEntity, grip: { x: number; y: number }, marker?: Marker) {
   const from = markers(entity),
     to = markers(entity, true);
+  const waterOffset = entity.waterOffset ?? 0;
   const key =
     marker ??
     (Object.keys(from).filter((k) => k !== "bounds" && k !== "shapes") as Marker[]).sort(
-      (a, b) => Math.hypot(grip.x - from[a].x, grip.y - from[a].y) - Math.hypot(grip.x - from[b].x, grip.y - from[b].y)
+      (a, b) => Math.hypot(grip.x - from[a].x, grip.y - from[a].y - waterOffset) - Math.hypot(grip.x - from[b].x, grip.y - from[b].y - waterOffset)
     )[0];
-  return { marker: key, x: from[key].x - to[key].x, y: from[key].y - to[key].y };
+  return { marker: key, x: from[key].x - to[key].x, y: from[key].y + waterOffset - to[key].y };
 }
 export function carrySample(sample: number) {
   return { tilt: sample === 0 ? 0 : sample < 0 ? 6 : -6, limbLag: Math.abs(sample) / 4 };

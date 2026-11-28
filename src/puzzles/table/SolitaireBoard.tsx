@@ -1,5 +1,6 @@
+import { createBoardPan, BoardPanView } from '../../gestures/BoardPan';
 import React,{useCallback,useContext,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
-import {Animated,AppState,PanResponder,Pressable,ScrollView,View,useWindowDimensions} from 'react-native';
+import {Animated,AppState,Platform,Pressable,ScrollView,View,useWindowDimensions} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Button,C,Copy} from '../../components/ui';
 import {Text} from '../../components/Text';
@@ -80,7 +81,7 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
   setForeground(state==='active');if(state!=='active'){search.current?.abort();setThinking(false);setHelp(null);setAdvice(null);setSelected(null);drag.current=null;setDragging(null);holdPage(false);}
  });return()=>listener.remove();},[holdPage]);
  // eslint-disable-next-line react-hooks/refs -- responder handlers run after render.
- const pan=useMemo(()=>PanResponder.create({
+ const pan=useMemo(()=>createBoardPan({
   onStartShouldSetPanResponder:e=>live.current.active&&!!hit(e.nativeEvent.locationX,e.nativeEvent.locationY),
   onPanResponderGrant:e=>{const p=hit(e.nativeEvent.locationX,e.nativeEvent.locationY);drag.current=p??null;if(p&&!p.covered&&p.card!==null&&(p.pile>=8||descending(live.current.s.piles[p.pile].slice(p.index)))){translation.setValue({x:0,y:0});setDragging(p);holdPage(true);}},
   onPanResponderMove:(_e,g)=>{if(drag.current&&!drag.current.covered)translation.setValue({x:g.dx,y:g.dy});},
@@ -159,11 +160,11 @@ export function SolitaireBoard({view,dispatch,active:routeActive,width}:Solitair
   {!short&&headings}
   <View ref={tableFrame} testID="solitaire-table-viewport" collapsable={false} onLayout={measureRoom}><ScrollView ref={horizontal} horizontal nestedScrollEnabled scrollEnabled={!dragging} style={{maxHeight:scrollHeight}} accessibilityLabel="Solitaire table, horizontal scroll">
    <ScrollView ref={vertical} nestedScrollEnabled scrollEnabled={!dragging} style={{width:boardW,maxHeight:scrollHeight}} accessibilityLabel="Solitaire table, vertical scroll">
-    <View {...pan.panHandlers} style={{width:boardW,height:boardH,backgroundColor:'#D4E7DC',borderRadius:12}}>
+    <BoardPanView pan={pan} enabled={inputActive} {...(inputActive ? pan.panHandlers : {})} style={{width:boardW,height:boardH,...(Platform.OS==='web'?{touchAction:'none' as const}:{}),backgroundColor:'#D4E7DC',borderRadius:12}}>
      {view.deal.mode==='draw-three'&&s.piles[13].length>1&&<View accessible accessibilityLabel={`Seen behind the top waste card: ${s.piles[13].slice(-3,-1).map(cardWords).join(', ')}. Only the top waste card can move.`} style={{position:'absolute',left:short?6+2*(cardW+gap):2*(cardW+gap)+boardX,top:4,width:cardW,gap:2}}>{s.piles[13].slice(-3,-1).map(c=><View key={c} style={{height:(cardH-2)/2,borderWidth:1,borderColor:'#BACCC4',borderRadius:6,backgroundColor:'#FFFDF7',paddingHorizontal:2,paddingVertical:short?0:2,flexDirection:'row',alignItems:'flex-start',gap:2}}><Text maxFontSizeMultiplier={cap} style={{fontSize:short?15:large?17:15,lineHeight:short?16:large?26:23,fontWeight:'800',color:red(c)?'#A63E33':C.ink}}>{face(c)}</Text><Text maxFontSizeMultiplier={cap} style={{fontSize:short?14:large?16:15,lineHeight:short?16:large?26:23,color:red(c)?'#A63E33':C.ink}}>{suits[suit(c)]}</Text></View>)}</View>}
      {places.map(p=><Pressable pointerEvents="none" accessibilityActions={[{name:'activate',label:'Select card or destination'}]} onAccessibilityAction={e=>{if(e.nativeEvent.actionName==='activate')touch(p);}} key={`${p.pile}-${p.index}`} accessible accessibilityRole="button" accessibilityLabel={description(p)} accessibilityState={{selected:selected?.pile===p.pile&&selected.index===p.index,disabled:!inputActive||p.covered&&(free||p.pile!==12)}} disabled={!inputActive||p.covered&&(free||p.pile!==12)} onPress={()=>touch(p)} style={{position:'absolute',left:p.x,top:p.y,width:cardW,height:p.pile<cols&&p.index<s.piles[p.pile].length-1?(short&&p.covered?4:overlap):cardH}}>{visual(p)}</Pressable>)}
      {dragging&&<Animated.View pointerEvents="none" style={{position:'absolute',left:dragging.x,top:dragging.y,zIndex:1000,transform:translation.getTranslateTransform(),opacity:0.9}}>{s.piles[dragging.pile].slice(dragging.index).map((c,i)=><View key={c} style={{position:i?'absolute':'relative',top:i*overlap}}>{visual({...dragging,index:dragging.index+i,card:c})}</View>)}</Animated.View>}
-    </View>
+    </BoardPanView>
    </ScrollView>
   </ScrollView></View>
 

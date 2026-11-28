@@ -1,5 +1,6 @@
+import { createBoardPan, BoardPanView } from '../../gestures/BoardPan';
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { PanResponder, View, useWindowDimensions, type AccessibilityActionEvent } from 'react-native';
+import { Platform, View, useWindowDimensions, type AccessibilityActionEvent } from 'react-native';
 import Svg, { Circle, G, Line, Rect, Text as SvgText } from 'react-native-svg';
 import { Button, C, Copy } from '../../components/ui';
 import { Text } from '../../components/Text';
@@ -80,7 +81,7 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
     return linkToward(d.island, ox, oy);
   };
   // eslint-disable-next-line react-hooks/refs -- PanResponder stores these event handlers; creation never reads the refs.
-  const responder = useMemo(() => PanResponder.create({
+  const responder = useMemo(() => createBoardPan({
     onStartShouldSetPanResponder: () => live.current.active,
     onMoveShouldSetPanResponder: () => live.current.active,
     // An island drag owns its touch. A touch that began on the water gives itself up, so the page can scroll.
@@ -166,7 +167,7 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
       {!hosted && <Button quiet compact maxFontSizeMultiplier={statusMax} disabled={!active || waiting || shown} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>}
     </PuzzleStatus>
     {rules && <Copy maxFontSizeMultiplier={1.5} style={{ color: C.ink }}>{howTo}</Copy>}
-    <View style={{ alignSelf: 'center', width: W, height: H }} {...responder.panHandlers} accessible={false}>
+    <BoardPanView style={{ alignSelf: 'center', width: W, height: H, ...(Platform.OS === 'web' ? { touchAction: 'none' as const } : {}) }} pan={responder} enabled={active} {...(active ? responder.panHandlers : {})} accessible={false}>
       <Svg width={W} height={H} pointerEvents="none">
         <Rect x={0} y={0} width={W} height={H} rx={Math.min(16, cell * 0.4)} fill={SEA}/>
         {dots}
@@ -194,7 +195,7 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
       {islands.map((s, i) => { const c = at(i); return <View key={i} accessible accessibilityRole="adjustable" accessibilityLabel={describe(i)} accessibilityActions={actionsFor(i)}
         onAccessibilityAction={(event: AccessibilityActionEvent) => { const e = Number(event.nativeEvent.actionName.replace('link-', '')); if (Number.isInteger(e)) cycle(e); }}
         style={{ position: 'absolute', left: c.x - r, top: c.y - r, width: r * 2, height: r * 2 }} pointerEvents="none"/>; })}
-    </View>
+    </BoardPanView>
     {/* Everything that answers a move sits under the board, so the board itself never jumps. */}
     <View style={{ minHeight: 24 }}>
       {shown ? <View accessibilityLiveRegion="polite" style={{ gap: 6, padding: 12, borderRadius: 14, backgroundColor: '#FBF2D5', borderWidth: 1, borderColor: C.gold }}>
