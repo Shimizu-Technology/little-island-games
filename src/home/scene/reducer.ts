@@ -1,3 +1,5 @@
+import { guamPlaceIds } from "../locations";
+import { MAX_PALM_COCONUTS } from "../waterZone";
 import { compactAtmosphere, validAtmosphere } from "../atmosphere";
 import { seasonalPacks } from "../seasonal";
 import { familySlots } from "../family";
@@ -137,6 +139,29 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
     return roomIds.includes(action.room) && action.room !== save.current
       ? { state: { ...save, current: action.room } }
       : { state: save };
+  }
+  if (action.type === "discover") {
+    if (!guamPlaceIds.includes(action.place)) return { state: save };
+    const existing = save.discoveredPlaces ?? [];
+    if (existing.includes(action.place)) return { state: save };
+    return finish({ ...save, version: 4, discoveredPlaces: [...existing, action.place] });
+  }
+  if (action.type === "palm-coconut") {
+    if (roomId !== "cocos-island") return { state: save };
+    const activePalmCoconuts = state.instances.filter(
+      (i) => i.id.startsWith("palm-coconut-") && !i.staged && !i.in
+    );
+    if (activePalmCoconuts.length >= MAX_PALM_COCONUTS || placedInstances(state).length >= MAX_INSTANCES) {
+      return { state: save, message: "The coconut palm rustles in the breeze!" };
+    }
+    const usedIds = new Set(state.instances.map((i) => i.id));
+    let n = 1;
+    while (usedIds.has(`palm-coconut-${n}`)) n++;
+    const dropX = activePalmCoconuts.length === 0 ? 4 : 6;
+    const dropY = activePalmCoconuts.length === 0 ? 9 : 10;
+    const created = instance(`palm-coconut-${n}`, "coconut-drink", dropX, dropY);
+    const placed = reduceSceneAction(save, { type: "place", instance: created, roomId }, ownership);
+    return placed.state === save ? placed : { ...placed, message: "A fresh coconut dropped onto the sand!" };
   }
   if (action.type === "reset") {
     const fresh = starterHome().rooms[roomId];

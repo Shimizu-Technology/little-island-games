@@ -1,7 +1,8 @@
 import { HolidayLights } from "./HolidayLights";
 import type { Atmosphere } from "../atmosphere";
-import { paintedProp } from './illustrated';
+import { illustratedProps, paintedProp } from './illustrated';
 import { PaintedProp } from './PropShape';
+import { Image, View } from "react-native";
 import { BeachPropArt } from '../BeachProps';
 import { LivingArt, hasLivingArt } from './LivingArt';
 import { SeatArt, hasSeatArt } from './SeatArt';
@@ -33,7 +34,31 @@ export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, ac
   occupied?: boolean; layer?: ArtLayer; state?: ItemVisualState; id: string; size?: number; mirrored?: boolean; rotation?: 0 | 90 | 180 | 270; active?: boolean; muted?: boolean; tint?: TintId; animated?: boolean; reduced?: boolean;
 }) {
   const uid = React.useId().replace(/[^A-Za-z0-9_-]/g, "");
-  if (['beach-blanket', 'bbq-grill', 'shaved-ice'].includes(id)) return layer === 'front' ? null : <PaintedProp id={paintedProp(id)!} size={size} mirrored={mirrored} rotation={rotation}>{id === 'bbq-grill' && (state?.on ?? active) && <Svg width={size} height={size} viewBox="0 0 150 150" style={{ position: 'absolute' }}><Ellipse cx={75} cy={64} rx={40} ry={8} fill="#FFAC50" opacity={.65}/><Path d="M45 61l6 4m12-5 5 4m13-5 5 3m12-4 6 3" stroke="#FFE6A0" strokeWidth={4} strokeLinecap="round"/></Svg>}</PaintedProp>;
+  if (['beach-blanket', 'bbq-grill', 'shaved-ice', 'beach-surfboard', 'sandcastle', 'sea-turtle', 'treasure-chest'].includes(id)) {
+    if (layer === 'front') return null;
+    const isOn = state?.on ?? active;
+    const propKey = id === 'treasure-chest' ? (isOn ? 'treasure-chest-open' : 'treasure-chest-closed') : paintedProp(id)!;
+    return <PaintedProp id={propKey} size={size} mirrored={mirrored} rotation={rotation}>
+      {id === 'bbq-grill' && isOn && <Svg width={size} height={size} viewBox="0 0 150 150" style={{ position: 'absolute' }}><Ellipse cx={75} cy={64} rx={40} ry={8} fill="#FFAC50" opacity={.65}/><Path d="M45 61l6 4m12-5 5 4m13-5 5 3m12-4 6 3" stroke="#FFE6A0" strokeWidth={4} strokeLinecap="round"/></Svg>}
+      {id === 'sandcastle' && isOn && <Svg testID="sandcastle-sparkle" width={size} height={size} viewBox="0 0 150 150" style={{ position: 'absolute' }} accessible={false}><Path d="M75 18v12m-6-6h12M36 46v8m-4-4h8M114 48v8m-4-4h8" stroke="#FFE28A" strokeWidth={3.2} strokeLinecap="round"/><Circle cx={54} cy={36} r={3} fill="#FFF4CC"/><Circle cx={98} cy={34} r={2.6} fill="#9CEEE6"/></Svg>}
+      {id === 'treasure-chest' && isOn && <Svg testID="treasure-chest-glow" width={size} height={size} viewBox="0 0 150 150" style={{ position: 'absolute' }} accessible={false}><Ellipse cx={75} cy={72} rx={36} ry={16} fill="#FFE68A" opacity={.38}/><Path d="M56 54v10m-5-5h10M92 48v12m-6-6h12M75 38v8m-4-4h8" stroke="#FFF4B8" strokeWidth={3} strokeLinecap="round"/></Svg>}
+      {id === 'sea-turtle' && <Svg width={size} height={size} viewBox="0 0 150 150" style={{ position: 'absolute' }} accessible={false}><Ellipse cx={75} cy={104} rx={54} ry={14} fill="none" stroke="#B7F4F0" strokeWidth={2.4} opacity={.65}/>{isOn && <G><Circle cx={34} cy={46} r={5} fill="#E6FFFF" stroke="#7AD8D4" strokeWidth={1.6}/><Circle cx={25} cy={32} r={3.5} fill="#FFFFFF" stroke="#7AD8D4" strokeWidth={1.4}/></G>}</Svg>}
+    </PaintedProp>;
+  }
+  if (id === 'swim-ring' || id === 'outrigger-canoe') {
+    const flip = mirrored !== (rotation === 180 || rotation === 270);
+    const key = id === 'swim-ring' ? 'swim-ring' : 'outrigger-canoe';
+    const top = id === 'swim-ring' ? 0.56 : 0.54;
+    return <View pointerEvents="none" accessible={false} style={{ width: size, height: size, transform: [{ scaleX: flip ? -1 : 1 }] }}>
+      {layer !== 'front' && <PaintedProp id={key} size={size} />}
+      {occupied && layer !== 'back' && (
+        <View testID={`painted-seat-front-${id}`} style={{ position: 'absolute', left: 0, top: top * size, width: size, height: (1 - top) * size, overflow: 'hidden' }}>
+          <Image source={illustratedProps[key]()} resizeMode="contain" fadeDuration={0} accessible={false}
+            style={{ position: 'absolute', width: size, height: size, left: 0, top: -top * size }} />
+        </View>
+      )}
+    </View>;
+  }
   if (id === 'beach-towel' || id === 'lounger') return <BeachPropArt item={id} size={size} mirrored={mirrored} rotation={rotation} tint={tint} layer={layer} />;
   if (hasLivingArt(id)) return layer === 'front' ? null : <LivingArt id={id} size={size} state={state ?? { on: active }} mirrored={mirrored} rotation={rotation} tint={tint} reduced={reduced} />;
   if (hasSeatArt(id)) return <SeatArt occupied={occupied} id={id} size={size} layer={layer} mirrored={mirrored} rotation={rotation} tint={tint} state={state ?? { on: active }} motion={art => <ItemMotion active={active} animated={animated} reduced={reduced}>{art}</ItemMotion>} />;

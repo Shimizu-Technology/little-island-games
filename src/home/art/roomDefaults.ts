@@ -4,6 +4,7 @@ import type { HomeState } from '../model';
 export const roomDefaultTheme: Record<RoomId, HomeState['theme']> = {
   'tumon-beach': { wallpaper: 'cream', floor: 'sand' },
   'chamorro-village': { wallpaper: 'cream', floor: 'sand' },
+  'cocos-island': { wallpaper: 'cream', floor: 'sand' },
   home: { wallpaper: 'cream', floor: 'sand' },
   kitchen: { wallpaper: 'lagoon', floor: 'sand' },
   treehouse: { wallpaper: 'cream', floor: 'honey' },

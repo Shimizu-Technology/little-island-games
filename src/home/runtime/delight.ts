@@ -1,3 +1,4 @@
+import { isInWaterZone, isWaterRideItem } from "../waterZone";
 import { capabilityOf } from "../world";
 import { decorSpec, type ItemId } from "../catalog";
 import { locationIds as roomIds } from "../catalogMore";
@@ -31,12 +32,19 @@ export function materialOf(itemId: string): Material {
 /** How much a material gives on landing: soft things squash most, hard things least. */
 export const materialGive: Record<Material, number> = { cloth: 1, wood: 0.55, shell: 0.4, splash: 0.7 };
 export const FRIEND_GIVE = 0.6;
-/** Where a drop lands decides the sound: a bath or a running sink splashes. */
+/** Where a drop lands decides the sound: a bath, running sink, or beach water splashes. */
 export function landingMaterial(subject: SceneEntity | undefined, proposal: DropProposal, scene: Scene): Material {
   if (proposal.kind === "socket" && proposal.base === "bathe") return "splash";
+  if (proposal.attachment.kind === "socket") {
+    const parent = scene.entities[proposal.attachment.item]?.item;
+    if (parent && isWaterRideItem(parent.item) && isInWaterZone(proposal.room, proposal.contact)) return "splash";
+  }
   if (proposal.attachment.kind === "surface") {
     const parent = scene.entities[proposal.attachment.parent]?.item;
     if (parent?.item === "sink-counter" && parent.powered) return "splash";
+  }
+  if ((subject?.character || subject?.item?.item === "snorkel-set") && isInWaterZone(proposal.room, proposal.contact)) {
+    return "splash";
   }
   if (!subject || subject.character) return "cloth";
   return subject.item ? materialOf(subject.item.item) : "wood";
@@ -44,10 +52,13 @@ export function landingMaterial(subject: SceneEntity | undefined, proposal: Drop
 /** The landing cue, or none: food in a mouth and props in a hand get their own reactions. */
 export function landingSound(subject: SceneEntity | undefined, proposal: DropProposal, scene: Scene): HomeSound | undefined {
   if (proposal.kind === "mouth" || proposal.kind === "staging" || proposal.kind === "transfer") return undefined;
-  if (proposal.kind === "hand") return "pick";
-  // A water landing is a short plop (rule 60: landing cues 60-120 ms). The long splash is for actions.
+  if (proposal.kind === "hand") return subject?.item?.item === "snorkel-set" ? "bubbles" : "pick";
+  // Entering beach/lagoon water gives a joyful splash; bath drops stay a short plop.
+  const inWater = isInWaterZone(proposal.room, proposal.contact);
+  if (subject?.character && inWater) return "splash";
+  if (subject?.item?.item === "snorkel-set" && inWater) return "bubbles";
   const material = landingMaterial(subject, proposal, scene);
-  return material === "splash" ? "plop" : material;
+  return material === "splash" ? (inWater ? "splash" : "plop") : material;
 }
 /** Semantic attachments get a light haptic (rule 60); plain floor drops do not. */
 export const attaches = (proposal: DropProposal) =>

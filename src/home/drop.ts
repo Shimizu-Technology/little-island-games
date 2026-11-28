@@ -33,7 +33,7 @@ export type DropSocket = {
   socketId: string;
   x: number;
   y: number;
-  pose: "sit" | "lie" | "bathe";
+  pose: "stand" | "sit" | "lie" | "bathe";
   occupied?: number;
   pet?: boolean;
   priority?: number;

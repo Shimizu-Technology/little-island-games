@@ -1,3 +1,4 @@
+import { COCOS_PALM_HOTSPOT, isEntitySwimming } from "../waterZone";
 import { activityFaceOf } from "./expressions";
 import { HomeMotionContext } from "./HomeMotionContext";
 import { defaultAtmosphere } from "../atmosphere";
@@ -8,7 +9,7 @@ import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { anchorsFor } from "../scene/species";
 import { restFrom, restTransform } from "./restFrom";
 import type { Meal } from "./meal";
-import Animated, { cancelAnimation, runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, Easing, type SharedValue } from "react-native-reanimated";
+import Animated, { cancelAnimation, runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue, withRepeat, withTiming, Easing, type SharedValue } from "react-native-reanimated";
 import { capabilityOf } from '../world';
 import { itemSize } from '../geometry';
 import { GestureDetector } from "react-native-gesture-handler";
@@ -85,6 +86,38 @@ function SetDownMotion({id,from,frame,reduced,onFinished,shadow,children}:{id:st
 const IdleEntityDrawing=memo(function IdleEntityDrawing({mealActive:_mealActive,...props}:React.ComponentProps<typeof EntityArt>&{mealActive:boolean}) {
   return <EntityArt {...props}/>;
 },(_previous,next)=>next.mealActive);
+/** Concentric glowing turquoise/white water ripples + gentle floating bob when a character is in the lagoon. */
+const WaterRipples = memo(function WaterRipples({ slot, width, height, reduced }: { slot: number; width: number; height: number; reduced: boolean }) {
+  const pulse = useSharedValue(0);
+  React.useEffect(() => {
+    if (reduced) {
+      cancelAnimation(pulse);
+      pulse.set(0);
+      return;
+    }
+    pulse.set(withRepeat(withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.sin) }), -1, true));
+    return () => cancelAnimation(pulse);
+  }, [pulse, reduced]);
+  const outer = useAnimatedStyle(() => ({
+    opacity: reduced ? 0.65 : 0.75 - pulse.value * 0.35,
+    transform: [{ scaleX: reduced ? 1 : 0.92 + pulse.value * 0.22 }, { scaleY: reduced ? 1 : 0.92 + pulse.value * 0.16 }],
+  }));
+  const inner = useAnimatedStyle(() => ({
+    opacity: reduced ? 0.85 : 0.55 + pulse.value * 0.35,
+    transform: [{ scaleX: reduced ? 1 : 1.06 - pulse.value * 0.14 }, { scaleY: reduced ? 1 : 1.04 - pulse.value * 0.1 }],
+  }));
+  const ringW = Math.max(54, width * 0.86);
+  const ringH = Math.max(16, Math.min(26, height * 0.16));
+  const top = Math.max(height * 0.56, height - ringH * 1.15);
+  return (
+    <View testID={`water-ripples-${slot}`} pointerEvents="none" accessible={false}
+      style={{ position: "absolute", left: (width - ringW) / 2, top, width: ringW, height: ringH, alignItems: "center", justifyContent: "center" }}>
+      <Animated.View style={[{ position: "absolute", width: ringW, height: ringH, borderRadius: ringW / 2, borderWidth: 2.5, borderColor: "#7CEAE8", backgroundColor: "rgba(124, 234, 232, 0.22)" }, outer]} />
+      <Animated.View style={[{ position: "absolute", width: ringW * 0.72, height: ringH * 0.68, borderRadius: ringW / 2, borderWidth: 2, borderColor: "#F2FFFF" }, inner]} />
+    </View>
+  );
+});
+
 const RestingEntity = memo(function RestingEntity({
   entity,
   name,
@@ -109,6 +142,7 @@ const RestingEntity = memo(function RestingEntity({
   mealHeld = false,
   cacheBlink = false,
   sleeping,
+  swimming = false,
   front = false,
   onNode,
   life,
@@ -152,6 +186,7 @@ const RestingEntity = memo(function RestingEntity({
   onMealFinished?: (id: string, key: number) => void;
   mealHeld?: boolean;
   sleeping: boolean;
+  swimming?: boolean;
   onSelect: (id: string) => void;
   onMove: (id: string, action: string) => void;
   front?: boolean;
@@ -175,7 +210,17 @@ const RestingEntity = memo(function RestingEntity({
   const from = restState.entity !== entity ? restFrom(restState.entity,entity) : restState.from;
   if (restState.entity !== entity) setRestState({entity,from});
   const finishSetDown=React.useCallback(()=>setRestState(current=>current.entity===entity && current.from ? {entity,from:undefined} : current),[entity]);
-  const effectiveFace = activityFaceOf(entity, sleeping, mood, false, !!meal || !!action);
+  const effectiveFace = activityFaceOf(entity, sleeping, mood, false, !!meal || !!action, swimming);
+  const swimBob = useSharedValue(0);
+  React.useEffect(() => {
+    if (!swimming || reduced || front) {
+      cancelAnimation(swimBob);
+      swimBob.set(0);
+      return;
+    }
+    swimBob.set(withRepeat(withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.sin) }), -1, true));
+    return () => cancelAnimation(swimBob);
+  }, [swimming, reduced, front, swimBob]);
   const frame = artFrame(entity);
   const floorDrink=entity.item && entity.attachment.kind==='floor' && capabilityOf(entity.item.item).edible==='drink';
   const drinkSize=entity.item ? itemSize(entity.item) : 0;
@@ -236,7 +281,7 @@ const RestingEntity = memo(function RestingEntity({
         : owned ? [ownerPivot!.x, ownerPivot!.y, 0] : [-frame.left, -frame.top, 0],
       transform: [
         { translateX: follow ? follow.dx : 0 },
-        { translateY: follow ? follow.dy : (landing && !reduced ? -3 : 0) + (bob?.dy ?? 0) },
+        { translateY: follow ? follow.dy : (landing && !reduced ? -3 : 0) + (bob?.dy ?? 0) + (swimming && !reduced ? (swimBob.value * 2 - 1) * 3.5 : 0) },
         { rotate: `${follow ? follow.tilt : wobble}deg` },
         { scaleX: follow ? follow.sx : (pressed || landing ? 1.02 : 1) },
         { scaleY: follow ? follow.sy : (pressed ? entity.character ? .99 : 1.02 : landing ? 1.02 :
@@ -361,6 +406,9 @@ const RestingEntity = memo(function RestingEntity({
       ]}
     >
       {!from && floorDrink && <View testID={`drink-ground-shadow-${entity.id}`} pointerEvents="none" accessible={false} style={[groundShadow,{opacity:.16}]}/>}
+      {swimming && !front && entity.character && (
+        <WaterRipples slot={entity.character.slot} width={frame.width} height={frame.height} reduced={reduced} />
+      )}
       {selected && !front && (
         <View
           pointerEvents="none"
@@ -440,6 +488,7 @@ export const SceneView = React.memo(function SceneView({
   onNode,
   badges = [],
   onBadges,
+  onShakePalm,
   debugLayer,
   liveRoom,
   moods = {},
@@ -458,6 +507,7 @@ export const SceneView = React.memo(function SceneView({
   debugLayer?: React.ReactNode;
   badges?: readonly BadgeId[];
   onBadges?: () => void;
+  onShakePalm?: () => void;
   onNode: (id: string, node: View | null) => void;
   state: HomeStateV2;
   scene: Scene;
@@ -606,7 +656,9 @@ export const SceneView = React.memo(function SceneView({
             // HC-02: beach shells lie on the sand, outside the room's clip.
             const entities = all.filter((e) => e.contact.y <= SHORE_TOP), shore = all.filter((e) => e.contact.y > SHORE_TOP);
             const names = entityLabels(all);
-            const resting = (entity: SceneEntity, front: boolean) => (
+            const resting = (entity: SceneEntity, front: boolean) => {
+              const swimming = !front && isEntitySwimming(entity, scene);
+              return (
               <RestingEntity
                 key={front ? `front:${entity.id}` : entity.id}
                 front={front}
@@ -622,6 +674,7 @@ export const SceneView = React.memo(function SceneView({
                 onMealFinished={onMealFinished}
                 mealHeld={entity.attachment.kind === "hand" && meals[entity.attachment.character]?.action === "drink"}
                 sleeping={!!sleeping[entity.id]}
+                swimming={swimming}
                 ownerKey={ancestors(entity, scene).join("|")}
                 targetKey={scene.rooms[roomId].targets
                   .filter((t) => t.owner === entity.id && (t.kind === "mouth" || t.kind === "hand"))
@@ -638,11 +691,12 @@ export const SceneView = React.memo(function SceneView({
                 onSelect={onSelect}
                 onMove={onMove}
                 life={living && !front && alive(entity) ? lifeClock : undefined}
-                mood={front ? undefined : activityFaceOf(entity, !!sleeping[entity.id], moods[entity.id], false, !!meals[entity.id] || !!reactions[entity.id])}
+                mood={front ? undefined : activityFaceOf(entity, !!sleeping[entity.id], moods[entity.id], false, !!meals[entity.id] || !!reactions[entity.id], swimming)}
                 shadowKey={front ? undefined : shadows[entity.id] && JSON.stringify(shadows[entity.id])}
                 {...heldOwners[entity.id]}
               />
-            );
+              );
+            };
             return (
               <View
                 key={roomId}
@@ -666,6 +720,9 @@ export const SceneView = React.memo(function SceneView({
                 {roomId === "home" && <Pressable accessible accessibilityRole="button"
                   accessibilityLabel={`Badge board, ${badges.length} of ${tracks.length * 4} earned. Open My badges`}
                   onPress={onBadges} style={{ position: "absolute", left: 524, top: 26, width: 178, height: 172 }} />}
+                {roomId === "cocos-island" && onShakePalm && <Pressable testID="cocos-palm-hotspot" accessible accessibilityRole="button"
+                  accessibilityLabel="Shake coconut palms"
+                  onPress={onShakePalm} style={{ position: "absolute", left: COCOS_PALM_HOTSPOT.left, top: COCOS_PALM_HOTSPOT.top, width: COCOS_PALM_HOTSPOT.width, height: COCOS_PALM_HOTSPOT.height }} />}
                 <View
                   pointerEvents="box-none"
                   style={{ position: "absolute", left: 8, top: 8, width: 784, height: 544, overflow: "hidden" }}

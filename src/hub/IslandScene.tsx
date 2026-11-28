@@ -7,10 +7,11 @@ import { theme } from '../ui/theme';
 import { C } from '../components/ui';
 import { Terrain } from './Terrain';
 import { Landmark } from './Landmarks';
-import { IslandLife } from './IslandLife';
-import { createJourney, guideStartPoint, guideWaypoints, mapLayout, WALK_MS, ZOOM_MS, type PlaceId } from './model';
+import { IslandLife, type MapEasterEggEvent } from './IslandLife';
+import { createJourney, guideStartPoint, guideWaypoints, mapExtrasLayout, mapLayout, WALK_MS, ZOOM_MS, type MapExcursionId, type PlaceId } from './model';
 import { GlobalWeatherLayer } from '../atmosphere/GlobalWeatherLayer';
 import { defaultAtmosphere, type Atmosphere } from '../atmosphere/palette';
+import type { HomeSound } from '../home/runtime/homeSound';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const PlaceButton = memo(function PlaceButton({ id, name, width, height, labelWidth, labelFontSize, labelHeight, left, top, reduced, visit, night = false }: { id: PlaceId; name: string; width: number; height: number; labelWidth: number; labelFontSize: number; labelHeight: number; left: number; top: number; reduced: boolean; visit: (place: PlaceId) => void; night?: boolean }) {
  const press = useSharedValue(0), [focused, setFocused] = useState(false);
@@ -33,35 +34,78 @@ const PlaceButton = memo(function PlaceButton({ id, name, width, height, labelWi
    </View>
  </AnimatedPressable>;
 });
-export function IslandScene({ width, height, fontScale, look, reduced, active, door, onArrive, atmosphere = defaultAtmosphere, weatherActive = active }: { width: number; height: number; fontScale: number; look: IslanderLook; reduced: boolean; active: boolean; door: PlaceId | null; onArrive: (place: PlaceId) => void; atmosphere?: Atmosphere; weatherActive?: boolean }) {
+export function IslandScene({ width, height, fontScale, look, reduced, active, door, onArrive, onExcursion, onSound, atmosphere = defaultAtmosphere, weatherActive = active }: { width: number; height: number; fontScale: number; look: IslanderLook; reduced: boolean; active: boolean; door: PlaceId | null; onArrive: (place: PlaceId) => void; onExcursion?: (place: MapExcursionId) => void; onSound?: (sound: HomeSound) => void; atmosphere?: Atmosphere; weatherActive?: boolean }) {
  const layout = useMemo(() => mapLayout(width, height, fontScale), [width, height, fontScale]);
+ const extras = useMemo(() => mapExtrasLayout(width, height, layout), [width, height, layout]);
  const doorPlace = door ? layout.targets.find(place => place.id === door) ?? null : null;
  const start = doorPlace?.door ?? guideStartPoint(layout, width, height);
  const x = useSharedValue(start.x), y = useSharedValue(start.y), bob = useSharedValue(0), zoom = useSharedValue(1), cameraX = useSharedValue(0), cameraY = useSharedValue(0), opacity = useSharedValue(1);
  const [walking, setWalking] = useState(false);
+ const [easterEgg, setEasterEgg] = useState<MapEasterEggEvent | null>(null);
  const departing = useRef(false), wasActive = useRef(active);
+ const eggSerial = useRef(0), eggTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined), excursionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
  const guideSize = layout.guideSize;
+ const triggerEgg = useCallback((kind: MapEasterEggEvent['kind'], ex: number, ey: number, toX?: number, toY?: number) => {
+  clearTimeout(eggTimer.current);
+  const id = ++eggSerial.current;
+  setEasterEgg({ id, kind, x: ex, y: ey, toX, toY });
+  eggTimer.current = setTimeout(() => { setEasterEgg(cur => (cur?.id === id ? null : cur)); }, reduced ? 550 : 1200);
+ }, [reduced]);
  const settle = useMemo(() => (place: PlaceId) => {
   const target = layout.targets.find(item => item.id === place)!.door;
+  clearTimeout(excursionTimer.current);
   cancelAnimation(x); cancelAnimation(y); cancelAnimation(bob); cancelAnimation(zoom); cancelAnimation(cameraX); cancelAnimation(cameraY);
   departing.current = true;
   x.set(target.x); y.set(target.y); bob.set(0); setWalking(false); onArrive(place);
  }, [layout, x, y, bob, zoom, cameraX, cameraY, onArrive]);
  // eslint-disable-next-line react-hooks/refs -- createJourney stores settle for input/timer callbacks; it never calls it during render.
  const journey = useMemo(() => createJourney(settle), [settle]);
- useEffect(() => () => journey.cancel(), [journey]);
+ useEffect(() => () => { journey.cancel(); clearTimeout(eggTimer.current); clearTimeout(excursionTimer.current); }, [journey]);
  useLayoutEffect(() => {
   const returning = active && !wasActive.current;
   wasActive.current = active;
   // A route push, app interruption, rotation or text resize cancels unfinished travel.
   // eslint-disable-next-line react-hooks/set-state-in-effect -- Interrupted travel settles at the last accepted door.
-  setWalking(false); journey.cancel(); cancelAnimation(x); cancelAnimation(y); cancelAnimation(bob); cancelAnimation(zoom); cancelAnimation(cameraX); cancelAnimation(cameraY); cancelAnimation(opacity);
+  setWalking(false); journey.cancel(); clearTimeout(excursionTimer.current); cancelAnimation(x); cancelAnimation(y); cancelAnimation(bob); cancelAnimation(zoom); cancelAnimation(cameraX); cancelAnimation(cameraY); cancelAnimation(opacity);
   // Updating the accepted door and losing focus both happen while the outgoing
   // map can still be visible. Freeze its camera until the next activation.
   if (departing.current && !returning) return;
   departing.current = false;
   x.set(start.x); y.set(start.y); bob.set(0); zoom.set(1); cameraX.set(0); cameraY.set(0); opacity.set(active && reduced ? withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: 120 })) : 1);
  }, [active, width, height, reduced, start.x, start.y, journey, x, y, bob, zoom, cameraX, cameraY, opacity]);
+ const visitExcursion = useCallback((place: MapExcursionId) => {
+  journey.cancel();
+  clearTimeout(excursionTimer.current);
+  const dest = place === 'cocos-island' ? extras.cocos : extras.ocean;
+  onSound?.(place === 'cocos-island' ? 'shell' : 'splash');
+  if (place === 'cocos-island') triggerEgg('sail', extras.sailboat.x, extras.sailboat.y, extras.cocos.x, extras.cocos.y);
+  else triggerEgg('splash', extras.ocean.x, extras.ocean.y);
+  if (!active || reduced) {
+   departing.current = true;
+   x.set(dest.x); y.set(dest.y); bob.set(0); setWalking(false);
+   onExcursion?.(place);
+   return;
+  }
+  setWalking(true);
+  if (place === 'cocos-island') {
+   // Hop to the little sailboat first, then glide across Cocos Lagoon to Secret Cocos Island!
+   x.set(withSequence(withTiming(extras.sailboat.x, { duration: Math.round(WALK_MS * 0.55) }), withTiming(dest.x, { duration: Math.round(WALK_MS * 0.85) })));
+   y.set(withSequence(withTiming(extras.sailboat.y, { duration: Math.round(WALK_MS * 0.55) }), withTiming(dest.y, { duration: Math.round(WALK_MS * 0.85) })));
+  } else {
+   x.set(withTiming(dest.x, { duration: WALK_MS }));
+   y.set(withTiming(dest.y, { duration: WALK_MS }));
+  }
+  bob.set(withSequence(withTiming(-5, { duration: Math.round(WALK_MS / 2), easing: Easing.out(Easing.cubic) }), withTiming(0, { duration: Math.round(WALK_MS / 2) })));
+  const travelMs = place === 'cocos-island' ? Math.round(WALK_MS * 1.4) : WALK_MS;
+  zoom.set(withDelay(travelMs, withTiming(1.16, { duration: ZOOM_MS, easing: Easing.out(Easing.cubic) })));
+  cameraX.set(withDelay(travelMs, withTiming((width / 2 - dest.x) * 0.16, { duration: ZOOM_MS, easing: Easing.out(Easing.cubic) })));
+  cameraY.set(withDelay(travelMs, withTiming((height / 2 - dest.y) * 0.16, { duration: ZOOM_MS, easing: Easing.out(Easing.cubic) })));
+  excursionTimer.current = setTimeout(() => {
+   departing.current = true;
+   setWalking(false);
+   onExcursion?.(place);
+  }, travelMs + ZOOM_MS);
+ }, [active, reduced, extras, journey, onSound, onExcursion, triggerEgg, width, height, x, y, bob, zoom, cameraX, cameraY]);
  const visit = useCallback((place: PlaceId) => {
   // A just-dismissed sheet can retain its presence token briefly. Never drop a visible tap.
   if (!active) { settle(place); return; }
@@ -96,8 +140,25 @@ export function IslandScene({ width, height, fontScale, look, reduced, active, d
  const camera = useAnimatedStyle(() => ({ opacity: opacity.get(), transform: [{ translateX: cameraX.get() }, { translateY: cameraY.get() }, { scale: zoom.get() }] }));
  return <Animated.View accessible={false} importantForAccessibility="no" testID={Platform.OS === "web" ? "island-scene" : undefined} style={[{ width, height }, camera]}>
   <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: 'absolute', width, height }}><Terrain layout={layout} wide={layout.wide} width={width} height={height}/></View>
-  <IslandLife atmosphere={atmosphere} width={width} height={height} fontScale={fontScale} reduced={reduced} active={active}/>
+  {/* Open surrounding turquoise ocean tap surface behind the 6 buildings and special hotspots */}
+  <Pressable testID="map-open-water" accessible={false} onPress={() => visitExcursion('tumon-beach')} style={{ position: 'absolute', width, height }} />
+  <IslandLife atmosphere={atmosphere} width={width} height={height} fontScale={fontScale} reduced={reduced} active={active} extras={extras} easterEgg={easterEgg}/>
   <GlobalWeatherLayer atmosphere={atmosphere} width={width} height={height} active={weatherActive} reduced={reduced} sky/>
+  {/* Calibrated ocean water, Secret Cocos Island boat trip, sailboat, and subtle Easter-egg hotspots */}
+  <Pressable testID="map-ocean-hotspot" accessibilityRole="button" accessibilityLabel="Visit Tumon Beach and Ocean" onPress={() => visitExcursion('tumon-beach')}
+   style={{ position: 'absolute', left: extras.ocean.left, top: extras.ocean.top, width: extras.ocean.width, height: extras.ocean.height, borderRadius: 26 }} />
+  <Pressable testID="map-cocos-hotspot" accessibilityRole="button" accessibilityLabel="Sail to secret Cocos Island" onPress={() => visitExcursion('cocos-island')}
+   style={{ position: 'absolute', left: extras.cocos.left, top: extras.cocos.top, width: extras.cocos.width, height: extras.cocos.height, borderRadius: 28 }} />
+  <Pressable testID="map-sailboat-hotspot" accessibilityRole="button" accessibilityLabel="Sail the little boat to Cocos Island" onPress={() => visitExcursion('cocos-island')}
+   style={{ position: 'absolute', left: extras.sailboat.left, top: extras.sailboat.top, width: extras.sailboat.width, height: extras.sailboat.height, borderRadius: 24 }} />
+  <Pressable testID="map-dolphin-hotspot" accessibilityRole="button" accessibilityLabel="Spot a playful lagoon dolphin" onPress={() => { onSound?.('splash'); triggerEgg('dolphin', extras.dolphinReef.x, extras.dolphinReef.y); }}
+   style={{ position: 'absolute', left: extras.dolphinReef.left, top: extras.dolphinReef.top, width: extras.dolphinReef.width, height: extras.dolphinReef.height, borderRadius: 26 }} />
+  <Pressable testID="map-northern-islet-hotspot" accessibilityRole="button" accessibilityLabel="Flutter hibiscus petals at the northern islet" onPress={() => { onSound?.('rustle'); triggerEgg('hibiscus', extras.northernIslet.x, extras.northernIslet.y); }}
+   style={{ position: 'absolute', left: extras.northernIslet.left, top: extras.northernIslet.top, width: extras.northernIslet.width, height: extras.northernIslet.height, borderRadius: 26 }} />
+  {atmosphere.timeOfDay === 'night' && (
+   <Pressable testID="map-moon-hotspot" accessibilityRole="button" accessibilityLabel="Wish on a night sky shooting star" onPress={() => { onSound?.('shell'); triggerEgg('shooting-star', extras.nightMoon.x, extras.nightMoon.y); }}
+    style={{ position: 'absolute', left: extras.nightMoon.left, top: extras.nightMoon.top, width: extras.nightMoon.width, height: extras.nightMoon.height, borderRadius: 26 }} />
+  )}
   {layout.targets.map(place => <PlaceButton key={place.id} {...place} height={layout.artHeight} labelHeight={layout.labelHeight} reduced={reduced} night={atmosphere.timeOfDay === 'night'} visit={visit}/>)}
   <Animated.View pointerEvents="none" testID="island-guide" accessibilityRole="image" accessibilityLabel={doorPlace ? `Your Islander at ${doorPlace.name}` : 'Your Islander on the island path'} style={[{ position: 'absolute', left: 0, top: 0, width: guideSize*.607, height: guideSize }, guide]}>
    <Islander look={look} view={walking && active ? 'back' : 'front'} pose={walking && active ? 0 : 'idle'} size={guideSize} reduced={reduced}/>

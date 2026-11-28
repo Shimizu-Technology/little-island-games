@@ -17,7 +17,7 @@ export type SpeciesMeta = {
   unit: number;
   /** Half of the visible head, in room units. Hair and hats reach this far from the head anchor. */
   headRadius: number;
-  supportedSockets: readonly ("sit" | "lie" | "bathe")[];
+  supportedSockets: readonly ("stand" | "sit" | "lie" | "bathe")[];
   poses: Record<CharacterBase, Record<Facing, PoseAnchors>>;
 };
 const bases = ["stand", "sit", "lie", "bathe", "carry"] as const;
@@ -98,7 +98,7 @@ const baseSpecies: Record<0 | 1 | 2, SpeciesMeta> = Object.fromEntries(
       standingHeight: [224, 170, 98][slot],
       unit: units[slot],
       headRadius: [34, 30, 28][slot] * units[slot],
-      supportedSockets: slot === 2 ? ["sit", "lie"] : ["sit", "lie", "bathe"],
+      supportedSockets: slot === 2 ? ["stand", "sit", "lie"] : ["stand", "sit", "lie", "bathe"],
       poses: Object.fromEntries(
         bases.map((base) => [
           base,

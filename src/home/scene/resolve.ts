@@ -142,7 +142,7 @@ function eligible(
     return (
       target.kind === "socket" &&
       !!target.pet === (subject.character.slot === 2) &&
-      species[subject.character.slot].supportedSockets.includes(target.base as "sit" | "lie" | "bathe")
+      species[subject.character.slot].supportedSockets.includes(target.base as "stand" | "sit" | "lie" | "bathe")
     );
   }
   if (!subject.body) return false;

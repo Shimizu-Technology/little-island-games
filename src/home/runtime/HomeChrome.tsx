@@ -353,7 +353,7 @@ export function HomeChrome({
               onRect={onRoomRect}
               measureKey={measureKey}
             />}
-            <PressTarget testID="home-places-button" target={large ? "child" : "adult"} accessibilityLabel={`Places, ${roomNames[room]}`} accessibilityHint="Choose Our House, Tumon Beach or Chamorro Village." onPress={() => onPlaces?.()} style={{ flex: 1, minWidth: large ? 64 : 0, paddingHorizontal: 4, flexDirection: "row", gap: 4, alignItems: "center", justifyContent: "center" }}>
+            <PressTarget testID="home-places-button" target={large ? "child" : "adult"} accessibilityLabel={`Places, ${roomNames[room]}`} accessibilityHint="Choose Our House, Tumon Beach, Chamorro Village or discovered island places." onPress={() => onPlaces?.()} style={{ flex: 1, minWidth: large ? 64 : 0, paddingHorizontal: 4, flexDirection: "row", gap: 4, alignItems: "center", justifyContent: "center" }}>
             <Text
               variant="body"
               maxFontSizeMultiplier={1.3}

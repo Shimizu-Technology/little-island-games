@@ -1,4 +1,5 @@
 import { arrivalPoint, isGuamPlace } from "./locations";
+import { isPointInCocosPalm } from "./waterZone";
 import { AtmospherePicker } from "./AtmospherePicker";
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import * as ReactNative from "react-native";
@@ -37,7 +38,7 @@ import { useHomeStore, RESTORE_NOTE, UNDO_NOTES } from "./useHomeStore";
 import { UndoNote } from "./runtime/UndoNote";
 import { buildScene, createSceneBuilder } from "./scene/graph";
 import { resolve, type DropProposal } from "./scene/proposal";
-import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity, type Scene } from "./scene/types";
+import { housePoint, roomPoint, roomToGrid, screenPoint, type ScreenPoint, type SceneEntity, type Scene } from "./scene/types";
 import { roomToScreen, screenToRoom, type CameraMatrix } from "./scene/camera";
 import { SceneView } from "./runtime/SceneView";
 import { HomeChrome, Tool, navigationHeightFor, largeNavigationHeight } from "./runtime/HomeChrome";
@@ -163,6 +164,7 @@ export type HomeScreenProps = Ownership & {
   unlockSeasonalPacks?: boolean;
   badges?: BadgeId[];
   milestones?: readonly string[];
+  initialRoom?: RoomId;
   initialItem?: string;
   initialSheet?: HomeSheet;
   initialClosetItem?: StyleItem;
@@ -178,6 +180,7 @@ export type HomeScreenProps = Ownership & {
 };
 export function HomeScreen({
   initialState,
+  initialRoom,
   initialItem,
   initialSheet,
   initialClosetItem,
@@ -211,8 +214,17 @@ export function HomeScreen({
   const [placesOpen, setPlacesOpen] = useState(false);
   const [overview, setOverview] = useState(false),
     [room, setRoom] = useState<RoomId>(() =>
-      initialSheet === "closet" ? heroRoomInState(store.state) : store.state.current
+      initialSheet === "closet" ? heroRoomInState(store.state) : (initialRoom ?? store.state.current)
     );
+  const [discoveryToast, setDiscoveryToast] = useState<string | null>(() => {
+    const startRoom =
+      initialSheet === "closet" ? heroRoomInState(store.state) : (initialRoom ?? store.state.current);
+    return startRoom === "cocos-island" && !store.state.discoveredPlaces?.includes("cocos-island")
+      ? "You discovered Secret Cocos Island!"
+      : null;
+  });
+  const discoveryTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const initialRoomApplied = useRef<RoomId | undefined>(undefined);
   const [more, setMore] = useState(false),
     [friends, setFriends] = useState(false);
   const [activeSheet, setActiveSheet] = useState<HomeSheet | null>(initialSheet ?? null);
@@ -296,8 +308,48 @@ export function HomeScreen({
   const reactionTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   React.useEffect(() => () => {
     Object.values(reactionTimers.current).forEach(clearTimeout);
+    clearTimeout(discoveryTimer.current);
     mealFinishers.current = {};
   }, []);
+  // Deep-link entry (`/island-home?room=tumon-beach` or `cocos-island`): switch room and bring the Islander if empty.
+  React.useEffect(() => {
+    if (!initialRoom || initialRoomApplied.current === initialRoom) return;
+    initialRoomApplied.current = initialRoom;
+    const current = store.getState();
+    setRoom(initialRoom);
+    if (current.current !== initialRoom) {
+      store.dispatch({ type: "room", room: initialRoom });
+    }
+    if ((initialRoom === "tumon-beach" || initialRoom === "cocos-island") && current.rooms[initialRoom].characters.length === 0) {
+      const heroRoom = roomIds.find((id) => current.rooms[id].characters.some((c) => c.slot === 0));
+      if (heroRoom && heroRoom !== initialRoom) {
+        const pt = arrivalPoint(initialRoom, 0);
+        const cell = roomToGrid(roomPoint(pt.x, pt.y));
+        store.dispatch({
+          type: "transfer",
+          slot: 0,
+          roomId: heroRoom,
+          room: initialRoom,
+          x: Math.max(0, Math.min(19, Math.round(cell.x))),
+          y: Math.max(0, Math.min(11, Math.round(cell.y))),
+        });
+      }
+    }
+    onConsumeIntent?.();
+  }, [initialRoom, onConsumeIntent, store]);
+  // Persist secret/special place discovery on first visit.
+  React.useEffect(() => {
+    if (room !== "cocos-island" && room !== "tumon-beach") return;
+    const current = store.getState();
+    if (current.discoveredPlaces?.includes(room)) return;
+    store.dispatch({ type: "discover", place: room });
+  }, [room, store]);
+  React.useEffect(() => {
+    if (!discoveryToast) return;
+    clearTimeout(discoveryTimer.current);
+    discoveryTimer.current = setTimeout(() => setDiscoveryToast(null), 4200);
+    return () => clearTimeout(discoveryTimer.current);
+  }, [discoveryToast]);
   const clearMealArt = useCallback(() => {
     Object.values(reactionTimers.current).forEach(clearTimeout);
     reactionTimers.current = {};
@@ -814,6 +866,9 @@ export function HomeScreen({
     setFriends(false);
     setRoom(id);
     setOverview(false);
+    if (id === "cocos-island" && !live.current.store.getState().discoveredPlaces?.includes("cocos-island")) {
+      setDiscoveryToast("You discovered Secret Cocos Island!");
+    }
     // HR-02: another floor is a door, not a jump; the same floor eases across.
     const destinationBuilding = locationBuilding(roomIds.indexOf(id), window.width / window.height > 1.8);
     interaction.animateCamera(focusCamera(roomIds.indexOf(id), viewport, destinationBuilding),
@@ -1092,9 +1147,17 @@ export function HomeScreen({
     if (!id && !current.selected && !current.placing) {
       const origin = roomOrigin(roomIds.indexOf("home"), building);
       const local = screenToRoom(point, runtime.current!.camera.get(), housePoint(origin.x, origin.y));
-      if (local.x >= 524 && local.x <= 702 && local.y >= 26 && local.y <= 198) {
+      if (current.room === "home" && local.x >= 524 && local.x <= 702 && local.y >= 26 && local.y <= 198) {
         openBadges();
         return;
+      }
+      if (current.room === "cocos-island") {
+        const cocosOrigin = roomOrigin(roomIds.indexOf("cocos-island"), building);
+        const cocosLocal = screenToRoom(point, runtime.current!.camera.get(), housePoint(cocosOrigin.x, cocosOrigin.y));
+        if (isPointInCocosPalm(cocosLocal)) {
+          shakeCocosPalm();
+          return;
+        }
       }
     }
     const entity = id ? current.scene.entities[id] : undefined;
@@ -1475,8 +1538,19 @@ export function HomeScreen({
     },
     []
   );
+  const shakeCocosPalm = useCallback(() => {
+    const before = live.current.store.getState().rooms["cocos-island"].instances.filter(
+      (i) => i.id.startsWith("palm-coconut-") && !i.staged && !i.in
+    ).length;
+    live.current.store.dispatch({ type: "palm-coconut", roomId: "cocos-island" });
+    const after = live.current.store.getState().rooms["cocos-island"].instances.filter(
+      (i) => i.id.startsWith("palm-coconut-") && !i.staged && !i.in
+    ).length;
+    delight.palmShaken("cocos-island", 160, 200, after > before);
+  }, [delight]);
   const selectInScene = useSceneEvent(choose);
   const showBadgesInScene = useSceneEvent(openBadges);
+  const shakePalmInScene = useSceneEvent(shakeCocosPalm);
   const sceneState = useMemo(() => ({ ...store.state, current: room }), [store.state, room]);
   function catalogSubject(item: ItemId, x: number, y: number, destination?: RoomId) {
     if (!owns(item, ownership)) { store.setMessage("This showpiece is in the Locker."); return; }
@@ -1620,6 +1694,7 @@ export function HomeScreen({
             state={sceneState}
             badges={ownership.badges}
             onBadges={showBadgesInScene}
+            onShakePalm={shakePalmInScene}
             scene={scene}
             building={building}
             viewport={viewport}
@@ -1770,7 +1845,32 @@ export function HomeScreen({
           }}
         />
       )}
-      {placesOpen && <React.Suspense fallback={null}><PlacesSheet room={room} onRoom={goRoom} onClose={() => setPlacesOpen(false)} onGame={route => { interaction.cancelAll(); setPlacesOpen(false); router.push(route); }}/></React.Suspense>}
+      {placesOpen && <React.Suspense fallback={null}><PlacesSheet room={room} discoveredPlaces={store.state.discoveredPlaces} onRoom={goRoom} onClose={() => setPlacesOpen(false)} onGame={route => { interaction.cancelAll(); setPlacesOpen(false); router.push(route); }}/></React.Suspense>}
+      {discoveryToast && (
+        <Pressable
+          testID="cocos-discovery-toast"
+          accessibilityRole="button"
+          accessibilityLabel={`${discoveryToast} Tap to dismiss.`}
+          onPress={() => { clearTimeout(discoveryTimer.current); setDiscoveryToast(null); }}
+          style={{
+            position: "absolute",
+            top: headerHeight + 12,
+            alignSelf: "center",
+            zIndex: 90,
+            paddingHorizontal: 18,
+            paddingVertical: 11,
+            borderRadius: 22,
+            backgroundColor: "#FFF6DB",
+            borderWidth: 2,
+            borderColor: "#E8B955",
+            boxShadow: "0px 4px 12px rgba(40, 79, 75, 0.22)",
+          }}
+        >
+          <Text style={{ color: "#284F4B", fontWeight: "800", fontSize: 15, textAlign: "center" }}>
+            ★ {discoveryToast}
+          </Text>
+        </Pressable>
+      )}
       {!overview && !more && !friends && !activeSheet && !atmosphereOpen && !placesOpen && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
         <StorageTray entity={scene.entities[storageId]} scene={scene} interaction={interaction} offset={viewportOffset} large={large} inspect={storageInspect === storageId && store.message === STORAGE_FULL_MESSAGE} bottom={inset.bottom + navigationHeight + (designing && !vertical ? portraitDrawerHeightFor(large) + 6 : staged.length ? 100 : 8)}
           onClose={() => { const e = scene.entities[storageId]; if (e?.item && storageOpen(e.item)) store.dispatch({ type: "toggle", id: e.item.id, roomId: e.room }); setStorageId(undefined); setStorageInspect(undefined); }}

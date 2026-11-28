@@ -22,7 +22,14 @@ function cachedEntry(before: HomeStateV2, after: HomeStateV2): UndoEntry {
   if (!entry) inner.set(after, (entry = undoEntry(undoStep(before, after), after)));
   return entry;
 }
-const bare = (state: HomeStateV2): HomeStateV2 => ({ version: state.version, ...(state.rosterVersion ? { rosterVersion: state.rosterVersion } : {}), current: state.current, rooms: state.rooms, ...(state.atmosphere ? { atmosphere: state.atmosphere } : {}) });
+const bare = (state: HomeStateV2): HomeStateV2 => ({
+  version: state.version,
+  ...(state.rosterVersion ? { rosterVersion: state.rosterVersion } : {}),
+  current: state.current,
+  rooms: state.rooms,
+  ...(state.atmosphere ? { atmosphere: state.atmosphere } : {}),
+  ...(state.discoveredPlaces?.length ? { discoveredPlaces: state.discoveredPlaces } : {}),
+});
 const entriesCache = new WeakMap<History, UndoEntry[]>();
 function savedEntries(history: History): UndoEntry[] {
   const cached = entriesCache.get(history);
@@ -118,7 +125,7 @@ export function editHistory(
   if (result.state !== history.present) carryPanSeats(history.present, result.state, action as HomeAction);
   return result.state === history.present
     ? history
-    : action.type === "room" || action.type === "finish-action" || action.type === "cook"
+    : action.type === "room" || action.type === "discover" || action.type === "finish-action" || action.type === "cook"
       ? { ...history, present: result.state }
       : { present: result.state, past: [...history.past, history.present].slice(-60), future: [] };
 }

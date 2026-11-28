@@ -24,8 +24,9 @@ import { Text } from '../ui/Text';
 import { theme } from '../ui/theme';
 import { useAppForeground } from './foreground';
 import { IslandScene } from './IslandScene';
-import { openGame, placeRoute } from './navigation';
-import type { PlaceId } from './model';
+import { excursionRoute, openGame, placeRoute } from './navigation';
+import type { MapExcursionId, PlaceId } from './model';
+import { useMapFeedback } from './mapSound';
 import { coveContinue, CovePersonResume } from '../cove/HubCove';
 import { infoFor } from '../cove/catalog';
 
@@ -57,7 +58,10 @@ export default function HubScreen() {
  const fallbackHeight = height - insets.top - insets.bottom - headerHeight - dockHeight;
  const availableHeight = viewport.w === width && viewport.h === height ? viewport.available : 0;
  const sceneHeight = Math.max(availableHeight || fallbackHeight, fontScale >= 1.25 ? 590 : width > height ? 245 : 355);
+ const soundOn = store.save.settings.sound && store.save.settings.effects !== false;
+ const playMapSound = useMapFeedback(soundOn && foreground && focused);
  const arrive = useCallback((place: PlaceId) => { router.push(placeRoute(place)); setDoor(place); }, []);
+ const arriveExcursion = useCallback((place: MapExcursionId) => { router.push(excursionRoute(place)); }, []);
  if (!store.ready) return <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}><Heading>Getting your island ready…</Heading></SafeAreaView>;
  if (store.recovery) return <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}><Recovery/></SafeAreaView>;
  const brand = <Text testID="hub-brand" variant="display" maxFontSizeMultiplier={1.3} numberOfLines={1} adjustsFontSizeToFit style={{ flex: stackHeader ? 1 : undefined, flexShrink: stackHeader ? 1 : 0, minWidth: 120, fontSize: 18, lineHeight: 22, color: theme.colors.ink }}>little island</Text>;
@@ -98,7 +102,7 @@ export default function HubScreen() {
   )}
   <SaveStatus/>
   <ScrollView onLayout={event => { const available = event.nativeEvent.layout.height; setViewport(prev => prev.w === width && prev.h === height && prev.available === available ? prev : { w: width, h: height, available }); }} style={{ flex: 1, backgroundColor: '#1F8EA0' }} contentContainerStyle={{ alignItems: 'center', flexGrow: 1, justifyContent: 'center' }}>
-   <IslandScene weatherActive={focused && foreground && !settings} atmosphere={atmosphere} width={sceneWidth} height={sceneHeight} fontScale={Math.min(fontScale, 2.0)} look={personFor(store.save).look} reduced={reduced} active={focused && !settings && clear && foreground} door={door} onArrive={arrive}/>
+   <IslandScene weatherActive={focused && foreground && !settings} atmosphere={atmosphere} width={sceneWidth} height={sceneHeight} fontScale={Math.min(fontScale, 2.0)} look={personFor(store.save).look} reduced={reduced} active={focused && !settings && clear && foreground} door={door} onArrive={arrive} onExcursion={arriveExcursion} onSound={playMapSound}/>
   </ScrollView>
   <CovePersonResume/>
   <View style={{ paddingHorizontal: narrow ? 10 : 18, paddingVertical: 8, backgroundColor: theme.colors.bg, borderTopWidth: 1, borderTopColor: theme.colors.hairline }}>

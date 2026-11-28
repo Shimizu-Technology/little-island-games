@@ -3,6 +3,10 @@ const socket = (id: string, kind: Socket['kind'], x: number, y: number, covered 
 /** Coordinates use the square SVG viewport, including its padding. */
 export const seatSockets: Record<string, readonly Socket[]> = {
   'beach-blanket': [socket('left', 'sit', 49, 98, false), socket('right', 'sit', 104, 98, false), socket('lounge', 'lie', 34, 88, false)],
+  'swim-ring': [socket('float', 'sit', 75, 80, true)],
+  'beach-surfboard': [socket('ride', 'stand', 75, 114, false)],
+  'outrigger-canoe': [socket('paddle', 'sit', 74, 86, true)],
+  'sea-turtle': [socket('swim-beside', 'sit', 112, 92, false)],
   bed: [socket('pillow', 'lie', 34, 73)],
   'bunk-bed': [socket('lower', 'lie', 34, 102), socket('upper', 'lie', 34, 42)],
   hammock: [socket('sling', 'lie', 35, 77)],

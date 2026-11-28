@@ -1,3 +1,4 @@
+import { locationIds } from "./catalogMore";
 /** All building coordinates use the room art's 800-unit coordinate system. */
 export type Building = { columns:number; floors:number; width:number; height:number; roomHeight:number; roof:number; frame:number; gap:number; count:number; locations?:boolean; place?:number };
 export function buildingLayout(count:number, wide=false):Building {
@@ -40,7 +41,8 @@ export function roomCamera(index:number,b:Building,scale:number,width:number,hei
 
 /** House geometry remains exactly four rooms. Outdoor locations have their own 800 × 560 stage. */
 export function locationBuilding(index: number, wide = false): Building {
-  return index < 4 ? { ...buildingLayout(4, wide), count: 6, locations: true } : {
-    columns: 1, floors: 1, width: 800, height: 560, roomHeight: 560, roof: 0, frame: 0, gap: 0, count: 6, place: index,
+  const count = locationIds.length;
+  return index < 4 ? { ...buildingLayout(4, wide), count, locations: true } : {
+    columns: 1, floors: 1, width: 800, height: 560, roomHeight: 560, roof: 0, frame: 0, gap: 0, count, place: index,
   };
 }

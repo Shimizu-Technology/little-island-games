@@ -92,7 +92,7 @@ export function Destinations({
   const contentNames = entityLabels(contents);
   const ownerNames = entityLabels(Object.values(scene.entities).filter((e) => restingVisible(e, scene)));
   const verbOf = (target: (typeof choices)[number]["target"], proposal: (typeof choices)[number]["proposal"]) =>
-    target.kind === "mouth" ? "Eat or drink" : target.kind === "hand" ? "Give" : target.kind === "socket" ? (proposal.base === "lie" ? "Lie" : proposal.base === "bathe" ? "Bathe" : "Sit") : target.kind === "container" ? "Put inside" : "Put on";
+    target.kind === "mouth" ? "Eat or drink" : target.kind === "hand" ? "Give" : target.kind === "socket" ? (proposal.base === "lie" ? "Lie" : proposal.base === "bathe" ? "Bathe" : proposal.base === "stand" ? "Ride" : "Sit") : target.kind === "container" ? "Put inside" : "Put on";
   const choiceLabels = choices.map(({ target, proposal, room }) => `${verbOf(target, proposal)} in ${roomNames[room]}`);
   // Two cushions in one room would both read "Sit in Tree house": add the numbered owner only then.
   const choiceLabel = (index: number) => {

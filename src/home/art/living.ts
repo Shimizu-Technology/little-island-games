@@ -2,7 +2,7 @@ import type { Capability, ItemVisualState } from '../world';
 import type { ItemId } from '../catalog';
 export const foodIds = ['mango','banana','rice-ball','cupcake','pumpkin-pie','fiesta-platter','shaved-ice'] as const;
 export const drinkIds = ['coconut-drink','juice','hot-cocoa'] as const;
-export const toyIds = ['teddy','ball','book','shell','gift-box'] as const;
+export const toyIds = ['teddy','ball','book','shell','gift-box','snorkel-set'] as const;
 export const holdableIds = [...foodIds,...drinkIds,...toyIds] as const;
 export type HoldableId = typeof holdableIds[number] | "surfboard" | "beach-surfboard";
 export const livingCapabilities: Partial<Record<ItemId, Capability>> = {
@@ -21,6 +21,11 @@ export const livingCapabilities: Partial<Record<ItemId, Capability>> = {
   // HD-07: a tap lights the burner under the stove's pan; food in the pan cooks.
   "beach-surfboard":{moveInPlay:true,holdable:true},
   surfboard:{moveInPlay:true,holdable:true},
+  'sandcastle':{moveInPlay:true,toggle:'power'},
+  'treasure-chest':{moveInPlay:false,toggle:'open'},
+  'sea-turtle':{moveInPlay:true},
+  'swim-ring':{moveInPlay:true},
+  'outrigger-canoe':{moveInPlay:true},
   'bbq-grill':{moveInPlay:false,toggle:'power'},
   stove:{moveInPlay:false,toggle:'power'},
   fridge:{moveInPlay:false,toggle:'open'},
