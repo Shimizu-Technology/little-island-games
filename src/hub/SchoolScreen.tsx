@@ -46,7 +46,7 @@ export default function SchoolScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: schoolCanvas }}>
       <ScrollView contentContainerStyle={{ padding: 20, gap: 18, maxWidth: 940, width: '100%', alignSelf: 'center' }}>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}><AtmosphereHeader/>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12, padding: 8, marginHorizontal: -8 }}><AtmosphereHeader rounded/>
           <Button
             quiet
             compact

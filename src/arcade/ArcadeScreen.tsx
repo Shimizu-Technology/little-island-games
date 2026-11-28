@@ -97,7 +97,7 @@ export function ArcadeLobby({ nunitoLoaded = false }: { nunitoLoaded?: boolean }
         <ArcadeScene game="reef-builder" active={!sheet}/>
       </View>
       <ScrollView contentContainerStyle={[styles.content, { padding: 20, gap: 20, maxWidth: 1000 }]}>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8 }}><AtmosphereHeader/>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8, padding: 8, marginHorizontal: -8 }}><AtmosphereHeader rounded/>
           <Button quiet compact icon="back" onPress={() => router.replace("/")}>Home</Button>
           <Button quiet compact onPress={() => setSheet("settings")}>Settings</Button>
         </View>
@@ -399,7 +399,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
     {playing ? <View testID="arcade-arena" style={{ flex: 1, minHeight: 0, overflow: "hidden" }} onLayout={event => {
       const { width, height } = event.nativeEvent.layout;
       setArena(previous => previous.width === width && previous.height === height ? previous : { width, height });
-    }}><SaveStatus/>{board}{!flightChrome && <GlobalWeatherLayer atmosphere={atmosphere} width={width} height={height} active={active} tint sky subtle/>}</View> : <ScrollView ref={scroll} contentContainerStyle={{ flexGrow: 1, width: "100%", paddingTop: 10, paddingBottom: 24, gap: 12 }}>
+    }}><SaveStatus/>{board}{!flightChrome && <GlobalWeatherLayer atmosphere={atmosphere} width={arena.width} height={arena.height} active={active} tint={false} sky={false} subtle/>}</View> : <ScrollView ref={scroll} contentContainerStyle={{ flexGrow: 1, width: "100%", paddingTop: 10, paddingBottom: 24, gap: 12 }}>
       <SaveStatus/>
       {!level ? <>
         {person.session?.game === game.id && (

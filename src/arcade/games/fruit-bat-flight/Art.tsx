@@ -81,6 +81,10 @@ const sunsetHorizon = [[0, "#C08794"], [40, "#FBAE80"], [68, "#FCDD9B"], [80, "#
 type SkyProps = { atmosphere?: Atmosphere; world?: WorldId; storm?: boolean; width?: number; height?: number };
 export const FlightWideSky = memo(function FlightWideSky({ world = "w1", storm = false, width = FLIGHT_W, height = FLIGHT_H, atmosphere = defaultAtmosphere }: SkyProps) {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  // Night owns its sky: do not decode a fully hidden day/sunset bitmap beneath it.
+  if (atmosphere.timeOfDay === 'night') return <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
+    <AtmosphereSky atmosphere={atmosphere} width={width} height={height} gradient/>
+  </View>;
   const sunset = atmosphere.timeOfDay === 'sunset' || storm || world === "w4" || world === "w5" || world === "w6";
   const stops = sunset ? sunsetHorizon : dayHorizon;
   const source = sunset ? flightArt.sunset() : flightArt.day();
@@ -108,7 +112,7 @@ export const FlightWideSky = memo(function FlightWideSky({ world = "w1", storm =
       <Rect width={width} height={height} fill={`url(#${id}-horizon)`}/>
       <SvgImage href={source} x={artLeft} y={0} width={artWidth} height={height} preserveAspectRatio="none" mask={`url(#${id}-art)`}/>
     </Svg> : <Image source={source} accessible={false} fadeDuration={0} resizeMode="cover" style={{ width: "100%", height: "100%" }}/>}
-    {atmosphere.timeOfDay !== 'day' && <AtmosphereSky atmosphere={atmosphere} width={width} height={height} gradient/>}
+    {atmosphere.timeOfDay === 'sunset' && <View testID="flight-sunset-glow" style={[StyleSheet.absoluteFill, { backgroundColor: '#FFCC8114' }]}/>}
     {storm && <View style={[StyleSheet.absoluteFill, { backgroundColor: "#47497424" }]}/>}
   </View>;
 });

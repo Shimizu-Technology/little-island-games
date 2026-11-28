@@ -46,3 +46,20 @@ Automated checks:
 Local evidence directory: `little-island-games-artifacts/v4/b11-global-atmosphere/` (outside Git). It contains sanitized PNG/HTML proofs, both generated storyboards, prebuild verification logs, and the automated logs.
 
 Native device gameplay, installed-release splash appearance, real family device acceptance, and final independent review remain for integration/release. Expo documents that development builds do not fully reproduce release splash behavior. Public release stays a separate gate in `docs/QA.md`.
+
+## R1 fixes and R2 verification — 28 November 2026
+
+Independent review R1 requested four changes on `e2ee63701fd451587eb571b4b602855c4eb6160a`. Each is addressed:
+
+- **R1-01:** Non-Flight arenas receive only six subtle foreground particles, using measured arena dimensions. Sky and lighting remain in `PlayScene` behind the board. Subtle mode suppresses sky/tint defensively, even when a caller requests them. Render tests launch all eight non-Flight screens and inspect the playing board's actual ancestors and overlays.
+- **R1-02:** Sunset retains the authored illustrated backdrop with a translucent warm glow. Night renders its own sky without mounting or decoding a hidden day/sunset bitmap. Gradient definitions use sanitized React IDs. Portrait and landscape render tests cover image presence/absence and independent gradient references.
+- **R1-03:** The plugin clears only its generated splash imageset, explicitly sets `UILaunchStoryboardName`, and repairs missing typed file/resource registration in the app target without duplicate references. Both app variants were prebuilt again after injecting stale images and removing launch registration; both recovered. `ibtool` and `actool` passed without ambiguous-content/unassigned-child warnings. Temporary projects were removed.
+- **R1-04:** Full-bleed headers default to square corners; inset headers explicitly request rounding and have breathing padding without shrinking their original content width. Layout callbacks ignore zero dimensions and unchanged sizes and retain only width/height. Tests cover corner modes, padding, and redundant layout events.
+
+The separate CI failure in `p4-reef-sweep-ui.test.tsx` is also fixed. The shared weather component loads the particle module through React lazy/Suspense only for non-clear weather, so clear screens never evaluate Reanimated through this import path. The Reef Sweep test is unchanged and passes. A dedicated module-loading test throws if clear day/sunset/night evaluates the particle module; all three cases pass. Native module loading remains green.
+
+The final combined targeted/affected sweep passed **698 tests in 68 files**, with two workers. The atmosphere suite now has 32 cases, and the separate clear-loading suite has three. Typecheck passed; full lint has zero errors (274 existing warnings), and lint on changed code is clean. Expo Doctor passed 21/21. The final web export passed with offline shell `c4e585636057`.
+
+The refreshed 390×844 DOM-rendered proofs are `map-night-snow.png`, `flight-night-snow.png`, and `flight-sunset.png` in the existing external evidence directory. Original night proofs are retained in `r1-before/`. These show rendering and layout; native performance and family acceptance remain separate. R1's original report is preserved unchanged; the fixes still need independent re-review on the new PR head.
+
+R1 runtime cleanup: the task-created preview tab and port 43832 server were closed/stopped; no owned runtime resources remain. Evidence is retained outside Git; the draft worktree remains available for the lead.
