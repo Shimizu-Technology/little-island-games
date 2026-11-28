@@ -258,7 +258,7 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
       const mouth = roomPoint(entity.contact.x + anchors.mouth.x, entity.contact.y + anchors.mouth.y);
       const face = { x: entity.contact.x + anchors.head.x, y: entity.contact.y + anchors.head.y, headRadius: species[c.slot].headRadius };
       const waist = floatyFrame(c.slot, entity.base, entity.facing);
-      targets.push({ id: `${entity.id}/wear-floaty`, kind: "floaty", owner: entity.id, floaty: true,
+      if (entity.attachment.kind !== "socket" && entity.base === "stand") targets.push({ id: `${entity.id}/wear-floaty`, kind: "floaty", owner: entity.id, floaty: true,
         attachment: { kind: "hand", character: entity.id, side: "right" },
         contact: entity.contact, projectedContact: entity.contact,
         core: { left: entity.contact.x + entity.bounds.left, top: entity.contact.y + entity.bounds.top,

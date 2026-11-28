@@ -276,7 +276,7 @@ describe('Tumon Beach & Ocean and Secret Cocos Island worlds', () => {
     expect(isEntitySwimming(buildScene(cocosAfterWet.present).entities['character/0'], buildScene(cocosAfterWet.present))).toBe(true);
   });
 
-  it('supports swim-ring float socket (including floating in water), beach-surfboard riding socket + hand hold, sandcastle sparkle, and snorkel bubbles', async () => {
+  it('supports wearable swim-ring (including moving together in water), beach-surfboard riding socket + hand hold, sandcastle sparkle, and snorkel bubbles', async () => {
     // Swim ring is movable into shallow turquoise water & any character can float in it
     expect(capabilityOf('swim-ring').moveInPlay).toBe(true);
     expect(capabilityOf('swim-ring').sockets?.length).toBeGreaterThan(0);
@@ -292,10 +292,21 @@ describe('Tumon Beach & Ocean and Secret Cocos Island worlds', () => {
     expect(validHome(h.present)).toBe(true);
     h = settle(h, 'character/0', 'tumon-beach/item/place-swim-ring/socket/float');
     expect(h.present.rooms['tumon-beach'].characters.find((c) => c.slot === 0)).toMatchObject({
-      pose: 'sit',
-      seatId: 'place-swim-ring',
+      holding: 'place-swim-ring',
+      anchor: 'floor',
+      pose: 'stand',
     });
     expect(isEntitySwimming(buildScene(h.present).entities['character/0'], buildScene(h.present))).toBe(true);
+
+    const wearing = buildScene(h.present);
+    const swimMove = resolve({ ...wearing.rooms['tumon-beach'], entities: wearing.entities }, wearing.entities['character/0'],
+      { x: 440, y: 300 } as any, { scale: 1, release: true, floorOnly: true });
+    h = editHistory(h, { type: 'apply-proposal', proposal: swimMove });
+    const moved = buildScene(h.present);
+    expect(validHome(h.present)).toBe(true);
+    expect(moved.entities['tumon-beach/item/place-swim-ring'].parent).toBe('character/0');
+    expect(moved.entities['tumon-beach/item/place-swim-ring'].contact).toEqual(moved.entities['character/0'].contact);
+    expect(isEntitySwimming(moved.entities['character/0'], moved)).toBe(true);
 
     // Surfboard has a real standing/riding socket AND remains holdable in hand
     let surf = bring(start('tumon-beach'), 0, 10, 8);

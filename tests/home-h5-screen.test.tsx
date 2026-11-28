@@ -188,3 +188,17 @@ it('lets games return to their saved place without Home intercepting browser Bac
   expect(harness.pop!({ state: {} })).toBe(true);
   expect(router.replace).toHaveBeenCalledWith('/');
 });
+
+it('R1-05 keeps Take off floaty out of the Cocos discovery toast and restores it after dismissal', async () => {
+  const state = labFixtures['silky-kitchen']();
+  for (const room of Object.values(state.rooms)) room.characters = [];
+  state.current = 'cocos-island';
+  state.rooms['cocos-island'].characters = [{ slot: 0, anchor: 'floor', pose: 'stand', x: 13, y: 4, holding: 'place-swim-ring' }];
+  await open(state);
+  await act(async () => harness.scene.onSelect('character/0'));
+  expect(root.root.findAllByProps({ testID: 'cocos-discovery-toast' })).toHaveLength(1);
+  expect(root.root.findAllByProps({ testID: 'take-off-floaty' })).toHaveLength(0);
+  await act(async () => root.root.findByProps({ testID: 'cocos-discovery-toast' }).props.onPress());
+  expect(root.root.findAllByProps({ testID: 'cocos-discovery-toast' })).toHaveLength(0);
+  expect(root.root.findAllByProps({ testID: 'take-off-floaty' })).toHaveLength(1);
+});

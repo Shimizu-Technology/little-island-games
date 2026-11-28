@@ -55,8 +55,8 @@ export const DecorArt = memo(function DecorArt({
 });
 
 /** The art origin and hit geometry both use CORE's semantic contact. */
-export function artFrame(entity: SceneEntity, carry = false) {
-  if (entity.item && entity.attachment.kind === 'hand' && (entity.item.item === 'swim-ring' || capabilityOf(entity.item.item).edible === 'drink')) return entity.bounds;
+export function artFrame(entity: SceneEntity, carry = false, standalone = false) {
+  if (entity.item && entity.attachment.kind === 'hand' && (entity.item.item === 'swim-ring' && !carry && !standalone || capabilityOf(entity.item.item).edible === 'drink')) return entity.bounds;
   if (entity.item) {
     const size = itemSize(entity.item);
     return { left: -size / 2, top: -size * 0.85, width: size, height: size };
@@ -67,6 +67,8 @@ export function artFrame(entity: SceneEntity, carry = false) {
 export const EntityArt = memo(function EntityArt({
   entity,
   carry = false,
+  standalone = false,
+  floatyStyle,
   front = false,
   reduced,
   renderCharacter,
@@ -102,6 +104,9 @@ export const EntityArt = memo(function EntityArt({
   tilt?: number;
   limbLag?: number;
   carry?: boolean;
+  /** Loose art in a drag overlay or thumbnail, even if the saved ring is worn. */
+  standalone?: boolean;
+  floatyStyle?: React.ComponentProps<typeof Animated.View>["style"];
   front?: boolean;
   reduced: boolean;
   renderCharacter?: CharacterRender;
@@ -109,7 +114,7 @@ export const EntityArt = memo(function EntityArt({
   actionOverride?: CharacterAction;
   faceOverride?: HomeMood;
 }) {
-  const frame = entity.character ? renderAnchors(carry && carryGrip && entity.character.slot === 1 ? {...entity,children:[]} : entity, carry, tilt, limbLag).bounds : artFrame(entity, carry);
+  const frame = entity.character ? renderAnchors(carry && carryGrip && entity.character.slot === 1 ? {...entity,children:[]} : entity, carry, tilt, limbLag).bounds : artFrame(entity, carry, standalone);
   if (entity.item && entity.attachment.kind === 'hand' && capabilityOf(entity.item.item).edible === 'drink') {
     const slot = Number(entity.attachment.character.split('/').at(-1)) as 0 | 1 | 2;
     const unit = heldDrinkScale(species[slot].unit,slot);
@@ -119,7 +124,7 @@ export const EntityArt = memo(function EntityArt({
       </G>
     </Svg>;
   }
-  if (entity.item?.item === "swim-ring" && entity.attachment.kind === "hand") return null;
+  if (entity.item?.item === "swim-ring" && entity.attachment.kind === "hand" && !carry && !standalone) return null;
   if (entity.item) {
     const basket = entity.item.item === 'carry-basket';
     const peekWidth = frame.width * (basket ? .175 : .13);
@@ -152,7 +157,7 @@ export const EntityArt = memo(function EntityArt({
     base = carry ? "carry" : entity.base;
   const size = characterSize(character.slot);
   const ringFrame = entity.floaty ? floatyFrame(character.slot, base, entity.facing) : undefined;
-  const ring = (layer: "back" | "front") => ringFrame && <View testID={`worn-floaty-${layer}-${character.slot}`} style={{ position: "absolute", left: ringFrame.left - frame.left, top: ringFrame.top - frame.top, width: ringFrame.width, height: ringFrame.height }}><View style={{ width: ringFrame.width, height: ringFrame.width, transformOrigin: "left top", transform: [{ scaleY: ringFrame.height / ringFrame.width }] }}><MoreItemArt id="swim-ring" size={ringFrame.width} layer={layer} occupied reduced={reduced} mirrored={entity.facing === "left"}/></View></View>;
+  const ring = (layer: "back" | "front") => ringFrame && <Animated.View testID={`worn-floaty-${layer}-${character.slot}`} style={[{ position: "absolute", left: ringFrame.left - frame.left, top: ringFrame.top - frame.top, width: ringFrame.width, height: ringFrame.height }, floatyStyle]}><View style={{ width: ringFrame.width, height: ringFrame.width, transformOrigin: "left top", transform: [{ scaleY: ringFrame.height / ringFrame.width }] }}><MoreItemArt id="swim-ring" size={ringFrame.width} layer={layer} occupied reduced={reduced} mirrored={entity.facing === "left"}/></View></Animated.View>;
   const chef = !carry && character.socket?.socketId.replace(/^pet-/, "") === "chef";
   faceOverride = activityFaceOf(entity, false, faceOverride, carry, !!meal);
   const input = {
@@ -199,7 +204,7 @@ export const EntityArt = memo(function EntityArt({
       {ring("front")}
     </View>
   );
-}, (a, b) => a.onMealFinished === b.onMealFinished && a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.mealStandby === b.mealStandby && a.mealVisible === b.mealVisible && a.idleStyle === b.idleStyle && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
+}, (a, b) => a.onMealFinished === b.onMealFinished && a.onMealPresented === b.onMealPresented && a.meal === b.meal && a.mealStandby === b.mealStandby && a.mealVisible === b.mealVisible && a.idleStyle === b.idleStyle && a.gaze?.x === b.gaze?.x && a.gaze?.y === b.gaze?.y && a.standalone === b.standalone && a.floatyStyle === b.floatyStyle && a.carry === b.carry && a.front === b.front && a.reduced === b.reduced &&
   a.renderCharacter === b.renderCharacter && a.preview === b.preview && a.actionOverride === b.actionOverride &&
   a.faceOverride === b.faceOverride && a.blink === b.blink && a.prepareMeal === b.prepareMeal && a.carryGrip === b.carryGrip && a.tilt === b.tilt && a.limbLag === b.limbLag &&
   a.entity.attachment.kind === b.entity.attachment.kind && a.entity.floaty === b.entity.floaty && a.entity.base === b.entity.base && a.entity.facing === b.entity.facing && (a.carry && b.carry || a.entity.action === b.entity.action) &&

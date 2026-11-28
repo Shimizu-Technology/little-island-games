@@ -32,4 +32,25 @@ Evidence directory: `/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-
 - Kitchen browser: brought Islander through the friends drawer, moved her, dragged a banana near the permanent trash target and a mango near the stove. No page exceptions were observed. Browser behavior cannot reproduce or certify Hermes/Fabric crash freedom.
 - Requested screenshots: `01-beach-floaty-worn-swimming.png`, `02-beach-floaty-moved-ocean.png`, `03-cocos-island-swimming.png`, `04-kitchen-moving-items.png`. Supporting commands, receipts and browser logs are beside them.
 - Native iOS/iPadOS Hermes/Fabric: not run in this implementation session; physical TestFlight retest remains required.
-- Review: implementation worker self-review only; independent final-code review and CI belong to the lead.
+- Review: independent cross-family R1 by Gemini 4 Neon on `1a2ba151669eb60ce0af7801ab3fb03b024e21f9` requested changes. The revision below addresses its five findings; a final-head independent recheck and CI remain lead-owned.
+
+
+## R1 revision
+
+The full review is preserved as `REVIEW-R1.md` in the evidence directory. The original test selection omitted `ocean-beach-cocos-easter-eggs.test.tsx`; the revision gate includes every Home, Ocean and Beach test plus the protected guard suites.
+
+| Finding | Change | Regression evidence |
+| --- | --- | --- |
+| R1-01 | Updated the unprotected Beach expectation to standing on the floor while wearing the ring; added movement together in water. | Entire Ocean/Beach feature file, included in the combined run. |
+| R1-02 | Explicit standalone ring art for drag roots and thumbnails. Every resting waist layer reads the ring's presented/hidden state on the UI thread. Carried children remain suppressed. | Real `DragOverlay` and `SceneView` rendering tests cover dragging, settling, readiness and cancellation. |
+| R1-03 | Ring chooser uses standalone artwork; wearer drawer badges omit the redundant held ring. Socket pictures remove the ring, while a ring destination depicts one wearer. | Actual Destinations, FriendDrawer and PosePicture rendering, plus all compatible socket preview plans. |
+| R1-04 | Ring geometry centres on the upright body bounds, limits carry size to standing proportions, and clamps the full wearer at room edges. Seated, lying and bathing avatars do not offer or accept a wear target. | Pip geometry in every facing/base, all-slot lagoon moves, and valid lying/bathing/sitting saves with stale target rejection. |
+| R1-05 | Quick room/floaty actions stay hidden while the Cocos discovery toast is present, then return after dismissal. | Live HomeScreen selection, toast and dismissal regression. |
+
+Final R1 check results and refreshed browser evidence are recorded in `r1-*.log` and `r1-verification.json` beside the three refreshed Beach screenshots. Native Hermes/Fabric and physical-family acceptance remain separate from these web/runtime checks.
+
+R1 final automated run: 115 files, 1,301 passed and two existing opt-in hull-raster cases skipped (`r1-tests-final.log`). Typecheck, Expo lint, the 180-bank immutable save catalog, production web export and the word-export guard passed. The production audit covers 298 worklets and 567 callable capture references (`r1-worklets.log`). The local word guard still reports no private policy lock; that full policy gate remains for CI.
+
+R1 browser acceptance: on the final production web export (`34455d8d3aa9` offline shell), real pointer pickup of the worn rim showed a visible loose-ring overlay while all original waist layers had zero opacity. Dropping and Undo restored the expected state. The ring chooser contains a loaded image; 16 sitting/lying/bathing destination pictures have no worn-ring layers. The friend drawer has a worn avatar and no redundant empty held badge. The Cocos toast and Take off action are mutually exclusive, and the action returns after toast dismissal. All three requested Beach screenshots were refreshed and inspected; `r1-drag-off-visible.png` and `r1-friend-drawer.png` provide extra evidence. No browser page exceptions were observed.
+
+R1 cleanup: the static server and browser were closed, lifecycle status has no owned resources, and `dist/` and task scratch files were removed. The clean worktree remains on the draft PR branch for lead review.

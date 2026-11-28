@@ -53,7 +53,7 @@ function FriendCell({ entity, scene, here, size, offset, interaction, renderChar
   // Hold them at the middle of the body, as you would pick a doll up.
   const below = frame.height * 0.45;
   const begin = useSharedValue({ x: 0, y: 0 }), carrying = useSharedValue(false);
-  const held = entity.children.map((id) => scene.entities[id]).find((e) => e?.attachment.kind === "hand");
+  const held = entity.children.map((id) => scene.entities[id]).find((e) => e?.attachment.kind === "hand" && e.item?.item !== "swim-ring");
   const place = friendPlace(entity);
   const pan = Gesture.Pan()
     .minDistance(8)

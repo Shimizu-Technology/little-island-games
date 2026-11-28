@@ -1,5 +1,5 @@
 import { waterFloorMinY } from "../waterZone";
-import { floatyFrame } from "../floaty";
+import { floatyContact, floatyFrame } from "../floaty";
 import { rigSlot } from "../family";
 import type { RoomId } from "../catalogMore";
 import { MAX_INSTANCES } from "../limits";
@@ -141,7 +141,7 @@ function eligible(
   const reserved = ctx.reservations?.[target.id];
   if (reserved && reserved !== subject.id) return false;
   const ring = subject.item?.item === "swim-ring";
-  if (target.floaty && !ring) return false;
+  if (target.floaty && (!ring || index.entities[target.owner]?.attachment.kind === "socket" || index.entities[target.owner]?.base !== "stand")) return false;
   if (ring && target.kind === "hand" && !target.floaty) return false;
   if (target.occupied && target.occupied !== subject.id && !((target.kind === "hand" || target.kind === "floaty") && (ctx.replaceHand || ring))) return false;
   if (target.trash) return !!subject.item && (!!subject.body?.edible || !!subject.body?.discardable) && group.length === 1;
@@ -378,7 +378,8 @@ function exactFloorMove(index: RoomIndex, subject: SceneEntity, point: RoomPoint
   if (slot === undefined && !(subject.body?.portable && (!subject.children.length || subject.body.container) && subject.body.layer !== "wall")) return;
   const beachMinY = waterFloorMinY(index.room);
   const waterProp = !!subject.item && (subject.item.item === "swim-ring" || subject.item.item === "outrigger-canoe" || subject.item.item === "beach-surfboard" || subject.item.item === "sea-turtle");
-  const contact = slot !== undefined ? standingContact(point, slot, beachMinY) : roomPoint(Math.max(8, Math.min(792, point.x)), Math.max(waterProp ? beachMinY : 350, Math.min(552, point.y)));
+  const floorContact = slot !== undefined ? standingContact(point, slot, beachMinY) : roomPoint(Math.max(8, Math.min(792, point.x)), Math.max(waterProp ? beachMinY : 350, Math.min(552, point.y)));
+  const contact = slot !== undefined && subject.floaty ? floatyContact(floorContact, slot, subject.facing) : floorContact;
   // The exact contact decides containment and visibility. The bounded grid cell only decides
   // occupancy, including the legal floor strip above row zero and the room edges.
   const y = Math.max(0, Math.min(12 - (subject.body?.h ?? 1), Math.round((contact.y - 386) / 14.4)));
@@ -557,7 +558,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
     const target = winner.target;
     const ring = index.entities[target.owner];
     if (subject.character && ring?.item?.item === "swim-ring" && target.kind === "socket") {
-      const contact = standingContact(ring.contact, subject.character.slot, waterFloorMinY(index.room));
+      const contact = floatyContact(standingContact(ring.contact, subject.character.slot, waterFloorMinY(index.room)), subject.character.slot, subject.facing);
       const move = rootMove(subject, index.room, { kind: "floor", room: index.room, at: contact }, contact, "stand");
       const proposal = makeProposal(index, subject, move, group.filter(e => e.id === subject.id), "floor", "Put on floaty", target);
       for (const child of group.slice(1)) {

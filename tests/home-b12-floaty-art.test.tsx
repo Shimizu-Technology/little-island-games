@@ -24,6 +24,8 @@ it('invalidates the item memo on attachment changes, so a worn ring is never pai
   expect(tree!.root.findAllByType('MoreItemArt' as any)).toHaveLength(1);
   await act(async () => tree!.update(<EntityArt entity={{ ...ring, attachment: { kind: 'hand', character: 'character/0', side: 'right' } }} reduced/>));
   expect(tree!.toJSON()).toBeNull();
+  await act(async () => tree!.update(<EntityArt entity={{ ...ring, attachment: { kind: 'hand', character: 'character/0', side: 'right' } }} standalone reduced/>));
+  expect(tree!.root.findAllByType('MoreItemArt' as any)).toHaveLength(1);
   await act(async () => tree!.unmount());
 });
 it.each(familySlots)('paints a flattened back and front around the waist in every facing, slot %i', async slot => {
@@ -38,7 +40,7 @@ it.each(familySlots)('paints a flattened back and front around the waist in ever
     const back = tree!.root.findByProps({ testID: `worn-floaty-back-${slot}` });
     const front = tree!.root.findByProps({ testID: `worn-floaty-front-${slot}` });
     expect(front.props.style).toEqual(back.props.style);
-    expect(front.props.style.height / front.props.style.width).toBeCloseTo(.48);
+    expect(front.props.style[0].height / front.props.style[0].width).toBeCloseTo(.48);
     const art = tree!.root.findAllByType('MoreItemArt' as any);
     expect(art.map(a => a.props.layer)).toEqual(['back', 'front']);
     expect(art.every(a => a.props.occupied)).toBe(true);

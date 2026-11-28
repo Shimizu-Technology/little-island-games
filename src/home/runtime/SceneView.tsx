@@ -192,6 +192,10 @@ const RestingEntity = memo(function RestingEntity({
       swimBob.set(0);
     }
   }, [swimming, front, swimBob]);
+  const floatyId = entity.floaty && entity.character?.holding ? `${entity.room}/item/${entity.character.holding}` : undefined;
+  const floatyStyle = useAnimatedStyle(() => ({
+    opacity: floatyId && restingFlags.value.rest.some(r => r.owner === floatyId && r.hide) ? 0 : 1,
+  }));
   const frame = artFrame(entity);
   const floorDrink=entity.item && entity.attachment.kind==='floor' && capabilityOf(entity.item.item).edible==='drink';
   const drinkSize=entity.item ? itemSize(entity.item) : 0;
@@ -285,6 +289,7 @@ const RestingEntity = memo(function RestingEntity({
               frame can reveal it without mounting a new native SVG. */}
           <EntityArt
             entity={entity}
+            floatyStyle={floatyStyle}
             actionOverride={action}
             prepareMeal={!!entity.character}
             idleStyle={character ? idleStyle : undefined}
@@ -303,14 +308,14 @@ const RestingEntity = memo(function RestingEntity({
         {cacheBlink && !sleeping && effectiveFace !== "sleepy" && (
           <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, opacity: mealShowing ? 0 : 1 }}>
             <Animated.View style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
-              <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} faceOverride={effectiveFace} reduced={reduced} renderCharacter={renderCharacter} blink />
+              <IdleEntityDrawing mealActive={!!meal} entity={entity} floatyStyle={floatyStyle} gaze={gaze} faceOverride={effectiveFace} reduced={reduced} renderCharacter={renderCharacter} blink />
             </Animated.View>
           </View>
         )}
         {character && !sleeping && effectiveFace !== "sleepy" && (
           <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, opacity: mealShowing ? 0 : 1 }}>
             <Animated.View style={anticipate}>
-              <IdleEntityDrawing mealActive={!!meal} entity={entity} gaze={gaze} preview reduced={reduced} renderCharacter={renderCharacter} />
+              <IdleEntityDrawing mealActive={!!meal} entity={entity} floatyStyle={floatyStyle} gaze={gaze} preview reduced={reduced} renderCharacter={renderCharacter} />
             </Animated.View>
           </View>
         )}
