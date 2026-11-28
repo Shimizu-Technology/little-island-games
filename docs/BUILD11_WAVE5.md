@@ -14,12 +14,55 @@ Required affected-flow acceptance:
 | --- | --- | --- |
 | W5-01 | Repeated rapid feeding and interrupted native presentation recover without Undo; later input works | Automated hook regression passed, including lost commit acknowledgement |
 | W5-02 | Dropped/zero/cancelled touches and a pan interruption return orphaned avatars to supported positions | Automated hook regression passed |
-| W5-03 | Pantry food dropped in pan lights stove, cooks, and shows sizzle/steam; Islander can stand at stove; Undo works | Engine regression passed; visual QA pending |
-| W5-04 | Pedal bin opens only for edible drops; discard and relaunch Undo restore exact item; permanent objects refused | Engine regression passed; visual QA pending |
-| W5-05 | Ladder and doorway tap/drag move characters and held items, while existing arrows/Friends/Whole House remain usable | Engine regression passed; visual QA pending |
-| W5-06 | Market shelves add by tap/drag, basket stops at four, put-back and Undo work, Carry Home preserves groceries, fridge stops at eight | Engine regression passed; visual QA pending |
-| W5-07 | Closet fits phone/tablet/landscape and updates the live look without remounting the renderer | Visual and rendering regression QA pending |
+| W5-03 | Pantry food dropped in pan lights stove, cooks, and shows sizzle/steam; Islander can stand at stove; Undo works | Engine regression passed; browser scenarios and screenshots recorded below |
+| W5-04 | Pedal bin opens only for edible drops; discard and relaunch Undo restore exact item; permanent objects refused | Engine regression passed; browser scenarios and screenshots recorded below |
+| W5-05 | Ladder and doorway tap/drag move characters and held items, while existing arrows/Friends/Whole House remain usable | Engine regression passed; browser scenarios and screenshots recorded below |
+| W5-06 | Market shelves add by tap/drag, basket stops at four, put-back and Undo work, Carry Home preserves groceries, fridge stops at eight | Engine regression passed; browser scenarios and screenshots recorded below |
+| W5-07 | Closet fits phone/tablet/landscape and updates the live look without remounting the renderer | Renderer mount regression passed; phone/tablet/landscape browser QA passed |
 
 Automated validation and final browser evidence are recorded below as they complete. Native gesture interruption, audible iPhone sizzle, physical 60 fps, and independent family-device acceptance remain separate operator checks under `QA.md`.
 
 Assets: the approved market JPEG was converted to optimized WebP. Built-in imagegen performed background extraction on each approved bin JPEG, with prompts to preserve the design, contours, watercolor texture, proportions and orientation and remove only the white studio backdrop with antialiased alpha. The resulting transparent images were converted to WebP under `assets/home/props/`. No new food word lists or save-bank edits are required.
+
+
+Agent QA used an isolated Chromium context and the local production web export on port 43827, with service workers disabled. Fixtures were a new family Home and groceries added through the Market UI. Viewports: 1024×768 tablet, 390×844 phone, and 844×390 short landscape. Browser keyboard activation, pointer drags and taps exercised the same proposal engine as Home. The requested native device tests were not run in this source-only task.
+
+- W5-01/02: six runtime hook regressions cover eight rapid feeds without native meal completion, a lost JS commit callback, zero-touch/cancel/pan interruptions, and a real drag onto the ladder. These are deterministic regressions; physical iOS dropped-touch reproduction remains a family-device check.
+- W5-03/04: an Islander was moved to the authored chef socket. Dragging a fruit-bowl portion over the bin opened the lid; closed/open screenshots show the transparent assets at Kitchen scale. Food was placed into the stove through the destination UI; the accepted save lit the burner and changed the ingredient to cooked. Browser QA found pan food painted behind the stove; the final patch puts the pan above its stove and adds an order assertion. Engine and history tests verify edible-only disposal and exact saved Undo restoration.
+- W5-05: the scene ladder/door cues and the 48-point selected-friend rail use shared destinations. The short-landscape rail moved the Islander from Kitchen to Beach hut and followed her; the resulting saved character was grounded in Beach hut. Whole House and Friends remain available. A runtime regression separately drags an Islander onto the ladder and checks the destination and retired capture.
+- W5-06: Market taps filled the four-slot basket, refused a fifth grocery, supported put-back/Undo, and returned groceries to Kitchen. Stock fridge filled the existing six groceries to eight and left overflow in the basket. A second browser run unpacked two groceries, verified the open fridge label at eight, and left no overflow. Short landscape now places basket/actions alongside shelves so both remain usable.
+- W5-07: Closet was inspected in all three viewports and a style was changed. On the compact phone, FlatList mounted 12 tiles initially and 16 after batching from 30 available choices. A renderer regression verifies that changing the look updates the existing live character without remounting its body. No physical frame-rate claim is made.
+
+Evidence lives outside the repository at `/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v4/b11-home-wave5/`: `kitchen-trash-closed.png`, `kitchen-trash-open.png`, `kitchen-cooking.png`, `market-basket-full.png`, `market-phone.png`, `market-phone-landscape.png`, `ladder-room-hop.png`, `quick-room-hop-phone-landscape.png`, and the three `closet-*.png` images. Only the final production export is used for the final cooking and landscape Market captures.
+
+The first full `npm run check` passed registry/save/puzzle/type/lint gates, then found three test files failing: chef geometry had enlarged the stove's placement silhouette; two existing render harnesses needed pure default-look/SVG dependencies. Those issues were fixed without editing protected tests. The three-file retest passed 23 tests. The final pan-order and rendering/runtime retest passed 107 tests across four files. The later full run found two old pan-paint assertions that required the food to stay behind its stove. Those assertions were updated for the visible pan behavior, while retaining the fridge-in-front occlusion check; the five-file final cooking/runtime/renderer retest passed 136 tests. Full-suite and final export results follow below.
+
+Remaining acceptance is explicit: native iPhone/iPad gesture interruption, audio playback, installed-build performance, and Stassie's family-device experience are not established by web resizing or hook tests. There is no EAS build, TestFlight submission, public deployment, or store release in this draft PR.
+
+
+Final web QA on source `e19982d8` and offline export `9a071295dd12` confirmed that one Market drag adds exactly one grocery (an earlier drag also fired a tap and added two; the final guard suppresses that follow-on tap). Independent taps filled the basket to four; a fifth was refused. Put-back followed by the Market's Undo restored the grocery. Three carried groceries filled two free fridge slots and retained one in the basket. The cooked banana stayed visible above the lit stove beside the chef, was eaten, was restored by Undo, was discarded through the pedal bin, and was restored by Undo again. No JavaScript page errors occurred in the final browser context. The screenshot browser and preview tab were closed after QA.
+
+
+Validation completed after implementation:
+
+| Gate | Result |
+| --- | --- |
+| `npm ci` | Passed using the lockfile; no dependency changes |
+| Registry and puzzle gates inside `npm run check` | Passed: 35 School games, 33 Challenge adapters; 19 puzzle families, 98 packs, 18,049 entries |
+| `npm run save:catalog` | Passed; all 180 immutable published banks unchanged |
+| `npm run doctor` | 21/21 passed |
+| Home/Personalization regression run | 88 files passed, one skipped; 994 tests passed, two skipped before the final visual fixes |
+| Final full-suite run | 576 files passed, one skipped; 7,858 tests passed, two skipped. Five failures in four files were then resolved and rerun as described below |
+| Final cooking/runtime/renderer retest | Five files, 136 tests passed. Includes the updated pan paint/selection contract and the unchanged nearer-fridge occlusion test |
+| Full-run timeout retest | Three files, 21 tests passed with `LITTLE_ISLAND_SLOW_HOST=1`; the word-pipeline, loop brute-force, and memory simulation tests exceeded their normal 120-second budget under contention. No assertions or timeout configuration files were changed |
+| Web export | Passed; final offline shell `278901cba8d6`, 7,558 bundled resources |
+
+The final full-suite failures were two obsolete pan-paint expectations plus three existing test timeouts. The final reruns above cover all five failures. The full suite has not been rerun again after those passing retests; CI on the PR head remains a lead-owned gate. An earlier full run overlapped a pan-source edit and picked up the new assertion with the old cached module; that result was discarded and replaced by the final full run above. The first `npm run check` invocation therefore did not exit green as a single command; its constituent gates were rerun after fixes rather than repeating the unchanged puzzle verification.
+
+Runtime cleanup: the task-owned Chromium processes, shared-preview tab, and static server on port 43827 were closed/stopped through their exact identities. Lifecycle session `01a2202e-90bb-79e2-b5a6-71f457fc86f2` reports no active owned resources. The draft branch/worktree is retained for lead review. Library paths, the word-games route, protected tests, and immutable save banks were not edited. `program/4.0` advanced with Wave 6 while this task ran; this branch retains the requested `ec830954` base and does not revert or modify that parallel work.
+
+
+Final source commit: `d57af440`. The last source edit extracts the identical `Date.now()` gesture clock into a named worklet for the React purity lint rule; it changes no interaction timing or visuals. Final typecheck passed and repository-wide lint passed with zero errors and 275 existing warnings. The affected Market advisory Impeccable scan returned `[]`. Both 512×512 bin WebPs have an alpha channel and pass `webpinfo` validation. The final export after this lint-only edit is `278901cba8d6`; the browser screenshots above were captured immediately before that extraction on the identical visual/gesture behavior.
+
+
+The final `npm run check:words:export` passed against export `278901cba8d6` with the existing private policy loaded (`policyDataChecked: true`): admission checked 14,374 files; the bundle guard checked 7,560 files and 72 source files. No new policy exceptions were added. Existing policy exception counts were five terms and one source unit. Final lint and typecheck both exited zero; lint retained 275 existing warnings.
