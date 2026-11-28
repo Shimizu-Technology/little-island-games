@@ -192,6 +192,7 @@ export function IslandIcon({ island, size = 74 }: { island: IslandIconId; size?:
     </View>;
   }
   const representative: Record<Exclude<IslandIconId, LearnSubjectId>, IconId> = { classic: "tic-tac-toe", arcade: "reef-builder", explore: "explore" };
+  if (island === "classic") return <Tile size={size} surface="#DFECF7"><Scene id="tic-tac-toe"/></Tile>;
   if (island === "arcade") return <Tile size={size} surface="#CDE8E2"><G transform="translate(-4 -5) scale(.8)"><Blocks falling/></G><Circle cx={73} cy={72} r={17} fill={purple}/><Line d="M64 72H82M73 63V81" color={cream} width={5}/></Tile>;
   return <GameIcon id={representative[island]} size={size}/>;
 }

@@ -1,6 +1,7 @@
 import type { Save } from "./validation";
 import { ActivityId, ActivitySession, validActivities } from "./activities";
 import { mergeRaceRecord, raceRecord } from "../racer/engine";
+import { clearWordGameRecent } from "./wordGames";
 export type ActivityExpected = { id: string | null; revision?: number; epoch: number };
 /** Reject callbacks from replaced rounds or an earlier backup generation. */
 export function applyActivitySave(
@@ -21,11 +22,11 @@ export function applyActivitySave(
     !validActivities({ [game]: next })
   )
     return save;
-  return {
+  return clearWordGameRecent({
     ...save,
     activities: { ...save.activities, [game]: next },
     recentActivity: game,
     recentLearn: null,
     ...(next.game === "racer" ? { raceRecords: mergeRaceRecord(save.raceRecords ?? {}, raceRecord(next)) } : {}),
-  };
+  });
 }

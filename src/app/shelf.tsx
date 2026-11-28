@@ -21,7 +21,8 @@ import { useNunitoLoaded } from "../ui/fonts";
 export default function Shelf() {
   const { island } = useLocalSearchParams<{ island?: string }>();
   if (!island || !["reading", "numbers", "science", "thinking", "coding", "classic"].includes(island)) return <Redirect href="/" />;
-  if (island === "classic") return <GameHallScreen wordGames={<WordGamesCards/>} />;
+  const title = island === 'classic' ? 'Game Hall' : islandNames[island as Exclude<keyof typeof islandNames, "explore" | "classic">];
+  if (island === "classic") return <GameHallScreen title={title} wordGames={<WordGamesCards/>} />;
   return <IslandShelf key={island} island={island as Exclude<keyof typeof islandNames, "explore" | "classic">} />;
 }
 function IslandShelf({ island }: { island: Exclude<keyof typeof islandNames, "explore" | "classic"> }) {

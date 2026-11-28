@@ -205,6 +205,8 @@ export function applyBoardSave<
     recentLearn?: unknown;
     recentActivity?: unknown;
     recent?: unknown;
+    learning?: { active?: string };
+    wordGames?: import("../state/wordGames").WordGamesSave;
   },
 >(
   save: T,
@@ -216,8 +218,20 @@ export function applyBoardSave<
 ): T {
   if (epoch !== expectedEpoch || save.board?.[game] !== expected || next.game !== game || !validBoardSession(next))
     return save;
+  const owner = save.learning?.active ?? "family";
+  let wordGames = save.wordGames;
+  if (wordGames?.recent && Object.hasOwn(wordGames.recent, owner)) {
+    const restRecent = Object.fromEntries(Object.entries(wordGames.recent).filter(([id]) => id !== owner));
+    wordGames = {
+      version: 1,
+      people: wordGames.people,
+      ...(wordGames.favorites ? { favorites: wordGames.favorites } : {}),
+      ...(Object.keys(restRecent).length > 0 ? { recent: restRecent } : {}),
+    };
+  }
   return {
     ...save,
+    ...(wordGames !== save.wordGames ? { wordGames } : {}),
     board: { ...save.board, [game]: next },
     recentBoard: game,
     recentLearn: null,

@@ -1,4 +1,4 @@
-import { applyWordGameSave, withoutWordGameOwner, type WordGameExpected } from './wordGames';
+import { applyWordGameSave, clearWordGameRecent, toggleWordGameFavorite as toggleWordFavorite, withoutWordGameOwner, type WordGameExpected } from './wordGames';
 import type { WordGame, WordSession } from '../wordgames/session';
 import { prepareSessionContent, sessionContentReady, retainSessionContent, captureSessionContent, contentMessage, resumeMessage, type SessionOpenResult } from './sessionContent';
 import { challengeFor } from '../challenge/catalog';
@@ -75,6 +75,7 @@ type Store = {
   activityUpdate: (game: ActivityId, next: ActivitySession, expected: ActivityExpected) => boolean;
   toggleFavorite: (topic: string) => void;
   toggleGameFavorite: (game: GameId | ActivityId | LearnId | BoardId | ArcadeId) => void;
+  toggleWordGameFavorite: (game: WordGame) => void;
   /** Remember family names used in a two-player setup (no-op when unchanged). */
   rememberPlayers: (names: string[]) => void;
   /** Save a learning-game round; false when the round was replaced or a backup was restored meanwhile. */
@@ -367,7 +368,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (epoch !== generation.current || (expected && current.sessions[game] !== expected)) return;
       // A captured round from another profile cannot be installed as this learner's work.
       if (Object.entries(current.profiles?.people ?? {}).some(([id,p]) => id !== (current.learning?.active ?? 'family') && p.sessions[game]?.id === next.id)) return;
-      commit({ ...current, sessions: { ...current.sessions, [game]: next }, recent: game, recentActivity: null, recentLearn: null, recentBoard: null });
+      commit(clearWordGameRecent({ ...current, sessions: { ...current.sessions, [game]: next }, recent: game, recentActivity: null, recentLearn: null, recentBoard: null }));
     },
     [commit, epoch]
   );
@@ -510,6 +511,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const toggleGameFavorite = useCallback((game: GameId | ActivityId | LearnId | BoardId | ArcadeId) => {
     if (epoch !== generation.current) return;
     const next = toggleShelfFavorite(latest.current, game);
+    if (next !== latest.current) commit(next);
+  }, [commit, epoch]);
+  const toggleWordGameFavorite = useCallback((game: WordGame) => {
+    if (epoch !== generation.current) return;
+    const next = toggleWordFavorite(latest.current, game);
     if (next !== latest.current) commit(next);
   }, [commit, epoch]);
   const learnUpdate = useCallback(
@@ -847,6 +853,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         wordGameUpdate,
         toggleFavorite,
         toggleGameFavorite,
+        toggleWordGameFavorite,
         rememberPlayers,
         learnUpdate,
         practice,

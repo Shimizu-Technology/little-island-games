@@ -1,5 +1,6 @@
 import type { GameId, GameState } from "../games";
 import type { Save } from "./validation";
+import { clearWordGameRecent } from "./wordGames";
 
 // Player intents compose against the latest round; stale AI snapshots still use Store.update's identity guard.
 export function applySessionAction(
@@ -12,5 +13,5 @@ export function applySessionAction(
   if (!current || current.id !== roundId || (save.roundOwners?.rounds[`classic:${game}`]?.round === roundId && save.roundOwners.rounds[`classic:${game}`].owner !== (save.learning?.active ?? 'family'))) return save;
   const next = transition(current);
   if (next === current || next.game !== game || next.id !== roundId) return save;
-  return { ...save, sessions: { ...save.sessions, [game]: next }, recent: game, recentActivity: null, recentLearn: null };
+  return clearWordGameRecent({ ...save, sessions: { ...save.sessions, [game]: next }, recent: game, recentActivity: null, recentLearn: null });
 }

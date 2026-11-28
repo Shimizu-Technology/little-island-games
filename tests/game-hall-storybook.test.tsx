@@ -4,17 +4,33 @@ import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'rea
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GAME_HALL_TILE_ART, hasGameHallArt, hasWordArt, PUZZLE_TILE_ART } from '../src/art/illustrated';
 import { GameIcon } from '../src/components/GameIcon';
+import { Button as UiButton, GameHeader } from '../src/components/ui';
+import { findGameHallContinue } from '../src/gamehall/GameHallScreen';
 import { shelfGames } from '../src/learn/home';
-import { emptySave, type Save } from '../src/state/validation';
-import { createWordSession } from '../src/wordgames/session';
+import { addLearner, selectLearner } from '../src/learn/learners';
+import { encodeSave, migrateProfiles } from '../src/state/profiles';
+import { applyActivitySave } from '../src/state/activityAction';
+import { applySessionAction } from '../src/state/sessionAction';
+import { emptySave, parseSave, type Save } from '../src/state/validation';
+import {
+  applyWordGameSave,
+  toggleWordGameFavorite,
+  validWordGames,
+  withoutWordGameOwner,
+  wordGameFavorites,
+} from '../src/state/wordGames';
+import { createWordSession, finishRound } from '../src/wordgames/session';
 import { getWordLexicon } from '../src/wordgames/lexicon';
-import { createTic } from '../src/games/tic';
+import { createTic, ticMove } from '../src/games/tic';
 import { defaultOptions } from '../src/games/types';
-import { createSession as createBoardSession } from '../src/board';
+import { applyBoardSave, createSession as createBoardSession } from '../src/board';
+import { createRaceSession } from '../src/racer/engine';
+import { createPartySession } from '../src/party/engine';
+import { PartyScreen } from '../src/party/PartyScreen';
 import { WordHuntScreen } from '../src/wordgames/WordHuntScreen';
 import { AnagramsScreen } from '../src/wordgames/AnagramsScreen';
 import { solveBoard } from '../src/wordgames/wordHuntEngine';
-import type { WordSession } from '../src/wordgames/session';
+import type { WordGame, WordSession } from '../src/wordgames/session';
 
 const viewport = vi.hoisted(() => ({ width: 1024, height: 768, fontScale: 1 }));
 const routing = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn(), canGoBack: () => false }));
@@ -24,6 +40,7 @@ const fixture = vi.hoisted(() => ({
   nunitoLoaded: true,
   save: {} as Save,
   toggleGameFavorite: vi.fn(),
+  toggleWordGameFavorite: vi.fn(),
 }));
 
 vi.mock('react-native', () => {
@@ -137,6 +154,9 @@ beforeEach(() => {
       ...fixture.save,
       favoriteGames: prev.includes(id as never) ? prev.filter(item => item !== id) : [...prev, id as never],
     };
+  });
+  fixture.toggleWordGameFavorite.mockImplementation((id: WordGame) => {
+    fixture.save = toggleWordGameFavorite(fixture.save, id);
   });
 });
 
@@ -367,5 +387,220 @@ describe('Word Hunt & Anagrams intuitive options, clean slide mode, and expanded
     await pressButton('7 tiles · Big Rack');
     await pressButton('Start a fresh round');
     expect(saved!.size).toBe(7);
+  });
+});
+
+describe('R1 review regressions: persisted word favorites, cross-18-game recency, 1-tap Secret Word Options, compact GameHeader', () => {
+  it('R1-01: persists Word Hunt & Anagrams favorites across Hall remount, save/reload, and learner switches', async () => {
+    const { default: Shelf } = await import('../src/app/shelf');
+    fixture.save = migrateProfiles(emptySave());
+    await mount(<Shelf />);
+
+    const findChip = (label: string) =>
+      screen!.root.find(n => String(n.type) === 'Pressable' && textOf(n).trim() === label);
+
+    // Star Word Hunt and Anagrams from the Hall.
+    await act(async () =>
+      screen!.root.find(n => String(n.type) === 'Pressable' && n.props.accessibilityLabel === 'Favorite Word Hunt').props.onPress(),
+    );
+    await act(async () =>
+      screen!.root.find(n => String(n.type) === 'Pressable' && n.props.accessibilityLabel === 'Favorite Anagrams').props.onPress(),
+    );
+    expect(wordGameFavorites(fixture.save)).toEqual(['word-hunt', 'anagrams']);
+
+    // Unmount, serialize/parse reload, and remount the Hall: both stars persist.
+    await act(async () => screen!.unmount());
+    screen = undefined;
+    fixture.save = migrateProfiles(parseSave(encodeSave(fixture.save)));
+    await mount(<Shelf />);
+
+    await act(async () => findChip('Favorites').props.onPress());
+    expect(screen!.root.findByProps({ testID: 'word-game-card-word-hunt' })).toBeDefined();
+    expect(screen!.root.findByProps({ testID: 'word-game-card-anagrams' })).toBeDefined();
+
+    // Per-learner isolation + learner removal + zero-byte omission when cleared.
+    let multi: Save = { ...fixture.save, learning: addLearner(fixture.save.learning, 'Mina', 'child-1') };
+    expect(wordGameFavorites(multi)).toEqual([]);
+    multi = toggleWordGameFavorite(multi, 'anagrams');
+    expect(wordGameFavorites(multi)).toEqual(['anagrams']);
+    const reloaded = migrateProfiles(parseSave(encodeSave(multi)));
+    expect(wordGameFavorites(reloaded, 'family')).toEqual(['word-hunt', 'anagrams']);
+    expect(wordGameFavorites(reloaded, 'child-1')).toEqual(['anagrams']);
+
+    const switchedBack = { ...reloaded, learning: selectLearner(reloaded.learning, 'family') };
+    const pruned = withoutWordGameOwner(switchedBack, 'child-1');
+    expect(pruned.wordGames?.favorites?.['child-1']).toBeUndefined();
+    expect(wordGameFavorites(pruned, 'family')).toEqual(['word-hunt', 'anagrams']);
+
+    let cleared = toggleWordGameFavorite(toggleWordGameFavorite(emptySave(), 'word-hunt'), 'word-hunt');
+    expect(JSON.parse(encodeSave(cleared))).not.toHaveProperty('wordGames');
+
+    // Strict validation rejects bad favorites payloads.
+    expect(validWordGames({ version: 1, people: {}, favorites: { family: ['word-hunt', 'word-hunt'] } }, ['family'])).toBe(false);
+    expect(validWordGames({ version: 1, people: {}, favorites: { family: ['chess'] } }, ['family'])).toBe(false);
+    expect(validWordGames({ version: 1, people: {}, favorites: { unknown: ['anagrams'] } }, ['family'])).toBe(false);
+  });
+
+  it('R1-02: Continue Playing honors recency across board -> word, activity -> word, word -> word, word -> board/activity/classic, and skips finished rounds', () => {
+    const classicGames = shelfGames.filter(g => g.island === 'classic');
+
+    // Board -> Word (Coconut Drop saved first, then Anagrams saved via applyWordGameSave)
+    let save = migrateProfiles(emptySave());
+    const boardRound = createBoardSession('coconut-drop');
+    save = applyBoardSave(save, 'coconut-drop', boardRound, undefined, 1, 1);
+    expect(findGameHallContinue(save, classicGames)).toMatchObject({ kind: 'shelf', game: { id: 'coconut-drop' } });
+
+    const anagramsRound = createWordSession('anagrams', 7, 'pass-play', 55);
+    save = applyWordGameSave(save, 'anagrams', anagramsRound, { owner: 'family', id: null, epoch: 1 }, 1);
+    expect(findGameHallContinue(save, classicGames)).toMatchObject({ kind: 'word', id: 'anagrams' });
+
+    // Round-trip through encodeSave/parseSave preserves Anagrams as Continue hero.
+    const persisted = migrateProfiles(parseSave(encodeSave(save)));
+    expect(findGameHallContinue(persisted, classicGames)).toMatchObject({ kind: 'word', id: 'anagrams' });
+
+    // Word Hunt after Anagrams -> Word Hunt wins; Anagrams after Word Hunt -> Anagrams wins.
+    const huntRound = createWordSession('word-hunt', 4, 'chill', 77);
+    save = applyWordGameSave(save, 'word-hunt', huntRound, { owner: 'family', id: null, epoch: 1 }, 1);
+    expect(findGameHallContinue(save, classicGames)).toMatchObject({ kind: 'word', id: 'word-hunt' });
+
+    const anagramsFresh = createWordSession('anagrams', 6, 'chill', 88);
+    save = applyWordGameSave(
+      save,
+      'anagrams',
+      anagramsFresh,
+      { owner: 'family', id: anagramsRound.id, revision: anagramsRound.revision, epoch: 1 },
+      1,
+    );
+    expect(findGameHallContinue(save, classicGames)).toMatchObject({ kind: 'word', id: 'anagrams' });
+
+    // Activity -> Word -> Board -> Classic transitions
+    const raceRound = createRaceSession('training', 'practice');
+    save = applyActivitySave(save, 'racer', raceRound, { id: null, epoch: 1 }, 1);
+    expect(findGameHallContinue(save, classicGames)).toMatchObject({ kind: 'shelf', game: { id: 'racer' } });
+
+    const huntFresh = createWordSession('word-hunt', 5, 'chill', 91);
+    save = applyWordGameSave(
+      save,
+      'word-hunt',
+      huntFresh,
+      { owner: 'family', id: huntRound.id, revision: huntRound.revision, epoch: 1 },
+      1,
+    );
+    expect(findGameHallContinue(save, classicGames)).toMatchObject({ kind: 'word', id: 'word-hunt' });
+
+    const boardFresh = createBoardSession('shell-pits');
+    save = applyBoardSave(save, 'shell-pits', boardFresh, undefined, 1, 1);
+    expect(findGameHallContinue(save, classicGames)).toMatchObject({ kind: 'shelf', game: { id: 'shell-pits' } });
+
+    const tic = createTic(defaultOptions);
+    save = { ...save, sessions: { ...save.sessions, 'tic-tac-toe': tic } };
+    save = applySessionAction(save, 'tic-tac-toe', tic.id, s => (s.game === 'tic-tac-toe' ? ticMove(s, 0) : s));
+    save = { ...save, recentBoard: null };
+    expect(findGameHallContinue(save, classicGames)).toMatchObject({ kind: 'shelf', game: { id: 'tic-tac-toe' } });
+
+    // Finished word round is ineligible for Continue Playing.
+    let singleWord = applyWordGameSave(
+      emptySave(),
+      'anagrams',
+      anagramsFresh,
+      { owner: 'family', id: null, epoch: 1 },
+      1,
+    );
+    expect(findGameHallContinue(singleWord, classicGames)).toMatchObject({ kind: 'word', id: 'anagrams' });
+    const ended = finishRound(anagramsFresh);
+    singleWord = applyWordGameSave(
+      singleWord,
+      'anagrams',
+      ended,
+      { owner: 'family', id: anagramsFresh.id, revision: anagramsFresh.revision, epoch: 1 },
+      1,
+    );
+    expect(findGameHallContinue(singleWord, classicGames)).toBeNull();
+
+    // Strict validation rejects invalid recent field.
+    expect(validWordGames({ version: 1, people: {}, recent: { family: 'racer' } }, ['family'])).toBe(false);
+    expect(validWordGames({ version: 1, people: {}, recent: { unknown: 'anagrams' } }, ['family'])).toBe(false);
+  });
+
+  it('R1-03: Secret Word header Options opens setup in one tap, conceals secrets, and cancel returns to the same round', async () => {
+    const session = createPartySession({ players: ['Ana', 'Ben', 'Cam'], pack: 'animals', clueRounds: 1 });
+    const onChange = vi.fn();
+    await mount(
+      <PartyScreen
+        session={session}
+        onChange={onChange}
+        onBack={() => {}}
+        sound={true}
+        onToggleSound={() => {}}
+      />,
+    );
+
+    // Reveal the current player's secret card first.
+    const revealBtn = screen!.root.find(
+      n => String(n.type) === 'Pressable' && textOf(n).trim() === 'Reveal my card',
+    );
+    await act(async () => revealBtn.props.onPress());
+    expect(JSON.stringify(screen!.toJSON())).toContain('Hide my card & pass');
+
+    // Tap header Options ONCE -> opens setup sheet directly (not "Start a different game?").
+    const optionsBtn = screen!.root.find(
+      n => String(n.type) === 'Pressable' && n.props.accessibilityLabel === 'Change players, pack, or start a new game',
+    );
+    await act(async () => optionsBtn.props.onPress());
+    const openJson = JSON.stringify(screen!.toJSON());
+    expect(openJson).toContain('Secret Word · players & pack');
+    expect(openJson).toContain('Deal the secret roles');
+    expect(openJson).not.toContain('Hide my card & pass');
+
+    // Cancel setup via Return to current game -> same round preserved with secrets concealed.
+    const returnBtn = screen!.root.find(
+      n => String(n.type) === 'Pressable' && textOf(n).trim() === 'Return to current game',
+    );
+    await act(async () => returnBtn.props.onPress());
+    const afterJson = JSON.stringify(screen!.toJSON());
+    expect(afterJson).toContain('Reveal my card');
+    expect(afterJson).not.toContain('Hide my card & pass');
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('R1-04: GameHeader stacks trailing controls onto a compact row at 375px phone width so titles never clip', async () => {
+    viewport.width = 375;
+    viewport.fontScale = 1;
+    await mount(
+      <GameHeader
+        title="Coconut Drop"
+        onBack={() => {}}
+        sound={{ on: true, toggle: () => {} }}
+        onHelp={() => {}}
+      >
+        <UiButton compact quiet label="New game and options" onPress={() => {}}>
+          Options
+        </UiButton>
+      </GameHeader>,
+    );
+    expect(screen!.root.findAllByProps({ testID: 'game-header-compact' })).toHaveLength(1);
+    const titleNode = screen!.root.find(n => String(n.type) === 'Text' && n.props.accessibilityRole === 'header');
+    expect(textOf(titleNode)).toBe('Coconut Drop');
+    // Title row only holds Back + Title (Options/Sound/Help live in the second row).
+    const titleRow = titleNode.parent!;
+    expect(titleRow.findAll(n => String(n.type) === 'Pressable' && textOf(n).trim() === 'Options')).toHaveLength(0);
+
+    // Wide tablet keeps the sleek single-row bar.
+    await act(async () => screen!.unmount());
+    screen = undefined;
+    viewport.width = 1024;
+    await mount(
+      <GameHeader
+        title="Crazy Eights"
+        onBack={() => {}}
+        sound={{ on: true, toggle: () => {} }}
+        onHelp={() => {}}
+      >
+        <UiButton compact quiet label="New game and options" onPress={() => {}}>
+          Options
+        </UiButton>
+      </GameHeader>,
+    );
+    expect(screen!.root.findAllByProps({ testID: 'game-header-compact' })).toHaveLength(0);
   });
 });

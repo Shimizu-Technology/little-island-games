@@ -14,6 +14,7 @@ import { LARGE_TEXT, wordFitMultiplier } from '../components/wordFit';
 import { ongoing, shelfGames, type ShelfGame, type ShelfId } from '../learn/home';
 import { useStore } from '../state/Store';
 import type { Save } from '../state/validation';
+import { wordGameFavorites } from '../state/wordGames';
 import { useNunitoLoaded } from '../ui/fonts';
 import { theme } from '../ui/theme';
 import type { WordGame } from '../wordgames/session';
@@ -131,9 +132,27 @@ export type ContinueEntry =
 export function findGameHallContinue(save: Save, classicGames: readonly ShelfGame[]): ContinueEntry | null {
   const byId = new Map(classicGames.map(game => [game.id, game]));
   const owner = save.learning?.active ?? 'family';
+  const wordRounds = save.wordGames?.people?.[owner];
+  const wordById = new Map(WORD_GAME_ITEMS.map(item => [item.id, item]));
 
+  const wordEntry = (id: WordGame | undefined): ContinueEntry | null => {
+    if (!id) return null;
+    const round = wordRounds?.[id];
+    const item = wordById.get(id);
+    if (!round || round.phase === 'finished' || !item) return null;
+    return {
+      kind: 'word',
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      surface: item.surface,
+      playerPill: item.playerPill,
+    };
+  };
+
+  // Honor the active recency marker across all 18 games; each save clears sibling markers.
   const recentCandidates: ShelfId[] = (
-    [save.recentBoard, save.recent, save.recentActivity] as (ShelfId | null | undefined)[]
+    [save.recentBoard, save.recentActivity, save.recent] as (ShelfId | null | undefined)[]
   ).filter((id): id is ShelfId => typeof id === 'string' && byId.has(id));
   for (const id of recentCandidates) {
     if (ongoing(save, id)) {
@@ -142,19 +161,12 @@ export function findGameHallContinue(save: Save, classicGames: readonly ShelfGam
     }
   }
 
-  const wordRounds = save.wordGames?.people?.[owner];
+  const recentWord = wordEntry(save.wordGames?.recent?.[owner]);
+  if (recentWord) return recentWord;
+
   for (const item of WORD_GAME_ITEMS) {
-    const round = wordRounds?.[item.id];
-    if (round && round.phase !== 'finished') {
-      return {
-        kind: 'word',
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        surface: item.surface,
-        playerPill: item.playerPill,
-      };
-    }
+    const candidate = wordEntry(item.id);
+    if (candidate) return candidate;
   }
 
   for (const game of classicGames) {
@@ -166,7 +178,7 @@ export function findGameHallContinue(save: Save, classicGames: readonly ShelfGam
   return null;
 }
 
-export function GameHallScreen({ wordGames }: { wordGames: React.ReactNode }) {
+export function GameHallScreen({ title = 'Game Hall', wordGames }: { title?: string; wordGames: React.ReactNode }) {
   const loaded = useNunitoLoaded();
   const bold = loaded
     ? ({ fontFamily: theme.fontFamily['800'], fontWeight: 'normal' } as const)
@@ -175,7 +187,6 @@ export function GameHallScreen({ wordGames }: { wordGames: React.ReactNode }) {
   const insets = useSafeAreaInsets();
   const { width, fontScale } = useWindowDimensions();
   const [filter, setFilter] = useState<GameHallFilter>('All games');
-  const [wordFavorites, setWordFavorites] = useState<WordGame[]>([]);
   const lastSurprise = useRef<string | null>(null);
 
   const classicGames = useMemo(() => shelfGames.filter(game => game.island === 'classic'), []);
@@ -205,8 +216,9 @@ export function GameHallScreen({ wordGames }: { wordGames: React.ReactNode }) {
   const cardWidth = Math.floor((line - 12 * (columns - 1)) / columns);
 
   const favorites = store.save.favoriteGames ?? [];
+  const wordFavorites = wordGameFavorites(store.save);
   const toggleWordFavorite = (id: WordGame) => {
-    setWordFavorites(prev => (prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]));
+    store.toggleWordGameFavorite?.(id);
   };
 
   const visibleWordIds = WORD_GAME_ITEMS.filter(item =>
@@ -322,10 +334,10 @@ export function GameHallScreen({ wordGames }: { wordGames: React.ReactNode }) {
               numberOfLines={large || wrapTitle ? 2 : 1}
               adjustsFontSizeToFit={!large && !wrapTitle}
               minimumFontScale={0.75}
-              maxFontSizeMultiplier={large ? wordFitMultiplier('Game Hall', 24, line - 56, 1.5) : undefined}
+              maxFontSizeMultiplier={large ? wordFitMultiplier(title, 24, line - 56, 1.5) : undefined}
               style={{ flex: 1, fontSize: 24, color: HALL_INK, ...bold }}
             >
-              Game Hall
+              {title}
             </Text>
             {inlineSurprise && (
               <Button

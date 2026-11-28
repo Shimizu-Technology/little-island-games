@@ -135,7 +135,7 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
     setConfirmNew(false);
   };
   const token = session ? `${session.id}:${session.revision}:${partyActor(session)}` : "";
-  const shown = !!session && visibleToken === token && active && foreground && !help && !confirmNew;
+  const shown = !!session && visibleToken === token && active && foreground && !help && !confirmNew && !setup;
   const actor = session ? partyActor(session) : null;
   const rolePhase = session?.phase === "roles",
     voting = session?.phase === "voting" || session?.phase === "runoff";
@@ -157,10 +157,7 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
               compact
               quiet
               label="Change players, pack, or start a new game"
-              onPress={() => {
-                conceal();
-                setConfirmNew(true);
-              }}
+              onPress={openSetup}
             >
               Options
             </Button>
@@ -173,7 +170,7 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
         </View>
       )}
       {setup || !session ? (
-        <Sheet visible={setup || !session} title={roundPractice?.pending ? "A little practice, then play" : "Secret Word · players & pack"} onClose={() => { if (roundPractice?.pending) roundPractice.cancel(); else if (session) setSetup(false); else onBack?.(); }} footer={roundPractice?.pending ? undefined :
+        <Sheet visible={setup || !session} title={roundPractice?.pending ? "A little practice, then play" : "Secret Word · players & pack"} onClose={() => { if (roundPractice?.pending) roundPractice.cancel(); else if (session) { conceal(); setSetup(false); } else onBack?.(); }} footer={roundPractice?.pending ? undefined :
           <Button disabled={!namesValid || !active} onPress={start}>Deal the secret roles</Button>
         }>
           {roundPractice?.pending ? roundPractice.content : <>
