@@ -1,3 +1,5 @@
+import { WordHuntScreen } from '../wordgames/WordHuntScreen';
+import { AnagramsScreen } from '../wordgames/AnagramsScreen';
 import { SaveStatus } from "../components/SaveStatus";
 import { learnerPractice } from "../learn/learners";
 import React, { useEffect, useRef, useState } from "react";
@@ -89,7 +91,18 @@ function ActivityGame({ id }: { id: ActivityId }) {
         keyboardShouldPersistTaps="handled"
       >
         <SaveStatus />
-        {id === "island-mystery" ? (
+        {id === 'word-hunt' || id === 'anagrams' ? (
+          React.createElement(id === 'word-hunt' ? WordHuntScreen : AnagramsScreen, {
+            session: saved?.game === id ? saved : null,
+            onSave: (next, previous) => save(next, previous),
+            onBack: () => router.canGoBack() ? router.back() : router.replace('/'),
+            active: focused && !practice.pending,
+            beforeNewRound: practice.request,
+            sound: store.save.settings.sound,
+            width: Math.min(width - 40, 420),
+            onFeedback: event => sound(event === 'finish' ? 'win' : event === 'word' ? 'match' : 'tap'),
+          })
+        ) : id === "island-mystery" ? (
           <MysteryScreen
             beforeNewRound={practice.request}
             roundPractice={practice}

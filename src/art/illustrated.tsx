@@ -36,6 +36,14 @@ export const PUZZLE_TILE_ART: Readonly<Partial<Record<string, ImageSourcePropTyp
   'gate-crab': require('../../assets/art/puzzles/gate-crab.webp'),
   'shell-scale': require('../../assets/art/puzzles/shell-scale.webp'),
 };
+export const WORD_TILE_ART: Readonly<Record<'word-hunt' | 'anagrams', ImageSourcePropType>> = {
+  'word-hunt': require('../../assets/art/tiles/word-hunt.webp'),
+  anagrams: require('../../assets/art/tiles/anagrams.webp'),
+};
+export const hasWordArt = (id: string): id is keyof typeof WORD_TILE_ART => Object.hasOwn(WORD_TILE_ART, id);
+export function WordGameArt({ id, size }: { id: keyof typeof WORD_TILE_ART; size?: number }) {
+  return <IllustratedArt source={WORD_TILE_ART[id]} size={size}/>;
+}
 export const puzzleArt = (game: string) => PUZZLE_TILE_ART[game];
 
 const arcadeArtSources: Readonly<Record<ArcadeId, ImageSourcePropType>> = {
