@@ -123,9 +123,13 @@ function eligible(
   group: SceneEntity[]
 ): boolean {
   "worklet";
+  const ownContainer =
+    target.kind === "container" &&
+    subject.attachment.kind === "container" &&
+    subject.attachment.parent === target.owner;
   if (
     (target.hidden && ctx.target !== target.id) ||
-    (target.closed && target.occupied !== subject.id) ||
+    (target.closed && target.occupied !== subject.id && !ownContainer) ||
     group.some((e) => e.id === target.owner)
   )
     return false;
@@ -325,13 +329,19 @@ function targetMove(index: RoomIndex, subject: SceneEntity, target: Target): Ent
     const parent = index.entities[target.attachment.parent]?.item;
     if (parent) cell = gridCell(parent.x + target.attachment.slot, parent.y);
   }
+  const ownContainer =
+    target.kind === "container" &&
+    subject.attachment.kind === "container" &&
+    subject.attachment.parent === target.owner;
   return rootMove(
     subject,
     index.room,
     target.attachment,
-    target.kind === "hand" || (target.kind === "mouth" && subject.body?.edible === "drink")
-      ? (target.projectedContact ?? target.contact)
-      : target.contact,
+    ownContainer
+      ? subject.contact
+      : target.kind === "hand" || (target.kind === "mouth" && subject.body?.edible === "drink")
+        ? (target.projectedContact ?? target.contact)
+        : target.contact,
     subject.character ? target.base : subject.base,
     subject.character ? target.facing : subject.facing,
     cell
@@ -464,7 +474,15 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
       ) : Math.hypot(targetPoint.x - centre.x, targetPoint.y - centre.y);
       const exitRadius = ctx.previous?.target === target.id ? radius * 1.25 : radius;
       const onFace = !!face && !!subject.body?.edible && distance <= exitRadius;
-      const core = contains(target.core, targetPoint) || activationHit || onFace;
+      const torsoHalfW = face ? face.headRadius * 1.1 : 0;
+      const onUpperTorso =
+        !!face &&
+        !!subject.body?.edible &&
+        targetPoint.y >= face.y - face.headRadius * 0.2 &&
+        targetPoint.y <= face.y + face.headRadius * 2.15 &&
+        Math.abs(targetPoint.x - face.x) <= torsoHalfW;
+      const containerHit = target.kind === "container" && (contains(target.core, point) || contains(target.core, aim));
+      const core = contains(target.core, targetPoint) || containerHit || activationHit || onFace || onUpperTorso;
       const catchSeat =
         target.kind === "socket" &&
         overlaps(translatedBounds(subject.bounds, point), target.core) &&
@@ -492,9 +510,11 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
       });
     }
   }
+  const actorTarget = (c: Candidate) => c.target.kind === "hand" || c.target.kind === "mouth";
   candidates.sort(
     (a, b) =>
       Number(b.core) - Number(a.core) ||
+      Number(actorTarget(b)) - Number(actorTarget(a)) ||
       Number(b.onHead) - Number(a.onHead) ||
       (a.core && b.core ? a.normalized - b.normalized : priority[a.target.kind] - priority[b.target.kind]) ||
       a.distance - b.distance ||
@@ -557,10 +577,11 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
     }
     return { ...proposal, catalogIntent };
   }
+  const fullAim = ctx.aim && Number.isFinite(ctx.aim.x) && Number.isFinite(ctx.aim.y) ? ctx.aim : undefined;
   const full = !ctx.floorOnly && subject.body?.small && !subject.body.container && group.length === 1 && index.targets.find(t =>
     t.kind === "container" && t.closed && (!ctx.target || t.id === ctx.target) &&
     !group.some(e => e.id === t.owner) && subject.parent !== t.owner &&
-    contains(t.core, point));
+    (contains(t.core, point) || (!!fullAim && contains(t.core, fullAim))));
   if (full) return { ...makeProposal(index, subject, rootMove(subject, subject.room, subject.attachment, subject.contact), group, "floor", "Container full", full), refusal: "storage-capacity" };
   let best: EntityMove | undefined;
   let bestDistance = Infinity;

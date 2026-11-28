@@ -111,6 +111,12 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
       const parent = before.entities[proposal.attachment.parent]?.item;
       if (parent?.item === "sink-counter" && parent.powered) effect("splash", proposal.room, proposal.contact.x, proposal.contact.y);
     }
+    const afterEntity = landedId ? after.entities[landedId] : undefined;
+    if (subject?.item?.empty && afterEntity?.item && !afterEntity.item.empty) {
+      feedback.play("splash");
+      effect("splash", proposal.room, proposal.contact.x, proposal.contact.y - 12);
+      effect("sparkle", proposal.room, proposal.contact.x, proposal.contact.y - 24);
+    }
     // HD-06: friends close by turn to greet a friend set down beside them, and both smile.
     const friend = landedId ? after.entities[landedId] : undefined;
     if (friend?.character && proposal.kind !== "staging" && !isRestingSleeper(friend)) {
@@ -130,19 +136,22 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
     const meal = (meals.current[id] ?? 0) + 1;
     meals.current[id] = meal;
     later(AFTER_EAT_MS, () => {
-      if (!now()) return;
+      const f = now();
+      if (!f) return;
       if (consume === "eat" && burps(meal)) {
         mood(id, "surprised", 260);
         cueOn(id, "burp");
         later(200, () => {
-          const f = now();
-          if (!f) return;
-          const point = friendPoint(f, "mouth");
-          effect("burp", f.room, point.x, point.y);
+          const currentFriend = now();
+          if (!currentFriend) return;
+          const point = friendPoint(currentFriend, "mouth");
+          effect("burp", currentFriend.room, point.x, point.y);
           feedback.play("burp");
           mood(id, "happy", 700);
         });
       } else {
+        const head = friendPoint(f, "head");
+        effect("sparkle", f.room, head.x, head.y);
         mood(id, "happy", 800);
         cueOn(id, "happy");
       }
@@ -236,5 +245,19 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
   }, [cookNow, cueOn, effect, feedback, heldNow, sceneNow]);
   useEffect(() => () => { for (const timer of Object.values(cooking.current)) clearTimeout(timer); }, []);
 
-  return { moods, effects, poke, pickedUp, landed, ate, tapped, touchedPiece, watchCooking, reduced };
+  const refilled = useCallback((entity: SceneEntity) => {
+    feedback.play("splash");
+    feedback.haptic("attach");
+    effect("splash", entity.room, entity.contact.x, entity.contact.y - 12);
+    effect("sparkle", entity.room, entity.contact.x, entity.contact.y - 24);
+    cueOn(entity.id, "hop");
+  }, [cueOn, effect, feedback]);
+
+  const restocked = useCallback((entity: SceneEntity) => {
+    feedback.play("shell");
+    feedback.haptic("attach");
+    effect("sparkle", entity.room, entity.contact.x, entity.contact.y - 160);
+  }, [effect, feedback]);
+
+  return { moods, effects, poke, pickedUp, landed, ate, tapped, refilled, restocked, touchedPiece, watchCooking, reduced };
 }

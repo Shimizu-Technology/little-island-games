@@ -1,5 +1,5 @@
 import { defaultGuamRoom, isGuamPlace } from "../locations";
-import { storageCapacity } from '../storage';
+import { fridgeShelfOffset, storageCapacity, storageOpen } from '../storage';
 import {heldDrinkGeometry,heldDrinkScale} from '../art/heldDrink';
 import { worldRevision, translatedBounds, standingContact, occludedFraction, catalogSamples, catalogNeighbours } from "./spatial";
 
@@ -180,7 +180,17 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
         entity.hitProxies=[entity.bounds];
       }
     } else if (parent && entity.attachment.kind === "container") {
-      entity.contact = roomPoint(parent.contact.x, parent.contact.y - (parent.item ? itemSize(parent.item) * .3 : 0));
+      if (parent.item?.item === "fridge" && storageOpen(parent.item)) {
+        const storedIds = parent.children.filter((id) => entities[id]?.attachment.kind === "container");
+        const slotIndex = Math.max(0, storedIds.indexOf(entity.id));
+        const flip = parent.item.mirrored !== (parent.item.rotation >= 180);
+        const offset = fridgeShelfOffset(slotIndex, itemSize(parent.item), flip);
+        entity.contact = roomPoint(parent.contact.x + offset.x, parent.contact.y + offset.y);
+        entity.depth = parent.depth + 3 + slotIndex * 0.01;
+        entity.band = "foreground";
+      } else {
+        entity.contact = roomPoint(parent.contact.x, parent.contact.y - (parent.item ? itemSize(parent.item) * .3 : 0));
+      }
     } else if (parent) {
       entity.contact = roomPoint(
         parent.contact.x + originalContacts[entity.id].x - originalContacts[parent.id].x,
@@ -345,17 +355,28 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
       });
     }
     if (storageCapacity(item.item)) {
-      const contact = roomPoint(entity.contact.x, entity.contact.y - itemSize(item) * .3);
+      const size = itemSize(item);
+      const capacity = storageCapacity(item.item);
+      const storedCount = Object.values(entities).filter(e => e.attachment.kind === "container" && e.parent === entity.id).length;
+      const isFridge = item.item === "fridge";
+      const flip = item.mirrored !== (item.rotation >= 180);
+      const offset = isFridge ? fridgeShelfOffset(Math.min(storedCount, capacity - 1), size, flip) : undefined;
+      const contact = offset
+        ? roomPoint(entity.contact.x + offset.x, entity.contact.y + offset.y)
+        : roomPoint(entity.contact.x, entity.contact.y - size * .3);
+      const core = isFridge
+        ? { left: entity.contact.x - size * 0.42, top: entity.contact.y - size * 0.82, width: size * 0.84, height: size * 0.80 }
+        : { left: contact.x - size * .26, top: contact.y - size * .2, width: size * .52, height: size * .4 };
       targets.push({
         id: `${entity.id}/container`,
         kind: "container",
         owner: entity.id,
         attachment: { kind: "container", parent: entity.id },
         contact,
-        core: { left: contact.x - itemSize(item) * .26, top: contact.y - itemSize(item) * .2, width: itemSize(item) * .52, height: itemSize(item) * .4 },
+        core,
         base: "stand",
         facing: "front",
-        closed: Object.values(entities).filter(e => e.attachment.kind === "container" && e.parent === entity.id).length >= storageCapacity(item.item),
+        closed: storedCount >= capacity,
       });
     }
   }

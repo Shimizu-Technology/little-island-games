@@ -706,6 +706,51 @@ export function HomeScreen({
     []
   );
   const dispatch = (action: HomeAction) => store.dispatch({ ...action, roomId: room });
+  const takeFromStorage = useCallback((id: string, ownerId?: string) => {
+    const { scene: currentScene } = live.current;
+    const e = currentScene.entities[id];
+    const owner = currentScene.entities[ownerId ?? e?.parent ?? ""];
+    if (!e || !owner) return false;
+    const p = resolve(
+      { ...currentScene.rooms[e.room], entities: currentScene.entities },
+      e,
+      roomPoint(owner.contact.x, Math.min(535, owner.contact.y + 70)),
+      { scale: 1, floorOnly: true, release: true }
+    );
+    if (runtime.current!.animateProposal(p)) {
+      if (owner.item?.item !== "fridge") setStorageId(undefined);
+      return true;
+    }
+    return false;
+  }, []);
+  const eatHeldItem = useCallback((entity: SceneEntity) => {
+    if (entity.attachment.kind !== "hand" || !entity.body?.edible) return false;
+    const holder = entity.attachment.character;
+    const { scene: currentScene } = live.current;
+    const mouth = currentScene.rooms[entity.room].targets.find(
+      (t) => t.owner === holder && t.kind === "mouth"
+    );
+    if (!mouth) return false;
+    const proposal = resolve(
+      { ...currentScene.rooms[entity.room], entities: currentScene.entities },
+      entity,
+      mouth.contact,
+      { scale: runtime.current!.camera.get().a, target: mouth.id, release: true }
+    );
+    if (proposal.kind !== "mouth") return false;
+    if (runtime.current!.animateProposal(proposal)) {
+      setSelected(undefined);
+      return true;
+    }
+    return false;
+  }, []);
+  const refillDrink = useCallback((entity: SceneEntity) => {
+    if (!entity.item?.empty || capabilityOf(entity.item.item).edible !== "drink") return false;
+    live.current.store.dispatch({ type: "refill-drink", id: entity.item.id, roomId: entity.room });
+    delight.refilled(entity);
+    setSelected(undefined);
+    return true;
+  }, [delight]);
   const moveTo = useCallback((id: string, target: SceneEntity | undefined, point: ScreenPoint) => {
     const c = runtime.current!.camera.get();
     const index = target ? roomIds.indexOf(target.room) : roomAtScreen(point.x, point.y, c, building);
@@ -725,8 +770,13 @@ export function HomeScreen({
         release: true,
       }
     );
+    if (targetProposal.refusal === "storage-capacity") {
+      showStorageFull(targetProposal.target);
+      setSelected(undefined);
+      return;
+    }
     if (runtime.current!.animateProposal(targetProposal)) setSelected(undefined);
-  }, [building, designing]);
+  }, [building, designing, showStorageFull]);
   const sheetHistoryPushed = useRef(false);
   const suppressNextPop = useRef(false);
   const navigatingToMap = useRef(false);
@@ -774,6 +824,13 @@ export function HomeScreen({
   const choose = useCallback((id: string) => {
     const entity = live.current.scene.entities[id];
     const current = live.current;
+    if (!designing && !overview && (!current.selected || current.selected === id) && entity?.attachment.kind === "hand" && entity.body?.edible) {
+      if (eatHeldItem(entity)) return;
+    }
+    if (!designing && !overview && !current.selected && entity?.attachment.kind === "container") {
+      const parent = current.scene.entities[entity.parent ?? ""];
+      if (parent?.item?.item === "fridge" && takeFromStorage(id, parent.id)) return;
+    }
     const selectedEntity = current.selected ? current.scene.entities[current.selected] : undefined;
     const interceptToggle = current.selected && current.selected !== id
       ? !!selectedEntity?.character || (!!entity?.item && !!storageCapacity(entity.item.item) && !storageOpen(entity.item))
@@ -796,7 +853,7 @@ export function HomeScreen({
     if (!designing && entity?.item && !capabilityOf(entity.item.item).moveInPlay) return;
     if (overview && entity) goRoom(entity.room);
     else { setStorageId(undefined); setStorageInspect(undefined); setSelected(id); }
-  }, [building, designing, goRoom, moveTo, overview]);
+  }, [building, designing, eatHeldItem, goRoom, moveTo, overview, takeFromStorage]);
   const openCloset = useCallback(
     (item?: StyleItem) => {
       runtime.current?.cancelAll();
@@ -1056,9 +1113,42 @@ export function HomeScreen({
       insertAt(current.placing, point.x, point.y);
       return;
     }
+    // Tap-to-eat while held: tapping an edible food or non-empty drink in a character's hand feeds them right away.
+    if (!designing && (!current.selected || current.selected === id) && entity?.attachment.kind === "hand" && entity.body?.edible) {
+      if (eatHeldItem(entity)) return;
+    }
+    // Tapping a real item sitting on the open fridge's shelves takes that exact item out (zero clones).
+    if (!designing && !current.selected && entity?.attachment.kind === "container") {
+      const parent = current.scene.entities[entity.parent ?? ""];
+      if (parent?.item?.item === "fridge" && takeFromStorage(entity.id, parent.id)) {
+        delight.tapped(entity, sleeping);
+        return;
+      }
+    }
+    // Tapping an empty drink sitting on the sink counter refills it cleanly.
+    if (!designing && !current.selected && entity?.item?.empty && capabilityOf(entity.item.item).edible === "drink") {
+      const parent = current.scene.entities[entity.parent ?? ""];
+      if (parent?.item?.item === "sink-counter" && refillDrink(entity)) return;
+    }
     // A doll cannot land on an appliance, but a loose item can use its open storage
     // or placement surface. Movable toggles still toggle AND select on an empty tap.
     const selectedEntity = current.selected ? current.scene.entities[current.selected] : undefined;
+    const canRefillSelectedAtSink =
+      !!selectedEntity?.item?.empty &&
+      capabilityOf(selectedEntity.item.item).edible === "drink" &&
+      entity?.item?.item === "sink-counter";
+    if (!designing && canRefillSelectedAtSink && selectedEntity) {
+      const sinkSlot = current.scene.rooms[entity.room].targets.find(
+        (t) => t.owner === entity.id && t.kind === "surface" && !t.closed && !t.occupied
+      );
+      if (sinkSlot) {
+        const origin = roomOrigin(roomIds.indexOf(entity.room), building);
+        moveTo(current.selected!, entity, roomToScreen(sinkSlot.contact, runtime.current!.camera.get(), housePoint(origin.x, origin.y)));
+      } else {
+        refillDrink(selectedEntity);
+      }
+      return;
+    }
     const interceptToggle = current.selected && current.selected !== id
       ? !!selectedEntity?.character || (!!entity?.item && !!storageCapacity(entity.item.item) && !storageOpen(entity.item))
       : !!entity?.item && !capabilityOf(entity.item.item).moveInPlay;
@@ -1684,12 +1774,13 @@ export function HomeScreen({
       {!overview && !more && !friends && !activeSheet && !atmosphereOpen && !placesOpen && storageId && (!selected || selected === storageId) && scene.entities[storageId]?.room === room && (
         <StorageTray entity={scene.entities[storageId]} scene={scene} interaction={interaction} offset={viewportOffset} large={large} inspect={storageInspect === storageId && store.message === STORAGE_FULL_MESSAGE} bottom={inset.bottom + navigationHeight + (designing && !vertical ? portraitDrawerHeightFor(large) + 6 : staged.length ? 100 : 8)}
           onClose={() => { const e = scene.entities[storageId]; if (e?.item && storageOpen(e.item)) store.dispatch({ type: "toggle", id: e.item.id, roomId: e.room }); setStorageId(undefined); setStorageInspect(undefined); }}
-          onTake={id => {
-            const e = scene.entities[id], owner = scene.entities[storageId];
-            if (!e || !owner) return;
-            const p = resolve({ ...scene.rooms[e.room], entities: scene.entities }, e, roomPoint(owner.contact.x, Math.min(535, owner.contact.y + 70)), { scale: 1, floorOnly: true, release: true });
-            if (interaction.animateProposal(p)) setStorageId(undefined);
-          }}/>
+          onRestock={fridgeId => {
+            const owner = scene.entities[storageId];
+            if (!owner) return;
+            store.dispatch({ type: "restock-fridge", id: fridgeId, roomId: owner.room });
+            delight.restocked(owner);
+          }}
+          onTake={id => { takeFromStorage(id, storageId); }}/>
       )}
       <StagingTray
         entities={staged}

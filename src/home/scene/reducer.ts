@@ -1,7 +1,7 @@
 import { compactAtmosphere, validAtmosphere } from "../atmosphere";
 import { seasonalPacks } from "../seasonal";
 import { familySlots } from "../family";
-import { storageCapacity, storageOpen, STORAGE_FULL_MESSAGE } from '../storage';
+import { FRIDGE_RESTOCK_TARGET, FRIDGE_STAPLES, storageCapacity, storageOpen, STORAGE_FULL_MESSAGE } from '../storage';
 import { decorSpec, itemSpec } from "../catalog";
 import { locationIds as roomIds, tintIds } from "../catalogMore";
 import { capabilityOf } from "../world";
@@ -89,6 +89,49 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
     const result = finish({ ...save, version: 4, rooms: { ...save.rooms, [roomId]: { ...state,
       instances: state.instances.map((i) => (i.id === food.id ? { ...i, powered: true } : i)) } } });
     return "message" in result ? result : { ...result, message: `The ${itemSpec(food.item).name.toLowerCase()} is cooked.` };
+  }
+  if (action.type === "restock-fridge") {
+    const fridge = state.instances.find((i) => i.id === action.id && i.item === "fridge");
+    if (!fridge) return { state: save };
+    const capacity = storageCapacity("fridge");
+    const targetCount = Math.min(FRIDGE_RESTOCK_TARGET, capacity);
+    const inside = state.instances.filter((i) => i.in === fridge.id);
+    if (inside.length >= targetCount || inside.length >= capacity) return { state: save };
+    const presentItems = new Set(inside.map((i) => i.item));
+    const usedIds = new Set(state.instances.map((i) => i.id));
+    const added = [];
+    for (const staple of FRIDGE_STAPLES) {
+      if (inside.length + added.length >= targetCount) break;
+      if (state.instances.length + added.length >= 256) break;
+      if (presentItems.has(staple)) continue;
+      let id = `fridge-${staple}`;
+      let suffix = 1;
+      while (usedIds.has(id)) id = `fridge-${staple}-${++suffix}`;
+      usedIds.add(id);
+      added.push({ ...instance(id, staple, fridge.x, fridge.y), in: fridge.id });
+    }
+    if (!added.length) return { state: save };
+    const instances = state.instances
+      .map((i) =>
+        i.id === fridge.id
+          ? { ...i, storage: { version: 1 as const, open: true }, powered: true, state: "active" as const }
+          : i
+      )
+      .concat(added);
+    const result = finish({ ...save, version: 4, rooms: { ...save.rooms, [roomId]: { ...state, instances } } });
+    return "message" in result ? result : { ...result, message: "Fridge restocked." };
+  }
+  if (action.type === "refill-drink") {
+    const drink = state.instances.find((i) => i.id === action.id);
+    if (!drink || !drink.empty || capabilityOf(drink.item).edible !== "drink") return { state: save };
+    const instances = state.instances.map((i) => {
+      if (i.id !== drink.id) return i;
+      const { empty: _empty, ...rest } = i;
+      void _empty;
+      return rest;
+    });
+    const result = finish({ ...save, version: 4, rooms: { ...save.rooms, [roomId]: { ...state, instances } } });
+    return "message" in result ? result : { ...result, message: `Refilled ${itemSpec(drink.item).name.toLowerCase()}.` };
   }
   if (action.type === "room") {
     return roomIds.includes(action.room) && action.room !== save.current

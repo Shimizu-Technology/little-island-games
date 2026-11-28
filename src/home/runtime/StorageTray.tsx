@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { itemSpec } from '../catalog';
-import { storageCapacity, storageOpen, STORAGE_FULL_MESSAGE } from '../storage';
+import { FRIDGE_RESTOCK_TARGET, storageCapacity, storageOpen, STORAGE_FULL_MESSAGE } from '../storage';
 import { storageDescription } from '../scene/labels';
 import type { Scene, SceneEntity } from '../scene/types';
 import { ItemArt } from '../art/Items';
@@ -10,20 +10,34 @@ import { moreCatalog } from '../catalogMore';
 import type { SharedValue } from 'react-native-reanimated';
 import type { Interaction } from './useInteraction';
 /** A real, bounded contents shelf. Taking one out uses the same resolver as a drag. */
-export function StorageTray({ entity, scene, bottom, large = false, inspect = false, onTake, onClose, interaction, offset }: {
+export function StorageTray({ entity, scene, bottom, large = false, inspect = false, onTake, onClose, onRestock, interaction, offset }: {
   interaction?: Interaction; offset?: SharedValue<{ x: number; y: number }>;
   entity?: SceneEntity; scene: Scene; bottom: number; large?: boolean; inspect?: boolean;
-  onTake: (id: string) => void; onClose: () => void;
+  onTake: (id: string) => void; onClose: () => void; onRestock?: (fridgeId: string) => void;
 }) {
   if (!entity?.item || (!storageOpen(entity.item) && !inspect)) return null;
   const contents = entity.children.map(id => scene.entities[id]).filter(e => e?.attachment.kind === 'container');
   const capacity = storageCapacity(entity.item.item), cell = large ? 72 : 60;
-  if (!capacity || contents.length === 0) return null;
+  const isFridge = entity.item.item === 'fridge';
+  if (!capacity || (!isFridge && contents.length === 0)) return null;
+  const showRestock = isFridge && !!onRestock && contents.length < FRIDGE_RESTOCK_TARGET;
+  const restockLabel = contents.length === 0 ? 'Restock fridge' : 'Restock';
   return <View testID="storage-tray" style={{ position: 'absolute', bottom, left: 10, right: 10, borderRadius: 20, backgroundColor: '#FFF8E9', borderWidth: 2, borderColor: '#D7C29A', padding: 8, zIndex: 38 }}>
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
       <Text accessibilityLabel={`${itemSpec(entity.item.item).name}, ${storageDescription(entity)}`} maxFontSizeMultiplier={1.4} style={{ flex: 1, fontSize: 15, fontWeight: '600', color: '#284F4B' }}>
         {itemSpec(entity.item.item).name} · {contents.length}/{capacity}
       </Text>
+      {showRestock && (
+        <Pressable
+          testID="fridge-restock-button"
+          accessibilityRole="button"
+          accessibilityLabel={restockLabel}
+          onPress={() => onRestock(entity.item!.id)}
+          style={{ minWidth: large ? 64 : 44, minHeight: large ? 64 : 44, paddingHorizontal: 14, justifyContent: 'center', alignItems: 'center', borderRadius: 22, backgroundColor: '#4FA99F' }}
+        >
+          <Text maxFontSizeMultiplier={1.3} style={{ fontSize: 14, fontWeight: '700', color: '#FFFDF7' }}>{restockLabel}</Text>
+        </Pressable>
+      )}
       <Pressable accessibilityRole="button" accessibilityLabel={`Close ${itemSpec(entity.item.item).name}`} onPress={onClose} style={{ minWidth: large ? 64 : 44, minHeight: large ? 64 : 44, justifyContent: 'center', alignItems: 'center', borderRadius: 24, backgroundColor: '#EEDDBA' }}><Text maxFontSizeMultiplier={1} style={{ fontSize: 24, color: '#284F4B' }}>×</Text></Pressable>
     </View>
     <ScrollView horizontal contentContainerStyle={{ gap: 8, alignItems: 'center' }} showsHorizontalScrollIndicator>

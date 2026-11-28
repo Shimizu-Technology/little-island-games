@@ -23,7 +23,7 @@ export const livingCapabilities: Partial<Record<ItemId, Capability>> = {
   surfboard:{moveInPlay:true,holdable:true},
   'bbq-grill':{moveInPlay:false,toggle:'power'},
   stove:{moveInPlay:false,toggle:'power'},
-  fridge:{moveInPlay:false,toggle:'open',dispenses:['mango','banana','juice','rice-ball']},
+  fridge:{moveInPlay:false,toggle:'open'},
   'fruit-bowl':{moveInPlay:true,dispenses:['mango','banana','coconut-drink']},
 };
 export function dispenserChoices(item: ItemId, state: ItemVisualState = {}): readonly ItemId[] {

@@ -71,7 +71,7 @@ describe("tap tray destinations", () => {
       renderer = TestRenderer.create(
         <Destinations
           scene={scene}
-          selected="kitchen/item/portion-fridge-banana"
+          selected="kitchen/item/portion-bowl-banana"
           scale={1}
           bottom={0}
           onChoose={() => {}}

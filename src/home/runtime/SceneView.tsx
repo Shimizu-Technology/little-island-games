@@ -12,6 +12,7 @@ import Animated, { cancelAnimation, runOnJS, useAnimatedReaction, useAnimatedSty
 import { capabilityOf } from '../world';
 import { itemSize } from '../geometry';
 import { GestureDetector } from "react-native-gesture-handler";
+import { itemSpec } from "../catalog";
 import { locationIds as roomIds, roomNames, type RoomId } from "../catalogMore";
 import { RoomArt, ShoreArt, SkyArt } from "../art/Room";
 import { RoomShellArt } from "../art/More";
@@ -677,9 +678,17 @@ export const SceneView = React.memo(function SceneView({
                         : []),
                       resting(entity, front),
                     ])}
-                    {scene.rooms[roomId].targets.filter((target) => !target.rim || scene.entities[target.owner]?.item?.layer !== "ground").map((target) => (
-                      <TargetCue key={target.id} target={target} interaction={interaction} />
-                    ))}
+                    {scene.rooms[roomId].targets.filter((target) => !target.rim || scene.entities[target.owner]?.item?.layer !== "ground").map((target) => {
+                      const ownerItem = target.kind === "container" ? scene.entities[target.owner]?.item : undefined;
+                      return (
+                        <TargetCue
+                          key={target.id}
+                          target={target}
+                          interaction={interaction}
+                          ownerName={ownerItem ? itemSpec(ownerItem.item).name : undefined}
+                        />
+                      );
+                    })}
                     {effects.some((e) => e.room === roomId) && <Effects effects={effects.filter((e) => e.room === roomId)} reduced={reduced} />}
                     {stress && roomId === "home" && (
                       <StressCopies

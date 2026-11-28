@@ -31,7 +31,7 @@ vi.mock('../src/home/runtime/homeSound', () => ({
   },
 }));
 vi.mock('expo-router', () => ({ router: { push: vi.fn() }, useFocusEffect: () => {} }));
-vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: { OS: 'web' }, AppState: { addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => harness.viewport, AccessibilityInfo: { sendAccessibilityEvent: () => {} } }));
+vi.mock('react-native', () => ({ View: 'View', ScrollView: 'ScrollView', Text: 'Text', Pressable: 'Pressable', Platform: { OS: 'web' }, AppState: { addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => harness.viewport, AccessibilityInfo: { sendAccessibilityEvent: () => {} } }));
 vi.mock('react-native-safe-area-context', () => { const insets = { top: 0, bottom: 0 }; return { useSafeAreaInsets: () => insets }; });
 vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, useSharedValue: (v: any) => { const ref = React.useRef(v); return { get: () => ref.current, set: (n: any) => { ref.current = n; } }; }, useAnimatedStyle: () => ({}) }));
 vi.mock('../src/components/motion', () => ({ useReducedMotion: () => harness.reduced }));

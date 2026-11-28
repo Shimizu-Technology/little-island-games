@@ -19,12 +19,12 @@ describe("native round 3 regressions", () => {
       fridge.powered = true; fridge.mirrored = mirrored;
       const scene = withPortions(buildScene(world)), hits = prepareHits(scene).kitchen;
       const movable = Object.fromEntries(Object.values(scene.entities).map((e) => [e.id, !e.item || capabilityOf(e.item.item).moveInPlay]));
-      const portions = Object.values(scene.entities).filter((e) => e.room === "kitchen" && isPortion(e.id));
-      expect(portions.length).toBeGreaterThanOrEqual(4);
-      for (const e of portions) {
+      const shelfItems = Object.values(scene.entities).filter((e) => e.room === "kitchen" && (isPortion(e.id) || e.attachment.kind === "container"));
+      expect(shelfItems.length).toBeGreaterThanOrEqual(6);
+      for (const e of shelfItems) {
         const bounds = e.bounds;
         const entries = paintEntries(Object.values(scene.rooms.kitchen.entities), scene);
-        const source = e.id.includes("portion-starter-fridge") ? scene.entities["kitchen/item/starter-fridge"] : undefined;
+        const source = e.attachment.kind === "container" ? scene.entities[e.attachment.parent] : undefined;
         if (source) expect(entries.findIndex((p) => p.entity.id === e.id)).toBeGreaterThan(entries.findIndex((p) => p.entity.id === source.id));
         // The middle of the art, and four points still on it.
         const m = e.visual!, near = bounds.width * .08;

@@ -26,7 +26,7 @@ describe("combined CORE/RIG runtime boundary", () => {
     const state = labHome();
     state.rooms.kitchen.instances.find((i) => i.id === "fridge")!.powered = true;
     const scene = withPortions(buildScene(state));
-    const portion = scene.entities["kitchen/item/portion-fridge-banana"];
+    const portion = scene.entities["kitchen/item/portion-bowl-banana"];
     expect(portion.body?.edible).toBe("food");
     const target = scene.rooms.home.targets.find((t) => t.owner === "character/0" && t.kind === "mouth")!;
     const proposal = resolve(scene.rooms.home, portion, target.contact, { scale: 1, release: true, target: target.id });

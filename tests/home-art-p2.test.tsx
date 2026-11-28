@@ -35,12 +35,12 @@ describe('Phase 2 living art contract',()=>{
   expect(render(<LivingArt id="sink-counter" state={{on:true}} reduced/>)).toContain('data-water="running"');
   expect(render(<LivingArt id="radio" state={{on:true}} reduced/>)).toContain('data-notes="static"');
  });
- it('only offers the fridge fan when open and never consumes stock',()=>{
+ it('treats fridge as a bounded container (no infinite fan) while fruit bowl dispenses without consuming stock',()=>{
   expect(dispenserChoices('fridge')).toEqual([]);
-  expect(dispenserChoices('fridge',{on:true})).toEqual(['mango','banana','juice','rice-ball']);
+  expect(dispenserChoices('fridge',{on:true})).toEqual([]);
   expect(dispenserChoices('fruit-bowl')).toEqual(['mango','banana','coconut-drink']);
-  const before=dispenserChoices('fridge',{on:true});dispenserFan('fridge',{on:true});expect(dispenserChoices('fridge',{on:true})).toEqual(before);
-  for(const id of ['fridge','fruit-bowl']) for(const slot of dispenserFan(id,{on:true})) {expect(slot.size).toBeGreaterThanOrEqual(44);expect(Math.abs(slot.x)+24).toBeLessThanOrEqual(112);expect(slot.y-24).toBeGreaterThanOrEqual(-120);}
+  const before=dispenserChoices('fruit-bowl',{on:true});dispenserFan('fruit-bowl',{on:true});expect(dispenserChoices('fruit-bowl',{on:true})).toEqual(before);
+  for(const slot of dispenserFan('fruit-bowl',{on:true})) {expect(slot.size).toBeGreaterThanOrEqual(44);expect(Math.abs(slot.x)+24).toBeLessThanOrEqual(112);expect(slot.y-24).toBeGreaterThanOrEqual(-120);}
  });
  it('starts a fresh kitchen with fridge, sink and reusable fruit bowl',()=>{
   const items=starterHome().rooms.kitchen.instances;

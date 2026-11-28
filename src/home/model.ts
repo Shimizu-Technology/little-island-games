@@ -1,7 +1,7 @@
 import { defaultGuamRoom, guamPlaceIds, untouchedGuamRoom } from "./locations";
 import { compactAtmosphere, validAtmosphere, type Atmosphere } from "./atmosphere";
 import { familySlots, type FamilySlot } from "./family";
-import { storageCapacity, type StorageState } from './storage';
+import { FRIDGE_STAPLES, storageCapacity, type StorageState } from './storage';
 import { MAX_INSTANCES } from "./limits";
 import { anchorsFor } from "./scene/species";
 import type { DropProposal } from "./scene/proposal";
@@ -435,7 +435,7 @@ export function normalizeRoom(room: RoomState): RoomState {
   const ids = [...instances.filter((i) => !i.on), ...instances.filter((i) => i.on)].map((i) => i.id);
   for (const id of ids) {
     const i = instances.find((i) => i.id === id)!;
-    if (room.characters.some((c) => c.holding === id)) continue;
+    if (i.in || room.characters.some((c) => c.holding === id)) continue;
     const p = itemPoint(i, instances),
       b = visualBox(i.item, i.rotation, i.mirrored);
     if (p.x + b.left >= 8 && p.x + b.left + b.width <= 792 && p.y + b.top >= 8 && p.y + b.top + b.height <= 552)
@@ -692,15 +692,33 @@ export function starterHome(): HomeStateV2 {
     version: 3, current: "home",
     rooms: { home, kitchen: extra("kitchen"), treehouse: extra("treehouse"), beach: extra("beach"), "tumon-beach": defaultGuamRoom("tumon-beach"), "chamorro-village": defaultGuamRoom("chamorro-village") },
   });
-  return { ...base, version: 4, rosterVersion: 1, rooms: { ...base.rooms,
-    home: { ...base.rooms.home, characters: [...base.rooms.home.characters, ...waitingFamily()] },
-  } };
+  return {
+    ...base,
+    version: 4,
+    rosterVersion: 1,
+    rooms: {
+      ...base.rooms,
+      home: { ...base.rooms.home, characters: [...base.rooms.home.characters, ...waitingFamily()] },
+      kitchen: {
+        ...base.rooms.kitchen,
+        instances: [
+          ...base.rooms.kitchen.instances,
+          ...FRIDGE_STAPLES.map((item) => ({
+            ...instance(`starter-fridge-${item}`, item, 14, 0),
+            in: "starter-fridge",
+          })),
+        ],
+      },
+    },
+  };
 }
 export type HomeAction = (
   | { type: "apply-proposal"; proposal: DropProposal }
   | { type: "finish-action"; slot: Character["slot"] }
   /** HD-07: food in the pan of a lit stove becomes cooked. Outside history, like finish-action. */
   | { type: "cook"; id: string }
+  | { type: "restock-fridge"; id: string }
+  | { type: "refill-drink"; id: string }
   | { type: "dispense"; source: string; item: ItemId; id: string; x: number; y: number }
   | { type: "use-item"; id: string; slot: Character["slot"]; eat?: boolean }
   | { type: "release-held"; slot: Character["slot"]; x: number; y: number }

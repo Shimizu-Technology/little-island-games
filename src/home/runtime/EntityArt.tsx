@@ -130,7 +130,7 @@ export const EntityArt = memo(function EntityArt({
           }
           reduced={reduced}
         />
-        {!front && storageCapacity(entity.item.item) > 0 && (storageOpen(entity.item) || basket) && !!entity.contents?.length && (
+        {!front && storageCapacity(entity.item.item) > 0 && entity.item.item !== 'fridge' && (storageOpen(entity.item) || basket) && !!entity.contents?.length && (
           <View testID="storage-peek" pointerEvents="none" accessible={false} style={{ position: 'absolute', left: frame.width * (basket ? .15 : .26), top: frame.height * (basket ? .25 : .43), width: frame.width * (basket ? .7 : .52), height: frame.height * .24, overflow: 'hidden', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center' }}>
             {entity.contents.slice(0, 4).map(item => {
               const size = itemSize(item), width = peekWidth, scale = pictureWidth / size;

@@ -42,7 +42,7 @@ function context(id:string,reduced=false) {
  return {state,scene,clock,slot,interaction,reduced};
 }
 describe('round4 rendered runtime contracts',()=>{
- it.each(['home/item/banana','kitchen/item/portion-fridge-banana','kitchen/item/portion-bowl-banana','character/0'])('T5 carries %s at the intended readable scale and eases exactly to1',async(id)=>{
+ it.each(['home/item/banana','kitchen/item/portion-bowl-banana','character/0'])('T5 carries %s at the intended readable scale and eases exactly to1',async(id)=>{
   const c=context(id);const pickup={id,slot:0,scene:c.scene,generation:1,epoch:0} as Pickup;let tree!:TestRenderer.ReactTestRenderer;
   await act(async()=>{tree=TestRenderer.create(<DragOverlay scene={c.scene} pickups={[pickup]} interaction={c.interaction} building={buildingLayout(4)} reduced={false}/>);});
   const view=tree.root.findByProps({nativeID:`drag-overlay-${id}`});
@@ -107,7 +107,7 @@ describe('round4 rendered runtime contracts',()=>{
  });
 
  it('T5 Reduce Motion carries source portions at1 without animated lift',async()=>{
-  const c=context('kitchen/item/portion-fridge-banana',true);const pickup={id:c.slot.id,slot:0,scene:c.scene,generation:1,epoch:0} as Pickup;
+  const c=context('kitchen/item/portion-bowl-banana',true);const pickup={id:c.slot.id,slot:0,scene:c.scene,generation:1,epoch:0} as Pickup;
   let tree!:TestRenderer.ReactTestRenderer;
   await act(async()=>{tree=TestRenderer.create(<DragOverlay scene={c.scene} pickups={[pickup]} interaction={c.interaction} building={buildingLayout(4)} reduced/>);});
   const view=tree.root.findByProps({nativeID:`drag-overlay-${c.slot.id}`});
