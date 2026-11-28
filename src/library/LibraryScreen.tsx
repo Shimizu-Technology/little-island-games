@@ -1,4 +1,4 @@
-import { AtmosphereHeader } from '../atmosphere/AtmosphereHeader';
+import { AtmosphereHeader } from "../atmosphere/AtmosphereHeader";
 import { collectionEmptyMessage } from "./availability";
 import { savedScrollPosition } from "./scrollPosition";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -17,7 +17,7 @@ import { gameIds } from "../games";
 import { boardIds } from "../board";
 import { activityIds } from "../state/activities";
 import { arcadeIds } from "../arcade";
-import { type WorldId } from "../explore/content";
+import { WORLDS, type WorldId } from "../explore/content";
 import { labAction } from "../explore/activities";
 import { newExploreProgress } from "../explore/progress";
 import { libraryChild, libraryHoursOpen, type LibraryChildState } from "./state";
@@ -33,11 +33,12 @@ import {
   worldCategory,
   type CatalogItem,
 } from "./catalog";
-import { categoryAfterTyping, search, searchCategory } from "./search";
+import { buildIndex, categoryAfterTyping, search, searchCategory } from "./search";
 import { Action, ItemPicture, LibraryIcon, s } from "./ui";
 import { WordLabel } from "./WordLabel";
 import { SoundSwitch } from "./SoundSwitch";
 import { LibraryArt } from "./LibraryArt";
+import { PaintedLibraryCover } from "./illustratedCovers";
 import { categoryScene } from "./tileArt";
 import { useLibraryAudio } from "./useLibraryAudio";
 import { TopicPage } from "./Topics";
@@ -50,9 +51,15 @@ import { ReviewedNarration } from "./ReviewedNarration";
 import { Exhibit } from "./Exhibit";
 import { hasPendingPages, pageDraftKey, pendingPage } from "./drafts";
 import { canonicalDestination, exhibitWorld as resolveExhibitWorld, hearTitleLabel, libraryBack, mayFinishPage } from "./navigation";
-import { canonicalLibraryId, rememberLibraryDestination } from "./ids";
+import { canonicalLibraryId, rememberLibraryDestination, rememberVisitedDestination } from "./ids";
 import type { ReadingLayer } from "./schema";
+
+type QuickFilter = "all" | "books" | "labs" | "saved";
+
 const extensions = new Map<string, number>();
+const sessionExplored = new Map<string, Set<string>>();
+const sessionSurpriseCycle = new Map<string, number>();
+
 const storyCard = {
   backgroundColor: "#FFFDF8",
   borderWidth: 1.5,
@@ -66,6 +73,51 @@ const storyCard = {
   shadowRadius: 10,
   elevation: 3,
 } as const;
+
+const overlayFill = { position: "absolute", top: 0, right: 0, bottom: 0, left: 0 } as const;
+
+const categoryTitleById = new Map(categories.map((category) => [category.id, category.title]));
+
+const exhibitSearchIndex = buildIndex(
+  exhibits.map((exhibit) => {
+    const worldInfo = WORLDS.find((entry) => entry.id === exhibit.world);
+    return {
+      id: `lab-${exhibit.world}`,
+      title: exhibit.title,
+      category: exhibit.category,
+      aliases: [worldInfo?.title ?? "", worldInfo?.activity ?? "", exhibit.world, exhibit.motif].filter(Boolean),
+      tags: [categoryTitleById.get(exhibit.category) ?? "", worldInfo?.invitation ?? ""].filter(Boolean),
+    };
+  })
+);
+
+function positionDestinationId(key: string): string | undefined {
+  const parts = key.split(":");
+  if (parts.length < 2 || !parts[1] || parts[1] === "index") return undefined;
+  const [placeKind, targetId] = parts;
+  if (placeKind === "exhibit") return `lab-${targetId}`;
+  if (placeKind === "topic" || placeKind === "reader" || placeKind === "authored-exhibit") {
+    return canonicalLibraryId(targetId);
+  }
+  return undefined;
+}
+
+function collectDurableExplored(child: LibraryChildState, legacyVisited: readonly string[]): Set<string> {
+  const ids = new Set<string>();
+  const add = (raw?: string) => {
+    if (!raw || raw.startsWith("page-")) return;
+    ids.add(canonicalLibraryId(raw));
+  };
+  for (const id of child.recent) add(id);
+  for (const id of child.visited ?? []) add(id);
+  for (const id of Object.keys(child.bookPages)) add(id);
+  for (const id of Object.keys(child.layers)) add(id);
+  for (const key of Object.keys(child.positions)) add(positionDestinationId(key));
+  for (const id of legacyVisited) add(id);
+  if (child.current) add(child.current);
+  return ids;
+}
+
 export default function LibraryScreen() {
   const store = useStore();
   const route = useLocalSearchParams<{ place?: string; id?: string }>();
@@ -89,6 +141,7 @@ export default function LibraryScreen() {
     />
   );
 }
+
 function LibraryReady() {
   const store = useStore();
   const nunitoLoaded = useNunitoLoaded();
@@ -131,10 +184,12 @@ function LibraryReady() {
     `${place}:${id}:${childId}:${store.epoch}`
   );
   const [expandedCategoryLabels, setExpandedCategoryLabels] = useState(false);
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>(child.onlyFavorites ? "saved" : "all");
   const [bookInfo, setBookInfo] = useState(false);
   const [notice, setNotice] = useState("");
   const [paused, setPaused] = useState(false);
   const [now, setNow] = useState(() => new Date());
+  const sessionKey = `${store.epoch}:${childId}`;
   const open = libraryHoursOpen(child.policy, now) || (extensions.get(childId) ?? 0) > now.getTime();
   const [enteredOpen] = useState(open);
   const currentOpen = useRef(open);
@@ -176,8 +231,15 @@ function LibraryReady() {
     setNotice("");
     if (nextId && !nextId.startsWith("page-")) {
       const destinationId = canonicalDestination(nextPlace, nextId);
+      let visited = sessionExplored.get(sessionKey);
+      if (!visited) {
+        visited = new Set<string>();
+        sessionExplored.set(sessionKey, visited);
+      }
+      visited.add(destinationId);
       update({
         recent: rememberLibraryDestination(live.current.recent, destinationId),
+        visited: rememberVisitedDestination(live.current.visited, destinationId),
         current: destinationId,
       });
     }
@@ -198,12 +260,13 @@ function LibraryReady() {
     else router.replace("/");
   };
   const savedId = (itemId: string) => canonicalLibraryId(itemById(itemId)?.id ?? itemId);
-  const isSaved = (itemId: string) => child.saved.some(value => savedId(value) === savedId(itemId));
-  const toggleSaved = (itemId: string) => update({
-    saved: isSaved(itemId)
-      ? child.saved.filter(value => savedId(value) !== savedId(itemId))
-      : [...child.saved, savedId(itemId)].slice(-300),
-  });
+  const isSaved = (itemId: string) => child.saved.some((value) => savedId(value) === savedId(itemId));
+  const toggleSaved = (itemId: string) =>
+    update({
+      saved: isSaved(itemId)
+        ? child.saved.filter((value) => savedId(value) !== savedId(itemId))
+        : [...child.saved, savedId(itemId)].slice(-300),
+    });
   const openItem = (itemId: string) => {
     if (itemId.startsWith("complete:")) {
       const topicId = itemId.slice(9);
@@ -243,6 +306,16 @@ function LibraryReady() {
       );
     }
   };
+  const openExhibit = (world: WorldId, motif: string) => {
+    remember();
+    const reviewed = authored.find(
+      (item) =>
+        item.type === "exhibit" &&
+        resolveExhibitWorld({ id: item.id, title: item.title, category: item.category, motif, item }) === world
+    );
+    if (reviewed) visit("authored-exhibit", reviewed.id);
+    else visit("exhibit", world);
+  };
   const make = (sourceId?: string) => {
     if (!open) {
       void pause();
@@ -276,9 +349,10 @@ function LibraryReady() {
       : child.category === "all"
         ? "map"
         : `world:${Object.entries(worldCategory).find(([, category]) => category === child.category)?.[0]}`;
-  const oldTurtlePosition = place === "topic" && id === "turtle-breath"
-    ? child.positions[positionKey.replace("turtle-breath", "turtles")] ?? child.positions["topic:turtles"]
-    : undefined;
+  const oldTurtlePosition =
+    place === "topic" && id === "turtle-breath"
+      ? child.positions[positionKey.replace("turtle-breath", "turtles")] ?? child.positions["topic:turtles"]
+      : undefined;
   const savedY = child.positions[positionKey] ?? child.positions[legacyScrollKey] ?? oldTurtlePosition ?? 0;
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestPositionKey = useRef(positionKey);
@@ -311,21 +385,203 @@ function LibraryReady() {
   const headerInnerWidth = Math.max(240, contentWidth - 16);
   const categoryCols = fontScale > 1.6 || expandedCategoryLabels ? 1 : width < 650 ? 2 : width < 1000 ? 3 : 4;
   const categoryTileWidth = Math.floor((headerInnerWidth - (categoryCols - 1) * 12) / categoryCols);
+  const labCols = fontScale > 1.6 ? 1 : width < 650 ? 2 : width < 1000 ? 3 : 5;
+  const labTileWidth = Math.floor((headerInnerWidth - (labCols - 1) * 10) / labCols);
   const shelfInnerWidth = contentWidth - (cols > 1 ? 14 : 0);
   const bookCardWidth = Math.max(120, Math.floor(shelfInnerWidth / cols) - 12);
   const stackHero = fontScale > 1.5 || (width < 340 && fontScale > 1.25);
-  const results = useMemo(
-    () =>
-      search(
-        searchIndex,
-        child.query,
-        child.onlyFavorites ? new Set(child.saved.map(id => itemById(id)?.id ?? id).filter((id) => allowedIds.has(id))) : allowedIds,
-        searchCategory(child.query, child.category)
-      )
-        .map((entry) => itemById(entry.id)!)
-        .filter(Boolean),
-    [child.query, child.category, child.onlyFavorites, child.saved, allowedIds]
+
+  const activeFilter: QuickFilter = child.onlyFavorites ? "saved" : quickFilter;
+  const savedSet = useMemo(() => new Set(child.saved.map((item) => canonicalLibraryId(itemById(item)?.id ?? item))), [child.saved]);
+  const recentSet = useMemo(
+    () => new Set([...child.recent, ...(child.visited ?? [])].map((item) => canonicalLibraryId(item))),
+    [child.recent, child.visited]
   );
+
+  const enabledExhibits = useMemo(
+    () => exhibits.filter((exhibit) => child.policy.collections.includes(exhibit.category)),
+    [child.policy.collections]
+  );
+
+  const matchingExhibits = useMemo(() => {
+    if (child.query.trim()) {
+      const allowedLabIds = new Set(enabledExhibits.map((exhibit) => `lab-${exhibit.world}`));
+      const matchedLabIds = new Set(
+        search(exhibitSearchIndex, child.query, allowedLabIds, searchCategory(child.query, child.category)).map(
+          (entry) => entry.id
+        )
+      );
+      return enabledExhibits.filter((exhibit) => matchedLabIds.has(`lab-${exhibit.world}`));
+    }
+    return enabledExhibits.filter((exhibit) => child.category === "all" || exhibit.category === child.category);
+  }, [child.query, child.category, enabledExhibits]);
+
+  const categoryStats = useMemo(() => {
+    const map = new Map<string, { total: number; saved: number; explored: number }>();
+    for (const item of allowed) {
+      const entry = map.get(item.category) ?? { total: 0, saved: 0, explored: 0 };
+      entry.total++;
+      const canon = canonicalLibraryId(item.id);
+      if (savedSet.has(canon)) entry.saved++;
+      if (recentSet.has(canon)) entry.explored++;
+      map.set(item.category, entry);
+    }
+    return map;
+  }, [allowed, savedSet, recentSet]);
+
+  const continueTarget = (() => {
+    for (const recentId of child.recent) {
+      if (!canOpen(recentId, child.policy.collections)) continue;
+      if (recentId.startsWith("lab-")) {
+        const world = recentId.slice(4) as WorldId;
+        const exhibit = exhibits.find((entry) => entry.world === world);
+        if (exhibit) {
+          return {
+            kind: "exhibit" as const,
+            id: recentId,
+            title: exhibit.title,
+            badge: "Interactive Lab",
+            subtitle: "Jump back into your interactive lab",
+            category: exhibit.category,
+            motif: exhibit.motif,
+            exhibit,
+          };
+        }
+      }
+      const found = itemById(recentId);
+      if (found) {
+        const isBook = found.item?.type === "book";
+        const pageIndex = child.bookPages[found.id] ?? 0;
+        const pageCount = isBook && found.item?.type === "book" ? found.item.pages.length : 0;
+        return {
+          kind: "item" as const,
+          id: found.id,
+          title: found.title,
+          badge: categoryTitleById.get(found.category) ?? "Island Library",
+          subtitle: isBook && pageCount > 0 ? `Page ${Math.min(pageIndex + 1, pageCount)} of ${pageCount}` : "Pick up right where you left off",
+          category: found.category,
+          motif: found.motif,
+          record: found,
+        };
+      }
+    }
+    return undefined;
+  })();
+
+  const surprisePick = () => {
+    if (!currentOpen.current) {
+      void pause();
+      return;
+    }
+    // Deduplicate authored exhibits and legacy lab destinations that open the same experience.
+    const authoredLabWorlds = new Map<WorldId, string>();
+    for (const item of allowed) {
+      if (item.item?.type === "exhibit") {
+        const world = resolveExhibitWorld(item);
+        if (world) authoredLabWorlds.set(world, canonicalLibraryId(item.id));
+      }
+    }
+    const poolIds: string[] = [];
+    const poolSet = new Set<string>();
+    const addCandidate = (candidateId: string) => {
+      const canon = canonicalLibraryId(candidateId);
+      if (!poolSet.has(canon)) {
+        poolSet.add(canon);
+        poolIds.push(canon);
+      }
+    };
+    for (const item of allowed) addCandidate(item.id);
+    for (const exhibit of enabledExhibits) {
+      if (!authoredLabWorlds.has(exhibit.world)) addCandidate(`lab-${exhibit.world}`);
+    }
+    if (!poolIds.length) {
+      setNotice("No stories or wonders are turned on yet. A grown-up can turn collections on.");
+      return;
+    }
+
+    const legacyVisited = store.save.explore?.progress?.history
+      ? store.save.explore.progress.history
+          .map((loc) => (loc.kind === "topic" ? loc.id : loc.kind === "activity" ? `lab-${loc.world}` : ""))
+          .filter(Boolean)
+      : [];
+    const durable = collectDurableExplored(live.current, legacyVisited);
+    if (durable.size === 0) {
+      sessionExplored.delete(sessionKey);
+      sessionSurpriseCycle.delete(sessionKey);
+    }
+
+    let visited = sessionExplored.get(sessionKey);
+    if (!visited) {
+      visited = new Set<string>();
+      sessionExplored.set(sessionKey, visited);
+    }
+    const seen = new Set<string>([...durable, ...visited]);
+    for (const [world, authoredId] of authoredLabWorlds.entries()) {
+      if (seen.has(authoredId)) seen.add(`lab-${world}`);
+      if (seen.has(`lab-${world}`)) seen.add(authoredId);
+    }
+
+    const fresh = poolIds.filter((candidate) => !seen.has(candidate));
+    let chosen: string;
+    if (fresh.length > 0) {
+      chosen = fresh[0];
+    } else {
+      // Explicit fallback once every eligible destination has been visited: start a fresh cycle
+      // without repeating the immediately preceding destination back-to-back.
+      const lastVisited = canonicalLibraryId(live.current.current ?? live.current.recent[0] ?? "");
+      const cyclePool = poolIds.length > 1 ? poolIds.filter((candidate) => candidate !== lastVisited) : poolIds;
+      const cycleIndex = sessionSurpriseCycle.get(sessionKey) ?? 0;
+      chosen = cyclePool[cycleIndex % cyclePool.length];
+      sessionSurpriseCycle.set(sessionKey, cycleIndex + 1);
+      visited.clear();
+    }
+    visited.add(chosen);
+    remember();
+    openItem(chosen);
+  };
+
+  const applyQuickFilter = (next: QuickFilter) => {
+    scrollY.current = 0;
+    if (next === "all") {
+      setQuickFilter("all");
+      update({ category: "all", query: "", onlyFavorites: false });
+      return;
+    }
+    if (next === "saved") {
+      const nextSaved = !child.onlyFavorites;
+      setQuickFilter(nextSaved ? "saved" : "all");
+      update({ onlyFavorites: nextSaved });
+      return;
+    }
+    setQuickFilter(next);
+    update({ category: "all", onlyFavorites: false });
+  };
+
+  const results = useMemo(() => {
+    const base = search(
+      searchIndex,
+      child.query,
+      child.onlyFavorites
+        ? new Set(child.saved.map((savedItem) => itemById(savedItem)?.id ?? savedItem).filter((savedItem) => allowedIds.has(savedItem)))
+        : allowedIds,
+      searchCategory(child.query, child.category)
+    )
+      .map((entry) => itemById(entry.id)!)
+      .filter(Boolean);
+    if (activeFilter === "books") return base.filter((item) => item.item?.type === "book");
+    if (activeFilter === "labs") return base.filter((item) => item.item?.type === "exhibit");
+    return base;
+  }, [child.query, child.category, child.onlyFavorites, child.saved, allowedIds, activeFilter]);
+
+  const allowedBooks = useMemo(() => allowed.filter((item) => item.item?.type === "book"), [allowed]);
+  const startedBooksCount = useMemo(
+    () => allowedBooks.filter((bookItem) => (child.bookPages[bookItem.id] ?? 0) > 0 || recentSet.has(canonicalLibraryId(bookItem.id))).length,
+    [allowedBooks, child.bookPages, recentSet]
+  );
+
+  const relatedBooks =
+    record?.item?.type === "book" ? allowedBooks.filter((bookItem) => bookItem.id !== record.id).slice(0, 2) : [];
+
   useEffect(() => {
     if (!params.resume) return;
     const old = store.save.explore?.progress?.location;
@@ -339,72 +595,82 @@ function LibraryReady() {
             : { place: "wonder" },
     });
   }, [params.resume, store.save.explore?.progress?.location]);
-  const card = (item: CatalogItem) => (
-    <View
-      style={[
-        s.card,
-        item.item?.type === "book" && {
-          backgroundColor: "#FFFDF8",
-          borderColor: "#DEC59D",
-          borderBottomWidth: 6,
-          borderBottomColor: "#C89F6E",
-          borderRadius: 16,
-          flex: 0,
-          flexBasis: bookCardWidth,
-          flexShrink: 0,
-          width: bookCardWidth,
-        },
-      ]}
-    >
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={item.title}
-        onPress={() => {
-          remember();
-          openItem(item.id);
-        }}
-        onLongPress={() => {
-          const speech = recordSpeech(item);
-          audio.speak(speech.key, speech.sentence);
-        }}
+
+  const card = (item: CatalogItem) => {
+    const isBook = item.item?.type === "book";
+    const categoryBadge = categoryTitleById.get(item.category);
+    return (
+      <View
+        style={[
+          s.card,
+          isBook && {
+            backgroundColor: "#FFFDF8",
+            borderColor: "#DEC59D",
+            borderBottomWidth: 6,
+            borderBottomColor: "#C89F6E",
+            borderRadius: 18,
+            flex: 0,
+            flexBasis: bookCardWidth,
+            flexShrink: 0,
+            width: bookCardWidth,
+          },
+        ]}
       >
-        <ItemPicture record={item} pictureHeight={item.item?.type === "book" ? (width < 650 ? 200 : 280) : undefined} />
-        <Text maxFontSizeMultiplier={1.5} style={[s.cardTitle, headingBold, { color: "#3D2B24" }]}>
-          {item.title}
-        </Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={hearTitleLabel(item.title)}
-        onPress={() => {
-          const speech = recordSpeech(item);
-          audio.speak(speech.key, speech.sentence);
-        }}
-        style={({ pressed }) => ({
-          position: "absolute",
-          right: 8,
-          top: 8,
-          minWidth: 44,
-          minHeight: 44,
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 8,
-          borderRadius: 22,
-          backgroundColor: "#FFFDF8",
-          borderWidth: 1.5,
-          borderColor: "#E8D8BE",
-          shadowColor: "#3D2B24",
-          shadowOpacity: 0.12,
-          shadowOffset: { width: 0, height: 2 },
-          shadowRadius: 5,
-          elevation: 2,
-          opacity: pressed ? 0.78 : 1,
-        })}
-      >
-        <LibraryIcon name="sound" size={22} />
-      </Pressable>
-    </View>
-  );
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={item.title}
+          onPress={() => {
+            remember();
+            openItem(item.id);
+          }}
+          onLongPress={() => {
+            const speech = recordSpeech(item);
+            audio.speak(speech.key, speech.sentence);
+          }}
+        >
+          <ItemPicture
+            record={item}
+            badge={place === "books" ? undefined : categoryBadge}
+            pictureHeight={isBook ? (width < 650 ? 200 : 280) : undefined}
+          />
+          <Text maxFontSizeMultiplier={1.5} style={[s.cardTitle, headingBold, { color: "#3D2B24" }]}>
+            {item.title}
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={hearTitleLabel(item.title)}
+          onPress={() => {
+            const speech = recordSpeech(item);
+            audio.speak(speech.key, speech.sentence);
+          }}
+          style={({ pressed }) => ({
+            position: "absolute",
+            right: 8,
+            top: 8,
+            minWidth: 48,
+            minHeight: 48,
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 8,
+            borderRadius: 24,
+            backgroundColor: "#FFFDF8",
+            borderWidth: 1.5,
+            borderColor: "#E8D8BE",
+            shadowColor: "#3D2B24",
+            shadowOpacity: 0.12,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 5,
+            elevation: 2,
+            opacity: pressed ? 0.78 : 1,
+          })}
+        >
+          <LibraryIcon name="sound" size={22} />
+        </Pressable>
+      </View>
+    );
+  };
+
   if (place === "little" && open && !paused)
     return (
       <SafeAreaView style={[s.page, { backgroundColor: "#FFF6E5" }]}>
@@ -417,6 +683,7 @@ function LibraryReady() {
         {audio.notice && <Text style={[s.small, bodyFont, { color: "#665247", paddingHorizontal: 14 }]}>{audio.notice}</Text>}
       </SafeAreaView>
     );
+
   const blocked = (paused || (!open && !safePage)) && place !== "grownups";
   const showGrid = (place === "wonder" || place === "books") && !blocked;
   const readerAvailable = place === "reader" && !restricted && !blocked && record?.item?.type === "book";
@@ -425,26 +692,41 @@ function LibraryReady() {
   const headerFontSize = place === "reader" ? 16 : width < 360 ? 16 : 20;
   const tabFontSize = width < 360 ? 12.5 : 13.5;
   const activeTabBg = { backgroundColor: "#F9EBD0", borderColor: "#DEC496" } as const;
+  const activeCategoryInfo = child.category !== "all" ? categories.find((c) => c.id === child.category) : undefined;
+
   return (
     <SafeAreaView style={[s.page, { backgroundColor: "#FFF6E5" }]} edges={["top", "left", "right", "bottom"]}>
-      <View style={s.header}><AtmosphereHeader/>
+      <View style={s.header}>
+        <AtmosphereHeader />
         <Action onPress={back} label="Back">
           <LibraryIcon name="back" size={24} />
         </Action>
         <Text
-          maxFontSizeMultiplier={1.3} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}
-          style={[s.heading, displayBold, { marginTop: 0, flex: 1, fontSize: headerFontSize, textAlign: "center", color: "#3D2B24" }]}
+          maxFontSizeMultiplier={1.3}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+          style={[
+            s.heading,
+            displayBold,
+            { marginTop: 0, flex: 1, fontSize: headerFontSize, textAlign: "center", color: "#3D2B24" },
+          ]}
         >
           {readerAvailable ? record.title : "Island Library"}
         </Text>
-        {place === "make" && creation && !restricted && !blocked ? <Action label="Done editing story" onPress={() => Keyboard.dismiss()}>Done</Action> : <SoundSwitch
-          on={store.save.settings.sound}
-          onToggle={() => {
-            audio.stop();
-            store.settings({ sound: !store.save.settings.sound });
-          }}
-        />
-        }
+        {place === "make" && creation && !restricted && !blocked ? (
+          <Action label="Done editing story" onPress={() => Keyboard.dismiss()}>
+            Done
+          </Action>
+        ) : (
+          <SoundSwitch
+            on={store.save.settings.sound}
+            onToggle={() => {
+              audio.stop();
+              store.settings({ sound: !store.save.settings.sound });
+            }}
+          />
+        )}
         {readerAvailable ? (
           <>
             <Action
@@ -452,7 +734,7 @@ function LibraryReady() {
               selected={isSaved(id)}
               onPress={() => toggleSaved(id)}
             >
-              <LibraryIcon name="heart" size={24} />
+              <LibraryIcon name="heart" size={24} filled={isSaved(id)} />
             </Action>
             <Action label="Book information" onPress={() => setBookInfo(true)}>
               <LibraryIcon name="info" size={24} />
@@ -515,7 +797,7 @@ function LibraryReady() {
         <FlatList
           ref={list}
           key={`${place}:${cols}`}
-          data={place === "books" ? allowed.filter((item) => item.item?.type === "book") : results}
+          data={place === "books" ? allowedBooks : results}
           numColumns={cols}
           style={{ backgroundColor: "#FFF6E5" }}
           columnWrapperStyle={
@@ -552,19 +834,177 @@ function LibraryReady() {
           }}
           ListHeaderComponent={
             place === "books" ? (
-              <View style={[storyCard, { padding: 20, gap: 6, marginHorizontal: 6, marginBottom: 18 }]}>
-                <Text maxFontSizeMultiplier={1.5} style={[s.title, displayBold, { fontSize: 28, lineHeight: 35, color: "#3D2B24" }]}>
-                  Our story shelf
-                </Text>
-                <Text style={[s.body, bodyFont, { fontSize: 18, lineHeight: 26, color: "#665247" }]}>
-                  A shelf of stories to share.
-                </Text>
+              <View style={[storyCard, { overflow: "hidden", marginHorizontal: 6, marginBottom: 18 }]}>
+                <View style={{ width: "100%", height: width < 650 ? 156 : 200, position: "relative", backgroundColor: "#EFE7D4" }}>
+                  <PaintedLibraryCover category="books" testID="books-shelf-hero-cover" />
+                  <View style={[overlayFill, { backgroundColor: "rgba(61, 43, 36, 0.22)" }]} />
+                  <View
+                    style={{
+                      position: "absolute",
+                      left: 14,
+                      bottom: 12,
+                      flexDirection: "row",
+                      flexWrap: "wrap",
+                      gap: 8,
+                    }}
+                  >
+                    <View
+                      style={{
+                        backgroundColor: "#FFFDF8F2",
+                        borderRadius: 999,
+                        borderWidth: 1,
+                        borderColor: "#E8D8BE",
+                        paddingHorizontal: 12,
+                        paddingVertical: 4,
+                      }}
+                    >
+                      <Text maxFontSizeMultiplier={1.25} style={[s.small, headingBold, { color: "#3D2B24", fontSize: 13 }]}>
+                        {allowedBooks.length} {allowedBooks.length === 1 ? "picture book" : "picture books"}
+                      </Text>
+                    </View>
+                    {startedBooksCount > 0 && (
+                      <View
+                        style={{
+                          backgroundColor: "#DDF1EEF2",
+                          borderRadius: 999,
+                          borderWidth: 1,
+                          borderColor: "#9BC7C2",
+                          paddingHorizontal: 12,
+                          paddingVertical: 4,
+                        }}
+                      >
+                        <Text maxFontSizeMultiplier={1.25} style={[s.small, headingBold, { color: "#1E6B66", fontSize: 13 }]}>
+                          {startedBooksCount} started
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+                <View style={{ padding: 18, gap: 6 }}>
+                  <Text maxFontSizeMultiplier={1.5} style={[s.title, displayBold, { fontSize: 28, lineHeight: 35, color: "#3D2B24" }]}>
+                    Our story shelf
+                  </Text>
+                  <Text style={[s.body, bodyFont, { fontSize: 18, lineHeight: 26, color: "#665247" }]}>
+                    A shelf of stories to share.
+                  </Text>
+                </View>
               </View>
             ) : (
               <View style={{ padding: 8, gap: 14 }}>
-                <Text maxFontSizeMultiplier={1.5} style={[s.title, displayBold, { fontSize: width < 360 ? 25 : 28, lineHeight: width < 360 ? 32 : 36, color: "#3D2B24" }]}>
-                  What do you wonder?
-                </Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                  <Text
+                    maxFontSizeMultiplier={1.5}
+                    style={[
+                      s.title,
+                      displayBold,
+                      { fontSize: width < 360 ? 25 : 28, lineHeight: width < 360 ? 32 : 36, color: "#3D2B24", flexShrink: 1 },
+                    ]}
+                  >
+                    What do you wonder?
+                  </Text>
+                  <Action
+                    testID="library-surprise-me"
+                    label="Surprise Me!"
+                    onPress={surprisePick}
+                    style={{ backgroundColor: "#FFF3DA", borderColor: "#DEC496" }}
+                  >
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                      <LibraryIcon name="sparkles" size={22} />
+                      <Text maxFontSizeMultiplier={1.3} style={[s.actionText, headingBold, { color: "#3D2B24" }]}>
+                        Surprise Me!
+                      </Text>
+                    </View>
+                  </Action>
+                </View>
+
+                {!child.query && continueTarget && (
+                  <View
+                    testID="library-continue-reading"
+                    style={[
+                      storyCard,
+                      {
+                        flexDirection: stackHero ? "column" : "row",
+                        alignItems: "center",
+                        padding: 12,
+                        gap: 14,
+                        borderColor: "#9BC7C2",
+                        backgroundColor: "#FFFDF8",
+                      },
+                    ]}
+                  >
+                    <View
+                      style={{
+                        width: stackHero ? "100%" : width < 650 ? 116 : 168,
+                        height: stackHero ? 124 : 112,
+                        borderRadius: 18,
+                        overflow: "hidden",
+                        backgroundColor: "#DDF1EE",
+                      }}
+                    >
+                      {continueTarget.kind === "item" && continueTarget.record ? (
+                        <ItemPicture record={continueTarget.record} fill />
+                      ) : (
+                        <LibraryArt kind={continueTarget.motif} category={continueTarget.category} />
+                      )}
+                    </View>
+                    <View style={{ flex: 1, gap: 6, width: stackHero ? "100%" : undefined }}>
+                      <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
+                        <View
+                          style={{
+                            backgroundColor: "#DDF1EE",
+                            borderRadius: 999,
+                            paddingHorizontal: 10,
+                            paddingVertical: 3,
+                            borderWidth: 1,
+                            borderColor: "#9BC7C2",
+                          }}
+                        >
+                          <Text maxFontSizeMultiplier={1.2} style={[s.small, headingBold, { color: "#1E6B66", fontSize: 12 }]}>
+                            Pick Up Where You Left Off
+                          </Text>
+                        </View>
+                        <View
+                          style={{
+                            backgroundColor: "#FFF6E5",
+                            borderRadius: 999,
+                            paddingHorizontal: 9,
+                            paddingVertical: 3,
+                            borderWidth: 1,
+                            borderColor: "#E8D8BE",
+                          }}
+                        >
+                          <Text maxFontSizeMultiplier={1.2} style={[s.small, headingBold, { color: "#3D2B24", fontSize: 12 }]}>
+                            {continueTarget.badge}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text
+                        maxFontSizeMultiplier={1.4}
+                        numberOfLines={2}
+                        style={[s.heading, displayBold, { marginTop: 0, fontSize: 19, lineHeight: 25, color: "#3D2B24" }]}
+                      >
+                        {continueTarget.title}
+                      </Text>
+                      <Text maxFontSizeMultiplier={1.25} style={[s.small, bodyFont, { color: "#665247" }]}>
+                        {continueTarget.subtitle}
+                      </Text>
+                      <View style={{ flexDirection: "row", marginTop: 2 }}>
+                        <Action
+                          testID="library-continue-resume"
+                          label={`Resume ${continueTarget.title}`}
+                          selected
+                          onPress={() => {
+                            remember();
+                            openItem(continueTarget.id);
+                          }}
+                        >
+                          Resume
+                        </Action>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Look & Listen"
@@ -591,15 +1031,22 @@ function LibraryReady() {
                       backgroundColor: "#DDF1EE",
                     }}
                   >
-                    <LibraryArt kind="turtle" />
+                    <LibraryArt kind="turtle" category="ocean" />
                   </View>
                   <View style={{ flex: 1, paddingHorizontal: 6, paddingVertical: 4, gap: 6, alignItems: "center" }}>
                     <LibraryIcon name="listen" size={34} />
-                    <Text maxFontSizeMultiplier={1.5} style={[s.heading, displayBold, { marginTop: 0, textAlign: "center", fontSize: 21, color: "#3D2B24" }]}>
+                    <Text
+                      maxFontSizeMultiplier={1.5}
+                      style={[s.heading, displayBold, { marginTop: 0, textAlign: "center", fontSize: 21, color: "#3D2B24" }]}
+                    >
                       Look & Listen
+                    </Text>
+                    <Text maxFontSizeMultiplier={1.25} style={[s.small, bodyFont, { textAlign: "center", color: "#665247" }]}>
+                      Picture cards with read-aloud words
                     </Text>
                   </View>
                 </Pressable>
+
                 <TextInput
                   accessibilityLabel="Search the Library"
                   value={child.query}
@@ -614,128 +1061,291 @@ function LibraryReady() {
                   autoCorrect={false}
                   returnKeyType="search"
                 />
-                <Action
-                  selected={child.category === "all" && !child.query}
-                  onPress={() => update({ category: "all", query: "", onlyFavorites: false })}
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12, width: "100%", justifyContent: "center" }}>
-                    <LibraryIcon name="wonder" size={32} />
-                    <Text maxFontSizeMultiplier={1.4} numberOfLines={2} style={[s.actionText, displayBold, { fontSize: 18, flexShrink: 1, color: "#3D2B24" }]}>
-                      All pictures
-                    </Text>
-                    <View style={{ width: width < 360 ? 64 : 78, height: 46, flexShrink: 0, overflow: "hidden", borderRadius: 14, backgroundColor: "#E5ECD8" }}>
-                      <LibraryArt kind="butterfly" />
+
+                {/* 1-tap Quick Filter Chips */}
+                <View style={[s.row, { gap: 8 }]}>
+                  <Action
+                    testID="library-filter-all"
+                    selected={activeFilter === "all" && child.category === "all" && !child.query}
+                    onPress={() => applyQuickFilter("all")}
+                  >
+                    All
+                  </Action>
+                  <Action
+                    testID="library-filter-books"
+                    selected={activeFilter === "books"}
+                    onPress={() => applyQuickFilter("books")}
+                  >
+                    Books
+                  </Action>
+                  <Action
+                    testID="library-filter-labs"
+                    selected={activeFilter === "labs"}
+                    onPress={() => applyQuickFilter("labs")}
+                  >
+                    Interactive Labs
+                  </Action>
+                  <Action
+                    testID="library-filter-saved"
+                    selected={activeFilter === "saved"}
+                    onPress={() => applyQuickFilter("saved")}
+                  >
+                    Saved
+                  </Action>
+                </View>
+
+                {!child.query && activeCategoryInfo && (
+                  <View testID="library-selected-category-banner" style={[storyCard, { overflow: "hidden" }]}>
+                    <View style={{ height: 112, width: "100%", position: "relative", backgroundColor: activeCategoryInfo.tint }}>
+                      <PaintedLibraryCover category={activeCategoryInfo.id} />
+                      <View style={[overlayFill, { backgroundColor: "rgba(61, 43, 36, 0.25)" }]} />
+                    </View>
+                    <View
+                      style={{
+                        padding: 14,
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 10,
+                      }}
+                    >
+                      <View style={{ gap: 2, flexShrink: 1 }}>
+                        <Text maxFontSizeMultiplier={1.4} style={[s.heading, displayBold, { marginTop: 0, color: "#3D2B24" }]}>
+                          {activeCategoryInfo.title}
+                        </Text>
+                        <Text maxFontSizeMultiplier={1.25} style={[s.small, bodyFont, { color: "#665247" }]}>
+                          {results.length} {results.length === 1 ? "wonder" : "wonders"} on this shelf
+                        </Text>
+                      </View>
+                      <Action onPress={() => update({ category: "all" })}>All shelves</Action>
                     </View>
                   </View>
-                </Action>
-                {!child.query && child.category === "all" && (
+                )}
+
+                {!child.query && child.category === "all" && activeFilter === "all" && (
                   <View style={[s.row, { gap: 12 }]}>
                     {categories
                       .filter((category) => category.id !== "books" && child.policy.collections.includes(category.id))
-                      .map((category) => (
-                        <Pressable
-                          key={category.id}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Browse ${category.title}`}
-                          accessibilityState={{ selected: child.category === category.id }}
-                          onPress={() => {
-                            scrollY.current = 0;
-                            update({ category: child.category === category.id ? "all" : category.id });
-                          }}
-                          onLongPress={() => audio.speak(category.speechKey)}
-                          style={({ pressed }) => [
-                            storyCard,
-                            {
-                              width: categoryTileWidth,
-                              overflow: "hidden",
-                              opacity: pressed ? 0.85 : 1,
-                            },
-                            child.category === category.id && s.selected,
-                          ]}
-                        >
-                          <View style={{ width: "100%", height: width < 650 ? 132 : 158, backgroundColor: category.tint }}>
-                            <LibraryArt kind={categoryScene(category)} />
-                          </View>
-                          <WordLabel
-                            textStyle={[s.actionText, headingBold, { color: "#3D2B24" }]}
-                            onWordLayout={(event) => setExpandedCategoryLabels(event.nativeEvent.layout.height > 28)}
-                            style={{
-                              paddingHorizontal: 10,
-                              paddingVertical: 10,
-                              minHeight: 54,
-                              backgroundColor: child.category === category.id ? "#DDF1EE" : "#FFFDF8",
-                              borderTopWidth: 1,
-                              borderColor: "#EFE3CE",
-                            }}
-                          >
-                            {category.title}
-                          </WordLabel>
-                        </Pressable>
-                      ))}
-                  </View>
-                )}
-                {!child.query && (
-                  <>
-                    <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
-                      Try an exhibit
-                    </Text>
-                    <View style={s.row}>
-                      {exhibits
-                        .filter((exhibit) => child.policy.collections.includes(exhibit.category))
-                        .map((exhibit) => (
-                          <Action
-                            key={exhibit.world}
+                      .map((category) => {
+                        const stats = categoryStats.get(category.id) ?? { total: 0, saved: 0, explored: 0 };
+                        const progressText =
+                          stats.saved > 0
+                            ? `${stats.saved} saved`
+                            : stats.explored > 0
+                              ? `${stats.explored} explored`
+                              : null;
+                        return (
+                          <Pressable
+                            key={category.id}
+                            testID={`library-category-${category.id}`}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Browse ${category.title}`}
+                            accessibilityState={{ selected: child.category === category.id }}
                             onPress={() => {
-                              remember();
-                              const reviewed = authored.find(item => item.type === "exhibit" && resolveExhibitWorld({ id: item.id, title: item.title, category: item.category, motif: exhibit.motif, item }) === exhibit.world);
-                              if (reviewed) visit("authored-exhibit", reviewed.id);
-                              else visit("exhibit", exhibit.world);
+                              scrollY.current = 0;
+                              update({ category: child.category === category.id ? "all" : category.id });
                             }}
+                            onLongPress={() => audio.speak(category.speechKey)}
+                            style={({ pressed }) => [
+                              storyCard,
+                              {
+                                width: categoryTileWidth,
+                                overflow: "hidden",
+                                opacity: pressed ? 0.85 : 1,
+                              },
+                              child.category === category.id && s.selected,
+                            ]}
                           >
                             <View
                               style={{
-                                width: width < 380 ? 112 : width < 650 ? 128 : 160,
-                                height: 84,
-                                overflow: "hidden",
-                                borderRadius: 16,
-                                marginBottom: 6,
+                                width: "100%",
+                                height: width < 650 ? 136 : 162,
+                                backgroundColor: category.tint,
+                                position: "relative",
                               }}
                             >
-                              <LibraryArt kind={exhibit.motif} />
+                              <LibraryArt kind={categoryScene(category)} category={category.id} />
+                              <View
+                                pointerEvents="none"
+                                style={{
+                                  position: "absolute",
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 0,
+                                  height: 44,
+                                  backgroundColor: "rgba(61, 43, 36, 0.24)",
+                                }}
+                              />
+                              <View
+                                pointerEvents="none"
+                                style={{
+                                  position: "absolute",
+                                  left: 8,
+                                  right: 8,
+                                  bottom: 8,
+                                  flexDirection: "row",
+                                  flexWrap: "wrap",
+                                  justifyContent: "space-between",
+                                  gap: 4,
+                                }}
+                              >
+                                {stats.total > 0 && (
+                                  <View
+                                    style={{
+                                      backgroundColor: "#FFFDF8F0",
+                                      borderRadius: 999,
+                                      paddingHorizontal: 8,
+                                      paddingVertical: 2,
+                                      borderWidth: 1,
+                                      borderColor: "#E8D8BE",
+                                    }}
+                                  >
+                                    <Text
+                                      maxFontSizeMultiplier={1.2}
+                                      style={[s.small, headingBold, { color: "#3D2B24", fontSize: 11.5, lineHeight: 15 }]}
+                                    >
+                                      {stats.total} {stats.total === 1 ? "story" : "stories & facts"}
+                                    </Text>
+                                  </View>
+                                )}
+                                {progressText && (
+                                  <View
+                                    style={{
+                                      backgroundColor: "#DDF1EEF2",
+                                      borderRadius: 999,
+                                      paddingHorizontal: 8,
+                                      paddingVertical: 2,
+                                      borderWidth: 1,
+                                      borderColor: "#9BC7C2",
+                                    }}
+                                  >
+                                    <Text
+                                      maxFontSizeMultiplier={1.2}
+                                      style={[s.small, headingBold, { color: "#1E6B66", fontSize: 11.5, lineHeight: 15 }]}
+                                    >
+                                      {progressText}
+                                    </Text>
+                                  </View>
+                                )}
+                              </View>
                             </View>
-                            {exhibit.title}
-                          </Action>
-                        ))}
-                    </View>
-                  </>
+                            <WordLabel
+                              textStyle={[s.actionText, headingBold, { color: "#3D2B24" }]}
+                              onWordLayout={(event) => setExpandedCategoryLabels(event.nativeEvent.layout.height > 28)}
+                              style={{
+                                paddingHorizontal: 10,
+                                paddingVertical: 10,
+                                minHeight: 54,
+                                backgroundColor: child.category === category.id ? "#DDF1EE" : "#FFFDF8",
+                                borderTopWidth: 1,
+                                borderColor: "#EFE3CE",
+                              }}
+                            >
+                              {category.title}
+                            </WordLabel>
+                          </Pressable>
+                        );
+                      })}
+                  </View>
                 )}
-                <View style={s.row}>
-                  <Action
-                    selected={!!child.onlyFavorites}
-                    onPress={() => update({ onlyFavorites: !child.onlyFavorites })}
-                  >
-                    Saved pictures
-                  </Action>
-                </View>
-                <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
-                  {child.query ? "Your discoveries" : "Follow a picture"}
-                </Text>
+
+                {(activeFilter === "all" || activeFilter === "labs") && matchingExhibits.length > 0 && (
+                  <View style={{ gap: 10 }}>
+                    <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
+                      Interactive Labs
+                    </Text>
+                    <View style={[s.row, { gap: 10 }]}>
+                      {matchingExhibits.map((exhibit) => (
+                        <Pressable
+                          key={exhibit.world}
+                          testID={`library-lab-${exhibit.world}`}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Interactive Lab: ${exhibit.title}`}
+                          onPress={() => openExhibit(exhibit.world, exhibit.motif)}
+                          style={({ pressed }) => [
+                            storyCard,
+                            {
+                              width: labTileWidth,
+                              minWidth: 146,
+                              flexGrow: 1,
+                              overflow: "hidden",
+                              opacity: pressed ? 0.85 : 1,
+                            },
+                          ]}
+                        >
+                          <View style={{ width: "100%", height: 104, position: "relative", backgroundColor: "#DDF1EE" }}>
+                            <LibraryArt kind={exhibit.motif} category={exhibit.category} />
+                            <View
+                              pointerEvents="none"
+                              style={{
+                                position: "absolute",
+                                left: 8,
+                                top: 8,
+                                backgroundColor: "#FFFDF8F2",
+                                borderRadius: 999,
+                                borderWidth: 1,
+                                borderColor: "#9BC7C2",
+                                paddingHorizontal: 8,
+                                paddingVertical: 2,
+                              }}
+                            >
+                              <Text
+                                maxFontSizeMultiplier={1.2}
+                                style={[s.small, headingBold, { color: "#1E6B66", fontSize: 11, lineHeight: 14 }]}
+                              >
+                                Interactive Lab
+                              </Text>
+                            </View>
+                          </View>
+                          <View style={{ padding: 10, minHeight: 52, justifyContent: "center" }}>
+                            <Text
+                              maxFontSizeMultiplier={1.4}
+                              numberOfLines={2}
+                              style={[s.actionText, headingBold, { color: "#3D2B24", fontSize: 15.5, textAlign: "left" }]}
+                            >
+                              {exhibit.title}
+                            </Text>
+                          </View>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {(activeFilter !== "labs" || results.length > 0) && (
+                  <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
+                    {child.query
+                      ? "Your discoveries"
+                      : activeFilter === "books"
+                        ? "Picture books"
+                        : activeFilter === "labs"
+                          ? "Reviewed exhibit guides"
+                          : activeFilter === "saved"
+                            ? "Saved pictures"
+                            : "Follow a picture"}
+                  </Text>
+                )}
               </View>
             )
           }
           ListEmptyComponent={
-            <View style={{ paddingHorizontal: 6, paddingTop: 4, maxWidth: 1060, width: "100%", alignSelf: "center" }}>
-              <View style={[storyCard, { padding: 20, gap: 14 }]}>
-                <Text style={[s.body, bodyFont, { color: "#3D2B24" }]}>
-                  {place === "books" ? collectionEmptyMessage("books", child.policy.collections) : "No picture found yet. Try another word, or choose a picture above."}
-                </Text>
-                {place !== "books" && (
-                  <Action onPress={() => update({ query: "", category: "all", onlyFavorites: false })}>
-                    Back to pictures
-                  </Action>
-                )}
+            place === "wonder" && (activeFilter === "labs" || activeFilter === "all") && matchingExhibits.length > 0 ? null : (
+              <View style={{ paddingHorizontal: 6, paddingTop: 4, maxWidth: 1060, width: "100%", alignSelf: "center" }}>
+                <View style={[storyCard, { padding: 20, gap: 14 }]}>
+                  <Text style={[s.body, bodyFont, { color: "#3D2B24" }]}>
+                    {place === "books"
+                      ? collectionEmptyMessage("books", child.policy.collections)
+                      : activeFilter === "saved"
+                        ? "No saved pictures yet. Tap the heart on any book or wonder to keep it here."
+                        : "No picture found yet. Try another word, or choose a picture above."}
+                  </Text>
+                  {place !== "books" && (
+                    <Action onPress={() => applyQuickFilter("all")}>Back to pictures</Action>
+                  )}
+                </View>
               </View>
-            </View>
+            )
           }
         />
       ) : place === "reader" && record?.item?.type === "book" ? (
@@ -756,6 +1366,18 @@ function LibraryReady() {
             selected={audio.selected}
             speak={(sentence) => audio.speak(sentence.speechKey, sentence)}
             word={audio.word}
+            readingPage={audio.readingSequence ?? false}
+            onReadPage={
+              audio.speakSequence
+                ? (sentences) => {
+                    audio.speakSequence(sentences);
+                  }
+                : undefined
+            }
+            onStopReading={audio.stop}
+            onDrawAbout={() => make(id)}
+            relatedBooks={relatedBooks}
+            onOpenBook={openItem}
           />
         </View>
       ) : place === "make" && creation ? (
@@ -832,13 +1454,43 @@ function LibraryReady() {
             )
           ) : place === "shelf" ? (
             <>
-              <View style={[storyCard, { padding: 20, gap: 6 }]}>
+              <View style={[storyCard, { padding: 20, gap: 10 }]}>
                 <Text maxFontSizeMultiplier={1.5} style={[s.title, displayBold, { color: "#3D2B24" }]}>
                   My Shelf
                 </Text>
                 <Text style={[s.small, bodyFont, { color: "#665247", fontSize: 15 }]}>
                   {people.people.find((person) => person.id === childId)?.name}
                 </Text>
+                <View style={s.row}>
+                  <View
+                    style={{
+                      backgroundColor: "#FFF6E5",
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: "#E8D8BE",
+                      paddingHorizontal: 12,
+                      paddingVertical: 5,
+                    }}
+                  >
+                    <Text maxFontSizeMultiplier={1.25} style={[s.small, headingBold, { color: "#3D2B24" }]}>
+                      {child.saved.filter((item) => canOpen(item, child.policy.collections)).length} saved
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      backgroundColor: "#DDF1EE",
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: "#9BC7C2",
+                      paddingHorizontal: 12,
+                      paddingVertical: 5,
+                    }}
+                  >
+                    <Text maxFontSizeMultiplier={1.25} style={[s.small, headingBold, { color: "#1E6B66" }]}>
+                      {child.creations.filter((page) => !page.sourceId || canOpen(page.sourceId, child.policy.collections)).length} pages made
+                    </Text>
+                  </View>
+                </View>
               </View>
               <Text maxFontSizeMultiplier={1.6} style={[s.heading, displayBold, { color: "#3D2B24" }]}>
                 Saved wonders & books
@@ -927,8 +1579,8 @@ function LibraryReady() {
                 setPaused(false);
                 router.replace("/library");
               }}
-              onSelect={(id) => {
-                store.selectLearner(id);
+              onSelect={(selectedId) => {
+                store.selectLearner(selectedId);
                 router.replace("/library");
               }}
               onDone={() => router.replace("/library")}

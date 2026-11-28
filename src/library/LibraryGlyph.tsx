@@ -1,7 +1,7 @@
 import React from "react";
 import Svg, { Path } from "react-native-svg";
 /** Shared ink-and-paper controls. Labels belong to the enclosing button. */
-export function LibraryGlyph({ name, size = 28 }: { name: string; size?: number }) {
+export function LibraryGlyph({ name, size = 28, filled = false }: { name: string; size?: number; filled?: boolean }) {
   const paths: Record<string, string> = {
     back: "M22 7 12 16l10 9M12 16h17",
     next: "m10 7 10 9-10 9M20 16H3",
@@ -21,23 +21,35 @@ export function LibraryGlyph({ name, size = 28 }: { name: string; size?: number 
     shelf: "M3 27h26M3 15h26M7 5v10M13 3v12M19 6l4 9M7 19v8M14 18v9M22 20v7",
     layer: "M5 6h22v22H5ZM10 6v22M5 22h22",
     books: "M3 6q6-3 13 1 7-4 13-1v20q-6-3-13 1-7-4-13-1ZM16 7v20",
+    play: "M9 6l16 10L9 26Z",
+    stop: "M8 8h16v16H8Z",
+    sparkles: "M16 4l2.5 7.5L26 14l-7.5 2.5L16 24l-2.5-7.5L6 14l7.5-2.5ZM25 5l1 3 3 1-3 1-1 3-1-3-3-1 3-1Z",
+    compass: "M16 29a13 13 0 1 0 0-26 13 13 0 0 0 0 26ZM21 11l-3 7-7 3 3-7Z",
+    check: "M6 17l7 7L26 9",
   };
+  const activeHeart = name === "heart" && filled;
+  const fillColor = activeHeart
+    ? "#D46A56"
+    : name === "stop"
+      ? "#B75C49"
+      : name === "play" || name === "sparkles"
+        ? "#F0C86D"
+        : ["heart", "make", "layer", "books", "lock"].includes(name)
+          ? "#EBD3A0"
+          : "none";
   return (
     <Svg
       width={size}
       height={size}
       viewBox="0 0 32 32"
       fill="none"
-      stroke="#254E4B"
+      stroke={activeHeart ? "#8E3929" : "#254E4B"}
       strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
       accessible={false}
     >
-      <Path
-        d={paths[name] ?? paths.books}
-        fill={["heart", "make", "layer", "books", "lock"].includes(name) ? "#EBD3A0" : "none"}
-      />
+      <Path d={paths[name] ?? paths.books} fill={fillColor} />
     </Svg>
   );
 }
