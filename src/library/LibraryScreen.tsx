@@ -51,7 +51,7 @@ import { ReviewedNarration } from "./ReviewedNarration";
 import { Exhibit } from "./Exhibit";
 import { hasPendingPages, pageDraftKey, pendingPage } from "./drafts";
 import { canonicalDestination, exhibitWorld as resolveExhibitWorld, hearTitleLabel, libraryBack, mayFinishPage } from "./navigation";
-import { canonicalLibraryId, rememberLibraryDestination } from "./ids";
+import { canonicalLibraryId, rememberLibraryDestination, rememberVisitedDestination } from "./ids";
 import type { ReadingLayer } from "./schema";
 
 type QuickFilter = "all" | "books" | "labs" | "saved";
@@ -109,6 +109,7 @@ function collectDurableExplored(child: LibraryChildState, legacyVisited: readonl
     ids.add(canonicalLibraryId(raw));
   };
   for (const id of child.recent) add(id);
+  for (const id of child.visited ?? []) add(id);
   for (const id of Object.keys(child.bookPages)) add(id);
   for (const id of Object.keys(child.layers)) add(id);
   for (const key of Object.keys(child.positions)) add(positionDestinationId(key));
@@ -238,6 +239,7 @@ function LibraryReady() {
       visited.add(destinationId);
       update({
         recent: rememberLibraryDestination(live.current.recent, destinationId),
+        visited: rememberVisitedDestination(live.current.visited, destinationId),
         current: destinationId,
       });
     }
@@ -391,7 +393,10 @@ function LibraryReady() {
 
   const activeFilter: QuickFilter = child.onlyFavorites ? "saved" : quickFilter;
   const savedSet = useMemo(() => new Set(child.saved.map((item) => canonicalLibraryId(itemById(item)?.id ?? item))), [child.saved]);
-  const recentSet = useMemo(() => new Set(child.recent.map((item) => canonicalLibraryId(item))), [child.recent]);
+  const recentSet = useMemo(
+    () => new Set([...child.recent, ...(child.visited ?? [])].map((item) => canonicalLibraryId(item))),
+    [child.recent, child.visited]
+  );
 
   const enabledExhibits = useMemo(
     () => exhibits.filter((exhibit) => child.policy.collections.includes(exhibit.category)),

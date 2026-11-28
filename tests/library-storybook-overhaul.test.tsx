@@ -3,8 +3,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { newLibraryChild } from "../src/library/state";
-import { emptySave } from "../src/state/validation";
+import { newLibraryChild, validLibraryChild } from "../src/library/state";
+import { emptySave, parseSave } from "../src/state/validation";
 import type { CatalogItem } from "../src/library/catalog";
 import type { LibraryItem, Rights, Sentence } from "../src/library/schema";
 
@@ -261,6 +261,76 @@ describe("Upgraded Wonder browsing, Continue Reading, Surprise Me!, and Quick Fi
 
     expect(visitedIds).toHaveLength(45);
     expect(new Set(visitedIds).size).toBe(45);
+  });
+
+  it("persists visited destinations across a cold restart and exhausts all eligible experiences without premature repeats (R2-01)", async () => {
+    // 1. Validate optional visited schema contract (omitted when empty, bounded & deduplicated when present).
+    expect(newLibraryChild().visited).toBeUndefined();
+    expect(validLibraryChild({ ...newLibraryChild(), visited: ["moon", "moon"] })).toBe(false);
+    expect(validLibraryChild({ ...newLibraryChild(), visited: ["https://outside"] })).toBe(false);
+    expect(
+      validLibraryChild({ ...newLibraryChild(), visited: Array.from({ length: 501 }, (_, i) => `topic-${i}`) })
+    ).toBe(false);
+
+    // Compute exact deduplicated eligible count for the active learner's collections.
+    const { availableItems, exhibits } = await import("../src/library/catalog");
+    const { exhibitWorld } = await import("../src/library/navigation");
+    const { canonicalLibraryId } = await import("../src/library/ids");
+    const collections = env.store.save.library.profiles.family.policy.collections as string[];
+    const allowed = availableItems(collections);
+    const authoredWorlds = new Set(
+      allowed.filter((i) => i.item?.type === "exhibit").map((i) => exhibitWorld(i)).filter(Boolean)
+    );
+    const eligibleCount = new Set([
+      ...allowed.map((i) => canonicalLibraryId(i.id)),
+      ...exhibits
+        .filter((e) => collections.includes(e.category) && !authoredWorlds.has(e.world))
+        .map((e) => `lab-${e.world}`),
+    ]).size;
+    expect(eligibleCount).toBeGreaterThan(50);
+
+    // 2. Tap Surprise Me 35 times (>24 recent cap).
+    let { default: LibraryScreen } = await import("../src/library/LibraryScreen");
+    const visitedIds: string[] = [];
+    for (let i = 0; i < 35; i++) {
+      await act(async () => {
+        root = create(<LibraryScreen />);
+      });
+      await act(async () => root!.root.findByProps({ testID: "library-surprise-me" }).props.onPress());
+      const lastCall = env.routerPush.mock.calls.at(-1)?.[0];
+      visitedIds.push(lastCall.params.place === "exhibit" ? `lab-${lastCall.params.id}` : String(lastCall.params.id));
+      await act(async () => root!.unmount());
+      root = undefined;
+    }
+
+    expect(env.store.save.library.profiles.family.recent).toHaveLength(24);
+    expect(env.store.save.library.profiles.family.visited).toHaveLength(35);
+
+    // 3. Serialize save, validate with real parseSave, reset all loaded modules to simulate cold app restart.
+    const serialized = JSON.stringify(env.store.save);
+    const reloadedSave = parseSave(serialized);
+    expect(reloadedSave.library?.profiles.family.visited).toHaveLength(35);
+
+    vi.resetModules();
+    env.store.save = reloadedSave;
+    env.store.epoch = 1;
+    ({ default: LibraryScreen } = await import("../src/library/LibraryScreen"));
+
+    // 4. Continue tapping Surprise Me until every remaining eligible distinct experience is exhausted.
+    const remaining = eligibleCount - 35;
+    for (let i = 0; i < remaining; i++) {
+      await act(async () => {
+        root = create(<LibraryScreen />);
+      });
+      await act(async () => root!.root.findByProps({ testID: "library-surprise-me" }).props.onPress());
+      const lastCall = env.routerPush.mock.calls.at(-1)?.[0];
+      visitedIds.push(lastCall.params.place === "exhibit" ? `lab-${lastCall.params.id}` : String(lastCall.params.id));
+      await act(async () => root!.unmount());
+      root = undefined;
+    }
+
+    expect(visitedIds).toHaveLength(eligibleCount);
+    expect(new Set(visitedIds).size).toBe(eligibleCount);
   });
 
   it("finds playable Interactive Labs like Habitat detective when searching under Interactive Labs or All (R1-03)", async () => {

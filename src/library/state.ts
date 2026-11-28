@@ -20,6 +20,7 @@ export type LibraryChildState = {
   version: 1;
   saved: string[];
   recent: string[];
+  visited?: string[];
   bookPages: Record<string, number>;
   layers: Record<string, "tell" | "more" | "deep">;
   query: string;
@@ -158,6 +159,7 @@ export function validLibraryChild(v: unknown): v is LibraryChildState {
       "version",
       "saved",
       "recent",
+      "visited",
       "bookPages",
       "layers",
       "query",
@@ -172,6 +174,7 @@ export function validLibraryChild(v: unknown): v is LibraryChildState {
     v.version === 1 &&
     ids(v.saved, 500) &&
     ids(v.recent, 24) &&
+    (v.visited === undefined || ids(v.visited, 500)) &&
     record(v.bookPages, 500, (p) => integer(p, 10000)) &&
     record(v.layers, 500, (l) => ["tell", "more", "deep"].includes(l as string)) &&
     text(v.query, 200) &&
