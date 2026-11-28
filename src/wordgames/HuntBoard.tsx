@@ -8,15 +8,16 @@ import { tileAtPoint, type HuntSize } from './wordHuntEngine';
 interface Props { tiles: readonly string[]; size: HuntSize; path: readonly number[]; hint?: number; width: number; interactive?: boolean; tapMode?: boolean; onTile?: (tile: number) => void; onRelease?: () => void; onCancel?: () => void }
 /** Capture only in drag mode. Tap mode exposes each full-size tile to VoiceOver and keyboard. */
 export function HuntBoard({ tiles, size, path, hint, width, interactive = false, tapMode = false, onTile, onRelease, onCancel }: Props) {
-  const [measured, setMeasured] = useState(width), board = useRef<View>(null), origin = useRef({ x: 0, y: 0 }), gesture = useRef(false);
+  const [measured, setMeasured] = useState(width), gesture = useRef(false);
   const handlers = useRef({ onTile, onRelease, onCancel });
   // Event handlers always read the latest round without rebuilding an active responder.
   React.useLayoutEffect(() => { handlers.current = { onTile, onRelease, onCancel }; }, [onTile, onRelease, onCancel]);
   const geometry = useRef({ width: measured, size });
   React.useLayoutEffect(() => { geometry.current = { width: measured, size }; }, [measured, size]);
   const hit = (event: GestureResponderEvent) => {
-    const x = event.nativeEvent.pageX - origin.current.x, y = event.nativeEvent.pageY - origin.current.y;
-    const tile = tileAtPoint(x, y, geometry.current.width, geometry.current.size);
+    // Passive tile children make the responder surface the native touch target.
+    // Local coordinates are synchronous, so a fast first move never waits for a bridge measurement.
+    const tile = tileAtPoint(event.nativeEvent.locationX, event.nativeEvent.locationY, geometry.current.width, geometry.current.size);
     if (tile !== null) handlers.current.onTile?.(tile);
   };
   // Stable responder callbacks read refs only when React Native dispatches a gesture.
@@ -26,16 +27,15 @@ export function HuntBoard({ tiles, size, path, hint, width, interactive = false,
     onMoveShouldSetPanResponder: () => true,
     onPanResponderGrant: event => {
       gesture.current = true;
-      // page coordinates remain stable when the touch target is a child or the grid is scrolled.
-      board.current?.measureInWindow((x, y) => { origin.current = { x, y }; if (gesture.current) hit(event); });
+      hit(event);
     },
     onPanResponderMove: event => { if (gesture.current) hit(event); },
-    onPanResponderRelease: () => { gesture.current = false; handlers.current.onRelease?.(); },
+    onPanResponderRelease: event => { if (gesture.current) hit(event); gesture.current = false; handlers.current.onRelease?.(); },
     onPanResponderTerminate: () => { gesture.current = false; handlers.current.onCancel?.(); },
     onPanResponderTerminationRequest: () => false,
   }), []);
   const cell = measured / size;
-  return <View ref={board} collapsable={false} testID="hunt-board" onLayout={event => { const value = event.nativeEvent.layout.width; if (value > 0) setMeasured(value); }}
+  return <View collapsable={false} testID="hunt-board" onLayout={event => { const value = event.nativeEvent.layout.width; if (value > 0) setMeasured(value); }}
     {...(interactive && !tapMode ? pan.panHandlers : {})}
     style={[styles.board, { width, height: width }, Platform.OS === 'web' && interactive && !tapMode ? { touchAction: 'none' } as never : undefined]}>
     {tiles.map((letter, i) => {

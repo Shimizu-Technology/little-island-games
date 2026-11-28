@@ -15,6 +15,10 @@ export function AnagramsScreen(props: WordScreenProps) {
     const run = () => { change(createWordSession('anagrams', size, mode, (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0, round?.best)); setFeedback(''); setHint(undefined); setReview(''); };
     if (props.beforeNewRound) props.beforeNewRound(run); else run();
   };
+  const replay = () => {
+    const run = () => { if (round) { change(rematch(round)); setReview(''); setFeedback(''); } };
+    if (props.beforeNewRound) props.beforeNewRound(run); else run();
+  };
   const submit = () => {
     const current = live.current;
     if (!current || current.phase !== 'playing') return;
@@ -29,7 +33,7 @@ export function AnagramsScreen(props: WordScreenProps) {
     {!round ? <View style={W.panel}><Heading>Mix a little word magic</Heading><ModePicker mode={mode} setMode={setMode}/><View style={W.row}><Button small tone={size === 6 ? 'primary' : 'quiet'} onPress={() => setSize(6)}>6 tiles · Classic</Button><Button small tone={size === 7 ? 'primary' : 'quiet'} onPress={() => setSize(7)}>7 tiles · Big Rack</Button></View><SetupCopy game="anagrams" mode={mode}/><Copy>Tap letters to build a word. Tap a chosen tile or answer slot to remove it. Enter each word once.</Copy><Button onPress={start}>Start Anagrams</Button></View>
     : round.phase === 'handoff' || round.phase === 'paused' ? <PrivacyCard round={round} onReady={() => change(round.phase === 'handoff' ? startSecondPlayer(round) : resumeRound(round))} onBack={props.onBack}/>
     : round.phase === 'finished' ? <>
-      <FinishSummary round={round} onAgain={start} onRematch={() => { change(rematch(round)); setReview(''); setFeedback(''); }} onBack={props.onBack}/>
+      <FinishSummary round={round} onAgain={start} onRematch={replay} onBack={props.onBack}/>
       <View style={W.banner}><Text style={W.big}>{review || round.tiles.join(' ')}</Text><Copy>Tap any word below to see how these letters fit.</Copy></View>
       <WordList title="Found Words" words={foundWords(round)} selected={review} onWord={setReview} grouped/>
       <WordList title="Best Words You Missed" words={missedWords(round, solveRack(round.tiles))} selected={review} onWord={setReview} grouped/>

@@ -92,6 +92,9 @@ function ActivityGame({ id }: { id: ActivityId }) {
       >
         <SaveStatus />
         {id === 'word-hunt' || id === 'anagrams' ? (
+          <>{
+          // createElement stores event callbacks; the callbacks read refs only when invoked.
+          // eslint-disable-next-line react-hooks/refs
           React.createElement(id === 'word-hunt' ? WordHuntScreen : AnagramsScreen, {
             session: saved?.game === id ? saved : null,
             onSave: (next, previous) => save(next, previous),
@@ -102,7 +105,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
             width: Math.min(width - 40, 420),
             onActionFocus: () => activityScroll.current?.scrollTo({ y: 0, animated: false }),
             onFeedback: event => sound(event === 'finish' ? 'win' : event === 'word' ? 'match' : 'tap'),
-          })
+          })}{practice.panel}</>
         ) : id === "island-mystery" ? (
           <MysteryScreen
             beforeNewRound={practice.request}

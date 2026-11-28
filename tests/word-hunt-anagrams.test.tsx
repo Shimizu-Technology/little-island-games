@@ -1,4 +1,5 @@
 import React from 'react';
+import Activity from '../src/app/activity';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
@@ -15,8 +16,26 @@ import { generateBoard, solveBoard, validHuntPath, traceTile, tileAtPoint } from
 import { generateRack, solveRack, canBuildWord, selectRackTile, shuffleRack } from '../src/wordgames/anagramsEngine';
 import { wordScore } from '../src/wordgames/scoring';
 import { createWordSession, changeSelection, submitWord, finishRound, startSecondPlayer, elapseRound, pauseRound, resumeRound, rematch, validWordSession } from '../src/wordgames/session';
+const routeFixture=vi.hoisted(()=>({game:'word-hunt'}));
+vi.mock('expo-router',()=>({useLocalSearchParams:()=>routeFixture,useIsFocused:()=>true,router:{canGoBack:()=>false,replace:vi.fn()},Redirect:'Redirect'}));
+vi.mock('react-native-safe-area-context',()=>({SafeAreaView:'SafeAreaView'}));
+vi.mock('../src/components/SaveStatus',()=>({SaveStatus:()=>null}));
+vi.mock('../src/components/Recovery',()=>({Recovery:()=>null}));
+vi.mock('../src/cards/CardGameScreen',()=>({CardGameScreen:()=>null}));
+vi.mock('../src/racer/RaceScreen',()=>({RaceScreen:()=>null}));
+vi.mock('../src/mystery/MysteryScreen',()=>({MysteryScreen:()=>null}));
+vi.mock('../src/party/PartyScreen',()=>({PartyScreen:()=>null}));
+vi.mock('../src/components/Audio',()=>({useSoundControls:()=>({play:vi.fn(),stop:vi.fn()})}));
+vi.mock('../src/state/Store',()=>({useStore:()=>({ready:true,epoch:0,save:emptySave(),activityUpdate:()=>true})}));
+vi.mock('../src/practice/useRoundPractice',async()=>{
+  const React=await import('react');
+  return {useRoundPractice:()=>{
+    const [pending,setPending]=React.useState(false), next=React.useRef<(()=>void)|null>(null);
+    return {pending,request:(start:()=>void)=>{next.current=start;setPending(true);},panel:pending?React.createElement('Button',{onPress:()=>{setPending(false);next.current?.();}},'Complete practice'):null};
+  }};
+});
 vi.mock('react-native', () => ({
-  View: 'View', Text: 'Text', ScrollView: 'ScrollView', Pressable: 'Pressable', Platform: { OS: 'ios' },
+  View: 'View', Text: 'Text', ScrollView: 'ScrollView', Pressable: 'Pressable', useWindowDimensions:()=>({width:390,height:844}), Platform: { OS: 'ios' },
   StyleSheet: { create: (s: object) => s, absoluteFill: {} },
   PanResponder: { create: (handlers: object) => ({ panHandlers: handlers }) },
   AppState: { addEventListener: () => ({ remove() {} }) },
@@ -24,7 +43,7 @@ vi.mock('react-native', () => ({
   Animated: { View: 'AnimatedView', Value: class { setValue() {} stopAnimation() {} interpolate() { return 0; } }, timing: () => ({ start() {} }) },
 }));
 vi.mock('react-native-svg', () => ({ default: 'Svg', Circle: 'Circle', Polyline: 'Polyline' }));
-vi.mock('../src/components/ui', () => ({ Button: 'Button', Copy: 'Copy', Heading: 'Heading', PressableScale: 'Tile', C: { ink: '#3D2B24', muted: '#665247' } }));
+vi.mock('../src/components/ui', () => ({ Button: 'Button', Copy: 'Copy', Heading: 'Heading', PressableScale: 'Tile', styles:{page:{},content:{}}, C: { ink: '#3D2B24', muted: '#665247' } }));
 vi.mock('../src/components/Text', () => ({ Text: 'Text' }));
 vi.mock('../src/components/motion', () => ({ nativeDriver: false, useReducedMotion: () => true }));
 vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => <div data-testid="atmosphere-header"/> }));
@@ -120,13 +139,13 @@ describe('activity persistence and integration', () => {
 describe('real screen interactions', () => {
   it('keeps the drag surface free of disabled native buttons and maps centered pointer events', async () => {
     const tiles=generateBoard(4,31), onTile=vi.fn(), onRelease=vi.fn(), onCancel=vi.fn();
-    await act(async()=>{screen=create(<HuntBoard tiles={tiles} size={4} path={[]} width={320} interactive onTile={onTile} onRelease={onRelease} onCancel={onCancel}/>, {createNodeMock:()=>({measureInWindow:(callback:(x:number,y:number)=>void)=>callback(20,100)})});});
+    await act(async()=>{screen=create(<HuntBoard tiles={tiles} size={4} path={[]} width={320} interactive onTile={onTile} onRelease={onRelease} onCancel={onCancel}/>);});
     expect(screen!.root.findAllByType('Tile' as React.ElementType)).toHaveLength(0);
     const board=screen!.root.findByProps({testID:'hunt-board'});
-    await act(async()=>board.props.onPanResponderGrant({nativeEvent:{pageX:60,pageY:140}}));
-    await act(async()=>board.props.onPanResponderMove({nativeEvent:{pageX:140,pageY:220}}));
+    await act(async()=>board.props.onPanResponderGrant({nativeEvent:{locationX:40,locationY:40,pageX:60,pageY:140}}));
+    await act(async()=>board.props.onPanResponderMove({nativeEvent:{locationX:120,locationY:120,pageX:140,pageY:220}}));
     expect(onTile.mock.calls.map(call=>call[0])).toEqual([0,5]);
-    await act(async()=>board.props.onPanResponderRelease()); expect(onRelease).toHaveBeenCalledOnce();
+    await act(async()=>board.props.onPanResponderRelease({nativeEvent:{locationX:120,locationY:120}})); expect(onRelease).toHaveBeenCalledOnce();
     await act(async()=>board.props.onPanResponderTerminate()); expect(onCancel).toHaveBeenCalledOnce();
   });
   it('starts Word Hunt, taps a diagonal trail, submits, hints, pauses and reviews missed paths', async () => {
@@ -181,5 +200,19 @@ describe('real screen interactions', () => {
     const onSave=vi.fn(()=>false), feedback=vi.fn();
     await act(async()=>{ screen=create(<AnagramsScreen session={null} onSave={onSave} onBack={()=>{}} sound={false} onFeedback={feedback}/>); });
     await press('Start Anagrams'); expect(visible()).toContain('Start Anagrams'); expect(feedback).not.toHaveBeenCalled();
+  });
+});
+
+describe('activity route practice integration',()=>{
+  for(const game of ['word-hunt','anagrams'] as const) it(`shows the optional practice panel before starting and rematching ${game}`,async()=>{
+    routeFixture.game=game;
+    await act(async()=>{screen=create(<Activity/>);});
+    await press(game==='word-hunt'?'Start Word Hunt':'Start Anagrams');
+    expect(visible()).toContain('Complete practice');
+    await press('Complete practice');
+    expect(screen!.root.findAllByProps({testID:game==='word-hunt'?'hunt-board':'anagrams-rack'})).toHaveLength(1);
+    await press('Finish round'); await press(game==='word-hunt'?'Rematch Same Board':'Rematch Same Rack');
+    expect(visible()).toContain('Complete practice'); await press('Complete practice');
+    expect(screen!.root.findAllByProps({testID:'word-finish'})).toHaveLength(0);
   });
 });

@@ -29,6 +29,10 @@ export function WordHuntScreen(props: WordScreenProps) {
       change(createWordSession('word-hunt', size, mode, seed, round?.best)); setHint(undefined); setReview(''); setFeedback(''); };
     if (props.beforeNewRound) props.beforeNewRound(run); else run();
   };
+  const replay = () => {
+    const run = () => { if (round) { change(rematch(round)); setReview(''); setFeedback(''); } };
+    if (props.beforeNewRound) props.beforeNewRound(run); else run();
+  };
   const submit = () => {
     const current = live.current;
     if (!current || current.game !== 'word-hunt' || current.phase !== 'playing') return;
@@ -56,7 +60,7 @@ export function WordHuntScreen(props: WordScreenProps) {
     {!round ? <View style={W.panel}><Heading>Find your island pace</Heading><ModePicker mode={mode} setMode={setMode}/><View style={W.row}><Button small tone={size === 4 ? 'primary' : 'quiet'} onPress={() => setSize(4)}>4 × 4 Classic</Button><Button small tone={size === 5 ? 'primary' : 'quiet'} onPress={() => setSize(5)}>5 × 5 Big Board</Button></View><SetupCopy game="word-hunt" mode={mode}/><Copy>Slide through neighboring letters, including diagonals. Each tile can be used once per word. Slide back one tile to undo.</Copy><Button onPress={start}>Start Word Hunt</Button></View>
     : round.phase === 'handoff' || round.phase === 'paused' ? <PrivacyCard round={round} onReady={() => change(round.phase === 'handoff' ? startSecondPlayer(round) : resumeRound(round))} onBack={props.onBack}/>
     : round.phase === 'finished' ? <>
-      <FinishSummary round={round} onAgain={start} onRematch={() => { change(rematch(round)); setReview(''); setFeedback(''); }} onBack={props.onBack}/>
+      <FinishSummary round={round} onAgain={start} onRematch={replay} onBack={props.onBack}/>
       <Copy>Tap a found or missed word to see its trail.</Copy><HuntBoard tiles={round.tiles} size={round.size} path={reviewPath} width={Math.min(boardWidth, 280)}/><Text style={W.label}>{review || 'Choose a word below'}</Text>
       <WordList title="Found Words" words={foundWords(round)} selected={review} onWord={setReview}/><WordList title="Best Words You Missed" words={missedWords(round, [...solutions.keys()])} selected={review} onWord={setReview}/>
       <View style={W.panel}><Heading>Next round</Heading><ModePicker mode={mode} setMode={setMode}/><View style={W.row}><Button small onPress={() => setSize(4)}>4 × 4</Button><Button small onPress={() => setSize(5)}>5 × 5</Button></View><Button onPress={start}>Start with these choices</Button></View>
