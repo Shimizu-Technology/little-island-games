@@ -67,7 +67,7 @@ describe('reviewed offline word games', () => {
     expect(getWordLexicon()).toBe(words);
     expect([...words].every(word => /^[A-Z]{3,8}$/.test(word))).toBe(true);
     expect(words.has('HTTPS')).toBe(false); expect(words.has('READING')).toBe(true);
-    for (const fragment of ['BLEU','ING','FUL','PRE','TELE','GEO','BIO']) expect(words.has(fragment), fragment).toBe(false);
+    for (const fragment of ['BLEU','ING','FUL','PRE','TELE','GEO','BIO','MON','TUE','THU','FRI']) expect(words.has(fragment), fragment).toBe(false);
     expect(words.has('READ.SHORT')).toBe(false); expect(words.has('V25')).toBe(false);
     expect(isValidPrefix('CA')).toBe(true); expect(isValidPrefix('ZZZZ')).toBe(false);
   });

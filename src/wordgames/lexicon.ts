@@ -44,7 +44,9 @@ export function getWordLexicon(): ReadonlySet<string> {
     // Three authored variants cover the existing task text; no generated IDs, labels or answer choices are read.
     for (let level = 1; level <= 5; level++) for (let seed = 0; seed < 3; seed++)
       for (const task of scienceTasks(game, level, seed)) {
-        prose(task.title); prose(task.goal); prose(task.fact); prose(task.notice);
+        // Gauge titles are abbreviated weekday chart labels, not prose.
+        if (task.kind !== 'gauge') prose(task.title);
+        prose(task.goal); prose(task.fact); prose(task.notice);
       }
   };
   science('weather-watch'); science('food-web'); science('space-station');
