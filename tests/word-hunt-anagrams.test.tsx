@@ -147,8 +147,8 @@ describe('real screen interactions', () => {
     await press('Rematch Same Board'); expect(saved!.tiles).toEqual(initial.tiles); expect(saved!.found[0]).toEqual([]);
   });
   it('runs Anagrams selection, shuffle, clear, submit, private handoff and scorecard', async () => {
-    let saved: WordSession | null = null;
-    await act(async()=>{screen=create(<AnagramsScreen session={null} onSave={next=>{saved=next;}} onBack={()=>{}}/>);});
+    let saved: WordSession | null = null; const onActionFocus=vi.fn();
+    await act(async()=>{screen=create(<AnagramsScreen session={null} onSave={next=>{saved=next;}} onBack={()=>{}} onActionFocus={onActionFocus}/>);});
     await press('Pass & Play'); await press('7 tiles · Big Rack'); await press('Start Anagrams');
     const initial=saved! as WordSession, word=solveRack(initial.tiles)[0], used:number[]=[];
     for (const letter of word) {
@@ -159,7 +159,7 @@ describe('real screen interactions', () => {
     await press('Enter'); expect(saved!.found[0]).toContain(word); await press('Shuffle');
     await act(async()=>screen!.root.findByProps({testID:'anagrams-rack'}).findAllByType('Tile' as React.ElementType)[0].props.onPress());
     await press('Clear'); expect(saved!.selection).toEqual([]);
-    await press('Finish round'); expect(visible()).toContain('Pass to Player 2!'); expect(visible()).not.toContain(word);
+    await press('Finish round'); expect(onActionFocus).toHaveBeenCalled(); expect(visible()).toContain('Pass to Player 2!'); expect(visible()).not.toContain(word);
     expect(screen!.root.findAllByProps({testID:'anagrams-rack'})).toHaveLength(0);
     await press('Player 2 is ready'); expect(saved!.tiles).toEqual(initial.tiles); expect(saved!.remainingMs).toBe(60000);
     await press('Finish round'); expect(visible()).toContain('Player 1 wins!'); expect(screen!.root.findByProps({testID:'word-scorecard'})).toBeDefined();

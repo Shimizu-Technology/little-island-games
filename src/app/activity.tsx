@@ -41,7 +41,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
     focused = useIsFocused(),
     { width } = useWindowDimensions();
   const [epoch] = useState(store.epoch);
-  const mysteryScroll = useRef<ScrollView>(null);
+  const activityScroll = useRef<ScrollView>(null);
   const expectedId = useRef(store.save.activities?.[id]?.id ?? null);
   const saved = store.save.activities?.[id];
   const [freshCard] = useState(() =>
@@ -86,7 +86,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
   return (
     <SafeAreaView style={styles.page}>
       <ScrollView
-        ref={id === "island-mystery" ? mysteryScroll : undefined}
+        ref={id === "island-mystery" || id === "word-hunt" || id === "anagrams" ? activityScroll : undefined}
         contentContainerStyle={[styles.content, { paddingHorizontal: 20, gap: 16 }]}
         keyboardShouldPersistTaps="handled"
       >
@@ -100,6 +100,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
             beforeNewRound: practice.request,
             sound: store.save.settings.sound,
             width: Math.min(width - 40, 420),
+            onActionFocus: () => activityScroll.current?.scrollTo({ y: 0, animated: false }),
             onFeedback: event => sound(event === 'finish' ? 'win' : event === 'word' ? 'match' : 'tap'),
           })
         ) : id === "island-mystery" ? (
@@ -114,7 +115,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
               />
             }
             soundControl={mysterySound}
-            onActionFocus={() => mysteryScroll.current?.scrollTo({ y: 0, animated: false })}
+            onActionFocus={() => activityScroll.current?.scrollTo({ y: 0, animated: false })}
             state={saved?.game === "island-mystery" ? saved : null}
             onSave={(next, previous) => save(next, previous)}
             active={focused}

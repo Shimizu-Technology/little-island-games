@@ -5,6 +5,7 @@ export interface WordScreenProps {
   session: WordSession | null;
   onSave: (next: WordSession, previous: WordSession | null) => boolean | void;
   onBack: () => void;
+  onActionFocus?: () => void;
   onFeedback?: (event: 'word' | 'finish' | 'tap') => void;
   active?: boolean;
   sound?: boolean;
@@ -12,15 +13,16 @@ export interface WordScreenProps {
   beforeNewRound?: (start: () => void) => void;
 }
 /** UI state is immediate; every accepted mutation uses the store's round/revision/restore guard. */
-export function useWordRound({ session, onSave, active = true, onFeedback, sound = true }: WordScreenProps) {
+export function useWordRound({ session, onSave, active = true, onFeedback, sound = true, onActionFocus }: WordScreenProps) {
   const [round, setRound] = useState<WordSession | null>(() => session ? pauseRound(session) : null);
-  const live = useRef(round), save = useRef(onSave), last = useRef(0), feedback = useRef({ onFeedback, sound });
-  useEffect(() => { save.current = onSave; feedback.current = { onFeedback, sound }; }, [onSave, onFeedback, sound]);
+  const live = useRef(round), save = useRef(onSave), last = useRef(0), feedback = useRef({ onFeedback, sound, onActionFocus });
+  useEffect(() => { save.current = onSave; feedback.current = { onFeedback, sound, onActionFocus }; }, [onSave, onFeedback, sound, onActionFocus]);
   const change = useCallback((next: WordSession) => {
     const previous = live.current;
     if (next === previous || save.current(next, previous) === false) return false;
     if (!previous || next.id !== previous.id || next.remainingMs !== previous.remainingMs || (next.phase === 'playing' && previous.phase !== 'playing')) last.current = Date.now();
     live.current = next; setRound(next);
+    if (!previous || next.phase !== previous.phase || next.id !== previous.id) feedback.current.onActionFocus?.();
     return true;
   }, []);
   // A restored running round opens behind a privacy/resume card, with its remaining time preserved.
