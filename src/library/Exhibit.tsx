@@ -21,6 +21,15 @@ import {
 } from "./exhibits";
 
 import { WordLabel } from "./WordLabel";
+import { PaintedLibraryCover } from "./illustratedCovers";
+
+const worldCoverCategory: Record<WorldId, string> = {
+  oceans: "ocean",
+  weather: "weather",
+  space: "space",
+  animals: "animals",
+  world: "guam",
+};
 
 export type ExhibitProps = {
   world: WorldId;
@@ -359,7 +368,20 @@ function ExhibitVisit({ world, title, state, onAction, sound, onHear, speaking, 
 
   return (
     <View style={s.exhibit}>
-      <Heading maxFontSizeMultiplier={1.5} style={s.title}>{title ?? WORLDS.find((entry) => entry.id === world)?.activity}</Heading>
+      <View testID="exhibit-hero-banner" style={s.heroBanner}>
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <PaintedLibraryCover category={worldCoverCategory[world]} />
+          <View style={s.heroScrim} />
+        </View>
+        <View style={s.heroBadge}>
+          <Text maxFontSizeMultiplier={1.2} style={s.heroBadgeText}>
+            Interactive Lab
+          </Text>
+        </View>
+        <Heading maxFontSizeMultiplier={1.5} style={s.title}>
+          {title ?? WORLDS.find((entry) => entry.id === world)?.activity}
+        </Heading>
+      </View>
       {world === "world" && !mapDone && (
         <View style={s.notebook}>
           <Copy>{PLACES[state.expedition].clue}</Copy>
@@ -504,10 +526,43 @@ const s = StyleSheet.create({
     alignSelf: "center",
     padding: 8,
     gap: 16,
-    backgroundColor: C.cream,
+    backgroundColor: "#FFF6E5",
     borderRadius: 24,
   },
-  title: { fontSize: 28 },
+  heroBanner: {
+    minHeight: 112,
+    borderRadius: 22,
+    overflow: "hidden",
+    justifyContent: "flex-end",
+    padding: 16,
+    gap: 6,
+    backgroundColor: "#FFFDF8",
+    borderWidth: 1.5,
+    borderColor: "#E8D8BE",
+  },
+  heroScrim: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: "rgba(255, 253, 248, 0.72)",
+  },
+  heroBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#FFFDF8F2",
+    borderWidth: 1,
+    borderColor: "#9BC7C2",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  heroBadgeText: {
+    fontSize: 12.5,
+    fontWeight: "700",
+    color: "#1E6B66",
+  },
+  title: { fontSize: 28, color: "#3D2B24" },
   subheading: { fontSize: 21 },
   picture: { borderRadius: 24, overflow: "hidden", backgroundColor: "#DAEEE7" },
   reefFrame: { width: "100%", aspectRatio: 320 / 230, maxHeight: 440 },

@@ -108,6 +108,17 @@ export function SceneBackdrop({ category, sun = true, cloud = true }: { category
           )}
         </>
       )}
+      <Rect
+        x={6}
+        y={6}
+        width={388}
+        height={388}
+        rx={18}
+        fill="none"
+        stroke="#FFFDF8"
+        strokeWidth={3}
+        opacity={0.42}
+      />
     </Svg>
   );
 }

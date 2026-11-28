@@ -1,7 +1,7 @@
 import React from "react";
 import Svg, { G, SvgXml } from "react-native-svg";
 import { libraryVectors } from "./vectors.generated";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Image, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { LibraryGlyph } from "./LibraryGlyph";
 import { Text } from "../components/Text";
 import { font } from "../components/ui";
@@ -14,6 +14,7 @@ import { sceneVector } from "./sceneVector";
 import { LibraryArt } from "./LibraryArt";
 import { libraryAssets } from "./assets.generated";
 import type { CatalogItem } from "./catalog";
+
 export const palette = {
   canvas: "#FFF6E5",
   ink: "#3D2B24",
@@ -29,8 +30,9 @@ export const palette = {
   muted: "#665247",
   coral: "#B75C49",
 };
-export function LibraryIcon({ name, size = 28 }: { name: string; size?: number }) {
-  return <LibraryGlyph name={name} size={size} />;
+
+export function LibraryIcon({ name, size = 28, filled = false }: { name: string; size?: number; filled?: boolean }) {
+  return <LibraryGlyph name={name} size={size} filled={filled} />;
 }
 
 export function Action({
@@ -40,6 +42,8 @@ export function Action({
   selected,
   disabled,
   expanded,
+  testID,
+  style,
 }: {
   children: React.ReactNode;
   onPress: () => void;
@@ -47,6 +51,8 @@ export function Action({
   selected?: boolean;
   disabled?: boolean;
   expanded?: boolean;
+  testID?: string;
+  style?: StyleProp<ViewStyle>;
 }) {
   const nunitoLoaded = useNunitoLoaded();
   const actionFont = nunitoLoaded
@@ -54,6 +60,7 @@ export function Action({
     : ({ fontWeight: "700" } as const);
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected, disabled, expanded }}
@@ -66,6 +73,7 @@ export function Action({
         selected && s.selected,
         disabled && { opacity: 0.45 },
         pressed && { opacity: 0.78 },
+        style,
       ]}
     >
       {React.Children.map(children, (child) =>
@@ -80,68 +88,119 @@ export function Action({
     </Pressable>
   );
 }
+
 export function ItemPicture({
   record,
   large = false,
   pictureHeight,
   scene = false,
   fill = false,
+  badge,
 }: {
   record: CatalogItem;
   large?: boolean;
   pictureHeight?: number;
   scene?: boolean;
   fill?: boolean;
+  badge?: string;
 }) {
   const path = record.item?.image.path;
+  const framed = !scene && !fill;
   return (
     <View
       style={{
         width: "100%",
         height: fill ? "100%" : (pictureHeight ?? (large ? 230 : 148)),
         overflow: "hidden",
-        borderRadius: scene ? 0 : large ? 26 : 18,
-        backgroundColor: palette.lagoon,
+        borderRadius: scene ? 0 : large ? 24 : 18,
+        backgroundColor: framed ? "#FBF4E4" : palette.lagoon,
+        padding: framed ? 5 : 0,
       }}
     >
-      {scene && (
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          <SceneBackdrop category={sceneCategory(record.id, record.category)} {...sceneDecor(record.id)} />
-        </View>
-      )}
-      {/* A positioned foreground paints above the absolute scene on web and native. */}
-      <View style={scene ? [StyleSheet.absoluteFill, { zIndex: 1 }] : { flex: 1 }}>
-        {path && libraryVectors[path] ? (
-          <SvgXml
-            xml={scene ? sceneVector(libraryVectors[path]) : libraryVectors[path]}
-            width="100%"
-            height="100%"
-            accessibilityLabel={record.item!.image.alt}
-          />
-        ) : path && libraryAssets[path] ? (
-          <Image
-            source={libraryAssets[path]}
-            resizeMode="contain"
-            accessibilityLabel={record.item!.image.alt}
-            style={{ width: "100%", height: "100%" }}
-          />
-        ) : record.legacy ? (
-          scene ? (
-            <Svg width="100%" height="100%" viewBox="0 0 160 140" accessible={false}>
-              <G transform="translate(20 10)">
-                <Motif name={record.legacy.illustration} />
-              </G>
-            </Svg>
+      <View
+        style={{
+          flex: 1,
+          width: "100%",
+          height: "100%",
+          overflow: "hidden",
+          borderRadius: scene ? 0 : large ? 20 : 14,
+          backgroundColor: palette.lagoon,
+          borderWidth: framed ? 1 : 0,
+          borderColor: framed ? "#EADBC2" : "transparent",
+        }}
+      >
+        {scene && (
+          <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+            <SceneBackdrop category={sceneCategory(record.id, record.category)} {...sceneDecor(record.id)} />
+          </View>
+        )}
+        {/* A positioned foreground paints above the absolute scene on web and native. */}
+        <View style={scene ? [StyleSheet.absoluteFill, { zIndex: 1 }] : { flex: 1 }}>
+          {path && libraryVectors[path] ? (
+            <SvgXml
+              xml={scene ? sceneVector(libraryVectors[path]) : libraryVectors[path]}
+              width="100%"
+              height="100%"
+              accessibilityLabel={record.item!.image.alt}
+            />
+          ) : path && libraryAssets[path] ? (
+            <Image
+              source={libraryAssets[path]}
+              resizeMode="contain"
+              accessibilityLabel={record.item!.image.alt}
+              style={{ width: "100%", height: "100%" }}
+            />
+          ) : record.legacy ? (
+            scene ? (
+              <Svg width="100%" height="100%" viewBox="0 0 160 140" accessible={false}>
+                <G transform="translate(20 10)">
+                  <Motif name={record.legacy.illustration} />
+                </G>
+              </Svg>
+            ) : (
+              <TopicArt topic={record.legacy} compact={!large} height={pictureHeight} />
+            )
           ) : (
-            <TopicArt topic={record.legacy} compact={!large} height={pictureHeight} />
-          )
-        ) : (
-          <LibraryArt kind={record.motif} />
+            <LibraryArt kind={record.motif} category={record.category} />
+          )}
+        </View>
+        {!!badge && (
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: 8,
+              top: 8,
+              zIndex: 2,
+              backgroundColor: "#FFFDF8EE",
+              borderWidth: 1,
+              borderColor: "#E4D1B1",
+              borderRadius: 999,
+              paddingHorizontal: 9,
+              paddingVertical: 3,
+              maxWidth: "74%",
+            }}
+          >
+            <Text
+              maxFontSizeMultiplier={1.2}
+              numberOfLines={1}
+              style={{
+                fontFamily: font,
+                fontSize: 11.5,
+                fontWeight: "700",
+                color: palette.ink,
+                lineHeight: 15,
+              }}
+            >
+              {badge}
+            </Text>
+          </View>
         )}
       </View>
     </View>
   );
 }
+
 export const s = StyleSheet.create({
   page: { flex: 1, backgroundColor: palette.canvas },
   header: {
@@ -160,9 +219,9 @@ export const s = StyleSheet.create({
   body: { fontFamily: font, color: palette.ink, fontSize: 20, lineHeight: 31 },
   small: { fontFamily: font, color: palette.muted, fontSize: 14, lineHeight: 21 },
   action: {
-    minHeight: 46,
-    minWidth: 46,
-    paddingHorizontal: 12,
+    minHeight: 48,
+    minWidth: 48,
+    paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 18,
     borderWidth: 1.5,
