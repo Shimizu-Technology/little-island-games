@@ -21,6 +21,9 @@ import { StoreProvider, useStore } from '../src/state/Store';
 import { emptyChallenge, type ChallengeSession } from '../src/state/challenge';
 import { progressFor, selectedOwner } from '../src/state/challengeDrafts';
 import { emptySave } from '../src/state/validation';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 
 const db = vi.hoisted(() => ({
   raw: null as string | null,

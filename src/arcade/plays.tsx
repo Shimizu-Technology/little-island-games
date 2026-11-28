@@ -33,6 +33,7 @@ import { CargoBoard } from "./games/canoe-cargo/View";
 
 /** Everything the shared game screen needs to start and frame one round of a game. */
 export type ArcadeBoardProps = {
+  atmosphere?: import("../home/atmosphere").Atmosphere;
   level: ArcadeLevel | "endless";
   seed: number;
   savedReef?: ReefState;

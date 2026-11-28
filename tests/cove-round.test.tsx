@@ -10,6 +10,9 @@ import { addLearner } from '../src/learn/learners';
 import { registration, puzzle, solve, type Payload } from './helpers/challenge-replay';
 import { progressFor, selectedOwner } from '../src/state/challengeDrafts';
 import { completion } from '../src/cove/catalog';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 const db = vi.hoisted(() => ({ raw: null as string | null, rows: [] as string[], fail: false, focused: true, reduced: false }));
 const sound = vi.hoisted(() => ({ play: (() => {}) as (key: string) => void }));
 vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set: async (raw: string) => { if (db.fail) throw new Error('disk'); db.raw = raw; }, preserve: async () => {}, writeDraft: async (raw: string) => { db.rows.push(raw); }, readDrafts: async () => db.rows, discardSession: async () => {} } }));

@@ -4,6 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { newLibraryChild } from "../src/library/state";
 import { emptySave } from "../src/state/validation";
 import type { CatalogItem } from "../src/library/catalog";
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 
 const env = vi.hoisted(() => ({
   width: 390,

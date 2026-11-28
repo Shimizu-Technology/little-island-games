@@ -1,3 +1,5 @@
+import { GlobalWeatherLayer } from '../../../atmosphere/GlobalWeatherLayer';
+import { defaultAtmosphere, atmosphereFlightPalette, type Atmosphere } from '../../../atmosphere/palette';
 import Constants from 'expo-constants';
 import {lagoonMeasurement} from '../lagoon-run/measurement';
 import { LagoonFeedback, LandingDust, useRunFeedback, type RunFeedbackVisual } from '../lagoon-run/RunFeedback';
@@ -44,12 +46,12 @@ import { hazardBox } from "../lagoon-run/course";
 import { equation, type ScrollGame, type ScrollLevel } from "./content";
 import { BatRig, RunnerRig, LastHit } from "./FeelArt";
 import { FLIGHT_H, FLIGHT_W } from "../fruit-bat-flight/hull";
-import { FLIGHT_CHROME_TINT, FLIGHT_GATE_COUNT, FLIGHT_SLOT, FRUIT_SIZE, PALM_CAP_WIDTH, PALM_COLUMN_HEIGHT, PORTAL_HEIGHTS, PORTAL_SIZE, flightPoses } from "../fruit-bat-flight/presentation";
+import { FLIGHT_GATE_COUNT, FLIGHT_SLOT, FRUIT_SIZE, PALM_CAP_WIDTH, PALM_COLUMN_HEIGHT, PORTAL_HEIGHTS, PORTAL_SIZE, flightPoses } from "../fruit-bat-flight/presentation";
 import { FlightEffects, FlightFlash, useFlightCamera, useFlightFeedback } from "../fruit-bat-flight/Feedback";
 import { runPoses, RUN_SLOTS, NEAR_START, CANOE_START, INCLINE_START, INCLINE_STRIDE, POWER_AURA } from "./render";
 
 import { runFrame, type Commands } from "./commands";
-export type BoardProps = { level: ScrollLevel | "endless"; seed: number; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped: boolean) => void; onTone: (key: string, haptic?: boolean) => void; onPause?: () => void; debug: boolean; overlayTop?: number; overlayInsets?: LagoonInsets };
+export type BoardProps = { atmosphere?: Atmosphere; level: ScrollLevel | "endless"; seed: number; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped: boolean) => void; onTone: (key: string, haptic?: boolean) => void; onPause?: () => void; debug: boolean; overlayTop?: number; overlayInsets?: LagoonInsets };
 const W = 390, H = 660, still = HIDDEN_POSE;
 const Portal = memo(function Portal({ value, index }: { value: number; index: number }) { return <Svg width={64} height={64} viewBox="0 0 64 64"><Rect x={3} y={3} width={58} height={58} rx={16} fill={["#F6C76D", "#A9E7E1", "#DEB1EF"][index]} stroke="#374565" strokeWidth={3}/><SvgText x={32} y={45} textAnchor="middle" fill="#27364E" fontWeight="900" fontSize={36}>{value}</SvgText></Svg>; });
 const Particle = memo(function Particle() { return <Svg width={12} height={12}><Path d="M6 0L8 4L12 6L8 8L6 12L4 8L0 6L4 4Z" fill="#FFE294"/></Svg>; });
@@ -120,8 +122,16 @@ const flightPill = {
   borderRadius: 22, paddingHorizontal: 14, paddingVertical: 5,
 };
 
+/** Twinkles borrow the gameplay clock; no second frame callback, timer or animation loop. */
+function FlightTwinkles({ state, reduced, active }: { state: SharedValue<ReturnType<typeof createFlight>>; reduced: boolean; active: boolean }) {
+  const glow = useAnimatedStyle(() => ({ opacity: reduced || !active ? .8 : .65 + Math.sin((state.value.time + state.value.hover) * .9) * .25 }));
+  return <Animated.View testID="flight-star-glints" pointerEvents="none" accessible={false} style={[{ position: "absolute", left: 0, top: 0, right: 0, height: "27%" }, glow]}>
+    <Svg width="100%" height="100%" viewBox="0 0 390 180"><Path d="M45 28l2 5 5 2-5 2-2 5-2-5-5-2 5-2ZM175 65l2 5 5 2-5 2-2 5-2-5-5-2 5-2ZM270 18l2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" fill="#FFF5CC"/></Svg>
+  </Animated.View>;
+}
+
 export function FlightBoard(props: BoardProps) {
-  const { level, seed, active, helper, outfit, onTone, debug } = props;
+  const { level, seed, active, helper, outfit, onTone, debug, atmosphere = defaultAtmosphere } = props;
   const reduced = useReducedMotion();
   const [initial] = useState(() => createFlight(level, seed, helper));
   const [size, setSize] = useState({ width: FLIGHT_W, height: FLIGHT_H });
@@ -154,11 +164,12 @@ export function FlightBoard(props: BoardProps) {
   const sceneryTiles = 2 * extraTiles + 1, sceneryWidth = FLIGHT_W * sceneryTiles;
   const arenaPosition = { position: "absolute" as const, height: FLIGHT_H, top: (size.height - FLIGHT_H) / 2, transform: [{ scale }], overflow: "hidden" as const };
   const scoreLabel = level === "endless" ? `Score ${s.score}` : `Score ${s.score} of ${level.target}`;
-  return <View testID="flight-field" style={{ flex: 1, overflow: "hidden", backgroundColor: FLIGHT_CHROME_TINT }} onLayout={event => {
+  return <View testID="flight-field" style={{ flex: 1, overflow: "hidden", backgroundColor: atmosphereFlightPalette(atmosphere).chrome }} onLayout={event => {
     const { width, height } = event.nativeEvent.layout;
     if (width > 0 && height > 0) setSize(previous => previous.width === width && previous.height === height ? previous : { width, height });
   }}>
-    <FlightWideSky world={world} storm={storm} width={size.width} height={size.height}/>
+    <FlightWideSky atmosphere={atmosphere} world={world} storm={storm} width={size.width} height={size.height}/>
+    {atmosphere.timeOfDay === "night" && <FlightTwinkles state={state} active={active} reduced={reduced}/>}
     <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
       style={[arenaPosition, { width: sceneryWidth, left: (size.width - sceneryWidth) / 2 }]}>
       <FlightForest poses={poses} storm={storm} tiles={sceneryTiles}/>
@@ -171,6 +182,7 @@ export function FlightBoard(props: BoardProps) {
         <FlightEffects award={feedback.award} awardPulse={feedback.awardPulse} puffs={feedback.puffs} reduced={reduced}/>
       </Animated.View>
     </View>
+    <GlobalWeatherLayer atmosphere={atmosphere} width={size.width} height={size.height} active={active} reduced={reduced} tint={false}/>
     <FlightFlash impact={feedback.impact} reduced={reduced}/>
     <UiPlayTarget mailbox={input} action={{ type: "flap" }} onFeedback={flapTone} onAccessiblePress={flap}
       testID="flight-touch" accessibilityLabel="Flight sky. Tap to flap" active={canFly} style={StyleSheet.absoluteFill}/>

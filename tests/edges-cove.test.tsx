@@ -22,6 +22,9 @@ import { bankLoader } from '../src/puzzles/catalog';
 import { bridgesAdapter } from '../src/puzzles/edges/adapter';
 import facts from '../src/puzzles/edges/packs.generated.json';
 import type { BankFacts, EdgeBoardProps } from '../src/puzzles/edges/registration';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 
 const db = vi.hoisted(() => ({ raw: null as string | null, rows: [] as string[], play: vi.fn(), feel: vi.fn() }));
 vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set: async (raw: string) => { db.raw = raw; }, preserve: async () => {}, writeDraft: async (raw: string) => { db.rows.push(raw); }, readDrafts: async () => db.rows, discardSession: async () => {} } }));

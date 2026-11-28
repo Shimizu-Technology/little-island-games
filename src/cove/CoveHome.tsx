@@ -1,3 +1,4 @@
+import { AtmosphereHeader } from '../atmosphere/AtmosphereHeader';
 import React, { useState } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { Icon, PageHeader, PressTarget, Sheet, Text, Tile, glyphs, theme } from '../ui';
@@ -44,7 +45,7 @@ export function CoveHome({ sections, continueItems, favorites, isFavorite, onBac
     <Tile testID={`cove-tile-${t.id}`} name={t.name} nameMax={nameMax} pastel={pastel} art={tileArt(t.id, size)} favorite={isFavorite(t.id)} onPress={() => onTile(t)} onLongPress={() => onFavorite(t.id)}/>
   </View>;
   return <View style={styles.screen}>
-    <View style={styles.bar}><PageHeader title="Puzzles" onBack={onBack} backLabel="Back to map" right={<PeoplePicker/>}/></View>
+    <View style={styles.bar}><AtmosphereHeader/><PageHeader title="Puzzles" onBack={onBack} backLabel="Back to map" right={<PeoplePicker/>}/></View>
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       {status}
       {onGrownUpMode && <View accessibilityRole="radiogroup" accessibilityLabel="Puzzle shelf" style={styles.modeRow}>

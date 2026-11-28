@@ -1,3 +1,7 @@
+import { useIslandAtmosphere } from '../atmosphere/useIslandAtmosphere';
+import { AtmosphereHeader } from '../atmosphere/AtmosphereHeader';
+import { AtmospherePicker, SkyPicture } from '../home/AtmospherePicker';
+import { completedLearningRounds, unlockedSeasonalPacks } from '../home/seasonal';
 import React, { useCallback, useState } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -32,11 +36,13 @@ function FirstIslander({ allowed }: { allowed: boolean }) {
 
 export default function HubScreen() {
  const store = useStore(), { width, height, fontScale } = useWindowDimensions(), insets = useSafeAreaInsets();
+ const { atmosphere, setAtmosphere } = useIslandAtmosphere();
+ const [skyOpen, setSkyOpen] = useState(false);
  const foreground = useAppForeground();
  const focused = useIsFocused(), reduced = useReducedMotion(), clear = useSheetsClear();
  const [settings, setSettings] = useState(false), [door, setDoor] = useState<PlaceId | null>(null);
  const narrow = width < 360;
- const singleRowMinWidth = 120 + Math.ceil(190 * Math.min(fontScale, 1.3)) + 88 + 18 + 28;
+ const singleRowMinWidth = 120 + Math.ceil(190 * Math.min(fontScale, 1.3)) + 144 + 18 + 28;
  const stackHeader = width < singleRowMinWidth || (fontScale >= 1.35 && width < 560);
  const sceneWidth = Math.min(width - insets.left - insets.right, 1100);
 
@@ -56,6 +62,7 @@ export default function HubScreen() {
  if (store.recovery) return <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}><Recovery/></SafeAreaView>;
  const brand = <Text testID="hub-brand" variant="display" maxFontSizeMultiplier={1.3} numberOfLines={1} adjustsFontSizeToFit style={{ flex: stackHeader ? 1 : undefined, flexShrink: stackHeader ? 1 : 0, minWidth: 120, fontSize: 18, lineHeight: 22, color: theme.colors.ink }}>little island</Text>;
  const actions = <>
+  <PressableScale testID="hub-atmosphere" accessibilityRole="button" accessibilityLabel="Sky and Weather" onPress={() => setSkyOpen(true)} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: '#F9E7BC', alignItems: 'center', justifyContent: 'center' }}><SkyPicture kind={atmosphere.weather === 'clear' ? atmosphere.timeOfDay : atmosphere.weather}/></PressableScale>
   <PressableScale testID="hub-everything" accessibilityRole="button" accessibilityLabel="Everything: all places and games" onPress={() => router.push('/everything')} style={{ width: theme.target.min, height: theme.target.min, borderRadius: theme.radius.full, backgroundColor: theme.colors.lagoonSoft, alignItems: 'center', justifyContent: 'center' }}><KitIcon glyph={GridFour} size={22} tone="ink"/></PressableScale>
   <PressableScale testID="hub-settings" accessibilityRole="button" accessibilityLabel="Open sound settings, practice and grown-up backups" onPress={() => setSettings(true)} style={{ width: theme.target.min, height: theme.target.min, borderRadius: theme.radius.full, backgroundColor: theme.pastels.arcade, alignItems: 'center', justifyContent: 'center' }}><KitIcon glyph={LockSimple} size={22} tone="ink"/></PressableScale>
  </>;
@@ -77,11 +84,13 @@ export default function HubScreen() {
  return <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }} edges={['top', 'left', 'right', 'bottom']}>
   {stackHeader ? (
    <View testID="hub-header" style={{ paddingHorizontal: narrow ? 10 : 14, paddingVertical: 6, gap: 6, backgroundColor: theme.colors.bg, borderBottomWidth: 1, borderBottomColor: theme.colors.hairline }}>
+    <AtmosphereHeader/>
     <View testID="hub-header-row" style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>{brand}{actions}</View>
     <View testID="hub-header-learner" style={{ flexDirection: 'row', alignItems: 'center' }}><LearnerChip compact/></View>
    </View>
   ) : (
    <View testID="hub-header" style={{ minHeight: 58, paddingHorizontal: 14, paddingVertical: 6, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, backgroundColor: theme.colors.bg, borderBottomWidth: 1, borderBottomColor: theme.colors.hairline }}>
+    <AtmosphereHeader/>
     {brand}
     <View testID="hub-header-learner" style={{ flex: 1, flexShrink: 1, minWidth: 140, alignItems: 'flex-end' }}><LearnerChip compact/></View>
     {actions}
@@ -89,7 +98,7 @@ export default function HubScreen() {
   )}
   <SaveStatus/>
   <ScrollView onLayout={event => { const available = event.nativeEvent.layout.height; setViewport(prev => prev.w === width && prev.h === height && prev.available === available ? prev : { w: width, h: height, available }); }} style={{ flex: 1, backgroundColor: '#1F8EA0' }} contentContainerStyle={{ alignItems: 'center', flexGrow: 1, justifyContent: 'center' }}>
-   <IslandScene width={sceneWidth} height={sceneHeight} fontScale={Math.min(fontScale, 2.0)} look={personFor(store.save).look} reduced={reduced} active={focused && !settings && clear && foreground} door={door} onArrive={arrive}/>
+   <IslandScene weatherActive={focused && foreground && !settings} atmosphere={atmosphere} width={sceneWidth} height={sceneHeight} fontScale={Math.min(fontScale, 2.0)} look={personFor(store.save).look} reduced={reduced} active={focused && !settings && clear && foreground} door={door} onArrive={arrive}/>
   </ScrollView>
   <CovePersonResume/>
   <View style={{ paddingHorizontal: narrow ? 10 : 18, paddingVertical: 8, backgroundColor: theme.colors.bg, borderTopWidth: 1, borderTopColor: theme.colors.hairline }}>
@@ -100,7 +109,10 @@ export default function HubScreen() {
     {dock('Favorites', Star, () => router.push({ pathname: '/everything', params: { section: 'favorites' } }), undefined, 'hub-dock-favorites')}
    </View>
   </View>
+  {skyOpen && <AtmospherePicker atmosphere={atmosphere} rounds={completedLearningRounds(store.save)} grownUp={store.save.settings.unlockSeasonalPacks ?? false} onChange={setAtmosphere} onClose={() => setSkyOpen(false)}
+    onApply={id => { const pack = unlockedSeasonalPacks(completedLearningRounds(store.save), store.save.settings.unlockSeasonalPacks).find(p => p.id === id); if (pack) setAtmosphere(pack.atmosphere); }}
+    onDecorate={item => { setSkyOpen(false); router.push({ pathname: '/island-home', params: { item } }); }}/>}
   <Settings visible={settings} onClose={() => setSettings(false)}/>
-  <FirstIslander key={`${learner.id}:${store.epoch}`} allowed={focused && !settings}/>
+  <FirstIslander key={`${learner.id}:${store.epoch}`} allowed={focused && !settings && !skyOpen}/>
  </SafeAreaView>;
 }

@@ -1,3 +1,4 @@
+import { AtmosphereHeader } from '../atmosphere/AtmosphereHeader';
 import { learningGroups } from '../learn/generated/ids';
 import type { LearnId } from '../learn/types';
 import React, { useState } from "react";
@@ -36,7 +37,7 @@ function IslandShelf({ island }: { island: Exclude<keyof typeof islandNames, "ex
   const wrapTitle = fontScale > 1.3 && available < 350;
   const large = fontScale >= LARGE_TEXT, line = Math.min(available, 1080) - 40;
   return <TextFit.Provider value={entryRegion(fontScale, line)}><SafeAreaView style={[styles.page, { backgroundColor: "#FFF6E5" }]}><ScrollView contentContainerStyle={[styles.content, { paddingHorizontal: 20, gap: 14 }]}>
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8, paddingHorizontal: 8, marginHorizontal: -8 }}><AtmosphereHeader rounded/>
       {large || wrapTitle ? <IconButton icon="back" label="Back to islands" onPress={() => router.canGoBack() ? router.back() : router.replace("/")} /> : <Button compact quiet icon="back" label="Back to islands" onPress={() => router.canGoBack() ? router.back() : router.replace("/")}>Islands</Button>}
       <Text accessibilityRole="header" numberOfLines={large || wrapTitle ? 2 : 1} adjustsFontSizeToFit={!large && !wrapTitle} minimumFontScale={0.75} maxFontSizeMultiplier={large ? wordFitMultiplier(islandNames[island], 21, line - 56, 1.5) : undefined} style={{ flex: 1, fontSize: 21, color: "#3D2B24", ...bold }}>{island === 'classic' ? 'Game Hall' : islandNames[island]}</Text>
     </View>

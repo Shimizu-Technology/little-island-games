@@ -21,6 +21,9 @@ import{capFixture}from'../scripts/puzzles/solitaire/qa-fixtures';
 import type{RootIndex}from'../src/puzzles/bank';
 import root from'../src/content/puzzles/root.json';
 import facts from'../src/puzzles/table/packs.generated.json';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 const db=vi.hoisted(()=>({raw:null as string|null,rows:[]as string[],loader:null as BankLoader|null,reads:[]as string[],discarded:[]as string[],failReplace:false}));
 vi.mock('../src/challenge/registry.generated',()=>({challengeEntries:[]}));
 vi.mock('../src/puzzles/catalog',()=>({bankLoader:()=>db.loader!}));

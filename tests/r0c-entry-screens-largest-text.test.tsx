@@ -7,6 +7,9 @@ import { emptySave } from '../src/state/validation';
 import { addLearner } from '../src/learn/learners';
 import { shelfGames } from '../src/learn/home';
 import { wordWidth } from '../src/components/wordFit';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 3.12 }));
 const fixture = vi.hoisted(() => ({ params: {} as Record<string, string>, store: { ready: true, recovery: false, save: {} as ReturnType<typeof import('../src/state/validation').emptySave>, toggleGameFavorite: () => {} } }));

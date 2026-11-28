@@ -7,6 +7,9 @@ import { emptySave } from '../src/state/validation';
 import { emptyLocal, defaults } from '../src/cove/local';
 import type { ChallengeCard, ChallengeEntry } from '../src/challenge/types';
 import { PUZZLE_TILE_ART } from '../src/art/illustrated';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 
 const fixture = vi.hoisted(() => ({
   local: {} as ReturnType<typeof import('../src/cove/useCoveLocal').useCoveLocal>,

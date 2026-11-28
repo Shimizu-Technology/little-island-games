@@ -7,6 +7,9 @@ import { ArcadeGameScreen } from '../src/arcade/ArcadeScreen';
 import { emptySave } from '../src/state/validation';
 import { addLearner, selectLearner } from '../src/learn/learners';
 import type { ArcadeGame } from '../src/arcade/types';
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null }));
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+
 vi.mock('../src/ui/fonts', () => ({ useNunitoLoaded: () => false }));
 const db=vi.hoisted(()=>({raw:null as string|null}));
 vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{db.raw=raw;},preserve:async()=>{}}}));

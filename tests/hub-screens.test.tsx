@@ -5,6 +5,8 @@ import { emptySave } from '../src/state/validation';
 import { shelfGames } from '../src/learn/home';
 import School from '../src/hub/SchoolScreen';
 import Everything from '../src/hub/EverythingScreen';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+
 const fixture = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn(), params: {} as {section?:string}, store: { ready:true, recovery:false, save: {} as ReturnType<typeof emptySave>, toggleGameFavorite: vi.fn() } }));
 vi.mock('expo-router', () => ({ router: { push: fixture.push, back: fixture.back, setParams: vi.fn() }, useLocalSearchParams: () => fixture.params }));
 vi.mock('react-native', () => ({ View: 'div', ScrollView: 'section', Image: 'img', useWindowDimensions: () => ({ width:390, fontScale:1 }) }));

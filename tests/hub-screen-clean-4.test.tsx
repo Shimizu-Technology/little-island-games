@@ -9,6 +9,8 @@ import { startSession } from '../src/learn/session';
 import { IslandScene } from '../src/hub/IslandScene';
 import { mapLayout } from '../src/hub/model';
 import { wordWidth } from '../src/components/wordFit';
+vi.mock('../src/ui/Sheet', () => ({ Sheet: () => null }));
+
 vi.mock('../src/hub/foreground', () => ({ useAppForeground: () => fixture.foreground }));
 
 const viewport = vi.hoisted(() => ({ width: 390, height: 844, fontScale: 1 }));

@@ -18,6 +18,9 @@ import { search } from '../src/puzzles/latin/solver';
 import type { LatinPuzzle } from '../src/puzzles/latin/core';
 import { GridPreferences } from '../src/puzzles/grid/preferences';
 import { defaults, type Mistakes } from '../src/cove/local';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 
 const db = vi.hoisted(() => ({ raw: null as string | null, rows: [] as string[], play: vi.fn() }));
 vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set: async (raw: string) => { db.raw = raw; }, preserve: async () => {}, writeDraft: async (raw: string) => { db.rows.push(raw); }, readDrafts: async () => db.rows, discardSession: async () => {} } }));

@@ -55,7 +55,8 @@
         }
       ],
       "expo-sharing",
-      "expo-asset"
+      "expo-asset",
+      "./plugins/withIslandSplash.cjs"
     ],
     "experiments": {
       "typedRoutes": true

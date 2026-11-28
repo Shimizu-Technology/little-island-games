@@ -1,3 +1,4 @@
+import { AtmosphereHeader } from '../atmosphere/AtmosphereHeader';
 import { C as BaseC, Heading as BaseHeading, Copy as BaseCopy, Button as BaseButton , IconButton, PressableScale } from "../components/ui";
 import { useNunitoLoaded } from "../ui/fonts";
 
@@ -35,7 +36,7 @@ export default function EverythingScreen() {
  const fav = <View style={{ gap: 8 }}><Heading style={{ fontSize: 24 }}>Favorites</Heading>{favorites.length ? rows(shelfGames.filter(game => favorites.includes(game.id))) : <Copy>Tap a star beside a game to keep it here.</Copy>}</View>;
  const suggestions = <View style={{ gap: 8 }}><View style={{ flexDirection: narrow ? 'column' : 'row', alignItems: narrow ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 8 }}><Heading style={{ fontSize: 24 }}>Try today</Heading><Button quiet compact onPress={() => setShuffle(value => value+1)} label="Shuffle today's three game suggestions">Shuffle</Button></View>{rows(ideas)}</View>;
  const pocket = section === 'favorites' || section === 'ideas';
- const bar = <View style={{ padding: 16, gap: 10, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}><Button quiet compact onPress={() => router.canGoBack() ? router.back() : router.replace('/')} label="Back to map">← Map</Button><Heading style={{ fontSize: 26, flex: 1, ...(narrow ? { flexBasis: '100%' as const } : {}) }}>{pocket ? 'Your pocket' : 'Everything'}</Heading></View>
+ const bar = <View style={{ padding: 16, gap: 10, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}><AtmosphereHeader/><Button quiet compact onPress={() => router.canGoBack() ? router.back() : router.replace('/')} label="Back to map">← Map</Button><Heading style={{ fontSize: 26, flex: 1, ...(narrow ? { flexBasis: '100%' as const } : {}) }}>{pocket ? 'Your pocket' : 'Everything'}</Heading></View>
  if (!store.ready) return <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}><Heading>Getting your island ready…</Heading></SafeAreaView>;
  if (store.recovery) return <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}><Recovery/></SafeAreaView>;
  return <TextFit.Provider value={region}><SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>

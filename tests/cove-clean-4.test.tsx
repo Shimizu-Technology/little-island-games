@@ -10,6 +10,9 @@ import type { RoundChoices } from '../src/cove/CoveRound';
 import { GridInteraction } from '../src/puzzles/grid/preferences';
 import { useBoardHud, type BoardCommands } from '../src/cove/boardHud';
 import { theme } from '../src/ui/theme';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 
 const fixture = vi.hoisted(() => ({
   local: {} as ReturnType<typeof import('../src/cove/useCoveLocal').useCoveLocal>, save: {} as ReturnType<typeof import('../src/state/validation').emptySave>,

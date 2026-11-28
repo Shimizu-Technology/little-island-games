@@ -14,6 +14,9 @@ import { WordSearchBoard } from '../src/puzzles/words/WordSearchBoard';
 import type { WordSearchBoardProps } from '../src/puzzles/words/WordSearchBoard';
 import type { ChallengeSession } from '../src/state/challenge';
 import { searchEngine, type Action } from '../src/puzzles/words/game';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 const db = vi.hoisted(() => ({ raw: null as string | null, rows: [] as string[], width: 393, played: vi.fn(() => true), fail: false }));
 vi.mock('../src/state/storage', () => ({storage:{get:async()=>db.raw,set:async(raw:string)=>{if(db.fail)throw Error('disk');db.raw=raw;},preserve:async()=>{},writeDraft:async(raw:string)=>{await new Promise(r=>setTimeout(r,5));db.rows.push(raw);},readDrafts:async()=>db.rows,discardSession:async()=>{}}}));
 vi.mock('react-native', () => ({AccessibilityInfo:{isScreenReaderEnabled:async()=>false,addEventListener:()=>({remove(){}})},ScrollView:'section',View:'div',TextInput:'input',Pressable:'button',Platform:{OS:'ios'},useWindowDimensions:()=>({width:db.width,height:852}),AppState:{addEventListener:()=>({remove(){}})}}));

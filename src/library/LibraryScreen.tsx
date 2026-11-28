@@ -1,3 +1,4 @@
+import { AtmosphereHeader } from '../atmosphere/AtmosphereHeader';
 import { collectionEmptyMessage } from "./availability";
 import { savedScrollPosition } from "./scrollPosition";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -426,7 +427,7 @@ function LibraryReady() {
   const activeTabBg = { backgroundColor: "#F9EBD0", borderColor: "#DEC496" } as const;
   return (
     <SafeAreaView style={[s.page, { backgroundColor: "#FFF6E5" }]} edges={["top", "left", "right", "bottom"]}>
-      <View style={s.header}>
+      <View style={s.header}><AtmosphereHeader/>
         <Action onPress={back} label="Back">
           <LibraryIcon name="back" size={24} />
         </Action>

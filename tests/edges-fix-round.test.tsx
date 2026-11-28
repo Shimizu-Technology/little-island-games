@@ -28,6 +28,9 @@ import { createRng } from '../src/puzzles/rng';
 import facts from '../src/puzzles/edges/packs.generated.json';
 import type { BankFacts, EdgeBoardProps } from '../src/puzzles/edges/registration';
 import { finger, type PanHandlers } from './helpers/native-pan';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 
 const db = vi.hoisted(() => ({ raw: null as string | null, rows: [] as string[], discarded: [] as string[], play: vi.fn(), feel: vi.fn(), held: [] as boolean[] }));
 vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set: async (raw: string) => { db.raw = raw; }, preserve: async () => {}, writeDraft: async (raw: string) => { db.rows.push(raw); }, readDrafts: async () => db.rows, discardSession: async (raw: string) => { db.discarded.push(raw); } } }));

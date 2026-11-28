@@ -15,6 +15,9 @@ import { styles } from '../src/components/ui';
 import { addLearner } from '../src/learn/learners';
 import { emptySave } from '../src/state/validation';
 import { theme } from '../src/ui/theme';
+vi.mock('../src/atmosphere/AtmosphereHeader', () => ({ AtmosphereHeader: () => null }));
+vi.mock('../src/atmosphere/GlobalWeatherLayer', () => ({ GlobalWeatherLayer: () => null, AtmosphereSky: () => null }));
+
 
 const viewport = vi.hoisted(() => ({ width: 393, height: 852, fontScale: 1 }));
 const routing = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
