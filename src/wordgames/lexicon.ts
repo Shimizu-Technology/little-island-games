@@ -1,11 +1,7 @@
-import { WORDS } from '../learn/content/reading/words';
-import { LADDERS } from '../learn/content/reading/ladders';
-import { PICTURE_WORDS, LEGACY_WARMUP_WORDS } from '../learn/content/reading/clues';
-import { LETTER_LAGOON_BANK } from '../learn/content/reading/lagoon';
-import { WORD_WORKSHOP_BANK } from '../learn/content/reading/workshop';
-import { STORY_STUDIO_BANK } from '../learn/content/reading/studio';
-import { SENTENCES } from '../learn/content/reading/sentences';
-import { STORIES } from '../learn/content/reading/stories';
+import { discoveryTracks } from '../learn/growth/discovery';
+import { numberTracks } from '../learn/growth/numbers';
+import { tasks as scienceTasks, type Game as ScienceGame } from '../learn/games/weather-watch/model';
+import { FLOAT_EXPERIMENTS } from '../learn/games/float-sink/stages';
 import { legacyWordRescue } from '../../content/words/registry';
 import { catalog } from '../library/catalog';
 
@@ -25,26 +21,36 @@ export function buildTrie(words: ReadonlySet<string>): TrieNode {
 }
 let lexicon: ReadonlySet<string> | undefined;
 let trie: TrieNode | undefined;
-/** Only admitted reading answers and human-facing prose. Never traverse metadata, IDs or speech keys. */
+/** Existing human-facing Library, Word Rescue, science and maths prose only.
+ * Reading snapshots belong exclusively to their branded provenance boundary. Never read distractors, code or metadata. */
 export function getWordLexicon(): ReadonlySet<string> {
   if (lexicon) return lexicon;
   const words = new Set<string>();
   const prose = (value: string) => {
     // Whole alphabetic tokens only: do not turn URLs, underscores, digits or contractions into answers.
-    for (const token of value.split(/\s+|[.,!?;:()“”"/—–]+/u)) {
+    for (const token of value.replace(/https?:\/\/\S+/gi, '').split(/\s+|[.,!?;:()“”"/—–]+/u)) {
       const word = token.toUpperCase();
       if (/^[A-Z]{3,8}$/.test(word)) words.add(word);
     }
   };
-  WORDS.forEach(item => prose(item.word));
-  LADDERS.forEach(item => item.words.forEach(prose));
-  Object.values(PICTURE_WORDS).forEach(group => group.forEach(prose));
-  LEGACY_WARMUP_WORDS.forEach(prose);
-  // Prompt/clue are complete prose, unlike phonics fragments in answer/extras.
-  for (const bank of [LETTER_LAGOON_BANK, WORD_WORKSHOP_BANK, STORY_STUDIO_BANK])
-    bank.forEach(level => level.forEach(task => { prose(task.prompt); if (task.clue) prose(task.clue); if (task.completedWord) prose(task.completedWord); if (!task.completedWord) { task.answer.forEach(prose); task.extras.forEach(prose); } }));
-  SENTENCES.forEach(item => prose(item.text));
-  STORIES.forEach(item => { prose(item.title); item.pages.forEach(page => prose(page.text)); });
+  for (const tracks of [discoveryTracks, numberTracks])
+    for (const stages of Object.values(tracks)) for (const stage of Object.values(stages)) {
+      prose(stage.label); prose(stage.description);
+      for (const question of stage.questions) {
+        prose(question.prompt); if (question.context) prose(question.context); prose(question.explanation);
+      }
+    }
+  const science = (game: ScienceGame) => {
+    // Three authored variants cover the existing task text; no generated IDs, labels or answer choices are read.
+    for (let level = 1; level <= 5; level++) for (let seed = 0; seed < 3; seed++)
+      for (const task of scienceTasks(game, level, seed)) {
+        prose(task.title); prose(task.goal); prose(task.fact); prose(task.notice);
+      }
+  };
+  science('weather-watch'); science('food-web'); science('space-station');
+  for (const experiment of FLOAT_EXPERIMENTS) {
+    prose(experiment.title); prose(experiment.question); prose(experiment.hint); prose(experiment.why);
+  }
   legacyWordRescue.forEach(item => { prose(item[0]); prose(item[2]); });
   for (const entry of catalog) {
     prose(entry.title);

@@ -6,8 +6,8 @@ import { nativeDriver, useReducedMotion } from '../components/motion';
 import { AtmosphereHeader } from '../atmosphere/AtmosphereHeader';
 import { matchStats, roundDuration, type WordGame, type WordMode, type WordSession } from './session';
 import { roundStats, totalScore, wordScore } from './scoring';
-export function Button({ children, onPress, small = false, tone = 'primary', accessibilityLabel, disabled = false }: { children: React.ReactNode; onPress: () => void; small?: boolean; tone?: 'primary' | 'quiet'; accessibilityLabel?: string; disabled?: boolean }) {
-  return <IslandButton compact={small} quiet={tone === 'quiet'} label={accessibilityLabel} onPress={onPress} disabled={disabled} style={{ minHeight: 48 }}>{children}</IslandButton>;
+export function Button({ children, onPress, small = false, tone = 'primary', accessibilityLabel, disabled = false, selected }: { children: React.ReactNode; onPress: () => void; small?: boolean; tone?: 'primary' | 'quiet'; accessibilityLabel?: string; disabled?: boolean; selected?: boolean }) {
+  return <IslandButton compact={small} quiet={tone === 'quiet'} label={accessibilityLabel} onPress={onPress} disabled={disabled} selected={selected} textStyle={selected ? { color: C.ink } : undefined} style={{ minHeight: 48, ...(selected ? { backgroundColor: tone === 'quiet' ? C.paper : C.coralFill, borderColor: C.line } : {}) }}>{children}</IslandButton>;
 }
 export const W = StyleSheet.create({
   screen: { gap: 12, width: '100%', maxWidth: 620, alignSelf: 'center' },

@@ -1,17 +1,16 @@
-import { validWordSession, type WordSession } from '../wordgames/session';
 import { CardSession, validCardSession } from "../cards/engine";
 import { RaceRecords, RaceSession, validRaceRecords, validRaceSession } from "../racer/engine";
 
 import { MysterySession, validMysterySession } from "../mystery/engine";
 import { PartySession, validPartySession } from "../party/engine";
-export type ActivityId = "go-fish" | "crazy-eights" | "racer" | "word-imposter" | "island-mystery" | "word-hunt" | "anagrams";
-export type ActivitySession = CardSession | RaceSession | PartySession | MysterySession | WordSession;
+export type ActivityId = "go-fish" | "crazy-eights" | "racer" | "word-imposter" | "island-mystery";
+export type ActivitySession = CardSession | RaceSession | PartySession | MysterySession;
 export type Activities = Partial<Record<ActivityId, ActivitySession>>;
-export const activityIds: ActivityId[] = ["go-fish", "crazy-eights", "racer", "word-imposter", "island-mystery", "word-hunt", "anagrams"];
+export const activityIds: ActivityId[] = ["go-fish", "crazy-eights", "racer", "word-imposter", "island-mystery"];
 export function validActivities(value: unknown): value is Activities {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   return Object.entries(value).every(([key, session]) =>
-    key === "word-hunt" || key === "anagrams" ? validWordSession(session, key) : key === "island-mystery"
+    key === "island-mystery"
       ? validMysterySession(session) && session.solo
       : key === "word-imposter"
         ? validPartySession(session)

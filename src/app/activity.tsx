@@ -1,5 +1,3 @@
-import { WordHuntScreen } from '../wordgames/WordHuntScreen';
-import { AnagramsScreen } from '../wordgames/AnagramsScreen';
 import { SaveStatus } from "../components/SaveStatus";
 import { learnerPractice } from "../learn/learners";
 import React, { useEffect, useRef, useState } from "react";
@@ -41,7 +39,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
     focused = useIsFocused(),
     { width } = useWindowDimensions();
   const [epoch] = useState(store.epoch);
-  const activityScroll = useRef<ScrollView>(null);
+  const mysteryScroll = useRef<ScrollView>(null);
   const expectedId = useRef(store.save.activities?.[id]?.id ?? null);
   const saved = store.save.activities?.[id];
   const [freshCard] = useState(() =>
@@ -86,27 +84,12 @@ function ActivityGame({ id }: { id: ActivityId }) {
   return (
     <SafeAreaView style={styles.page}>
       <ScrollView
-        ref={id === "island-mystery" || id === "word-hunt" || id === "anagrams" ? activityScroll : undefined}
+        ref={id === "island-mystery" ? mysteryScroll : undefined}
         contentContainerStyle={[styles.content, { paddingHorizontal: 20, gap: 16 }]}
         keyboardShouldPersistTaps="handled"
       >
         <SaveStatus />
-        {id === 'word-hunt' || id === 'anagrams' ? (
-          <>{
-          // createElement stores event callbacks; the callbacks read refs only when invoked.
-          // eslint-disable-next-line react-hooks/refs
-          React.createElement(id === 'word-hunt' ? WordHuntScreen : AnagramsScreen, {
-            session: saved?.game === id ? saved : null,
-            onSave: (next, previous) => save(next, previous),
-            onBack: () => router.canGoBack() ? router.back() : router.replace('/'),
-            active: focused && !practice.pending,
-            beforeNewRound: practice.request,
-            sound: store.save.settings.sound,
-            width: Math.min(width - 40, 420),
-            onActionFocus: () => activityScroll.current?.scrollTo({ y: 0, animated: false }),
-            onFeedback: event => sound(event === 'finish' ? 'win' : event === 'word' ? 'match' : 'tap'),
-          })}{practice.panel}</>
-        ) : id === "island-mystery" ? (
+        {id === "island-mystery" ? (
           <MysteryScreen
             beforeNewRound={practice.request}
             roundPractice={practice}
@@ -118,7 +101,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
               />
             }
             soundControl={mysterySound}
-            onActionFocus={() => activityScroll.current?.scrollTo({ y: 0, animated: false })}
+            onActionFocus={() => mysteryScroll.current?.scrollTo({ y: 0, animated: false })}
             state={saved?.game === "island-mystery" ? saved : null}
             onSave={(next, previous) => save(next, previous)}
             active={focused}

@@ -1,3 +1,4 @@
+import { validWordGames, type WordGamesSave } from './wordGames';
 import { assertContentLive, prepareSaveContent, type ContentOptions } from './sessionContent';
 import { saveCatalog, validChallengeSession } from './challenge';
 import '../challenge/catalog';
@@ -57,6 +58,8 @@ export type Save = {
   wordRecords?: WordRecords;
   numberRecords?: NumberRecords;
   activities?: Activities;
+  /** Optional independent word games, owned per learner and omitted from older saves. */
+  wordGames?: WordGamesSave;
   recentActivity?: ActivityId | null;
   raceRecords?: RaceRecords;
   explore?: { favorites: string[]; progress?: ExploreProgress };
@@ -438,6 +441,7 @@ export function parseSave(raw: string): Save {
     (v.numberRecords !== undefined && (v.version !== 3 || !validNumberRecords(v.numberRecords))) ||
     (v.schoolTogether !== undefined && (v.version !== 3 || !validSchoolTogether(v.schoolTogether))) ||
     (v.activities !== undefined && !validActivities(v.activities)) ||
+    (v.wordGames !== undefined && !validWordGames(v.wordGames, validLearners(v.learning) ? v.learning.people.map(p => p.id) : ['family'])) ||
     (v.recentActivity !== undefined &&
       v.recentActivity !== null &&
       !activityIds.includes(v.recentActivity as ActivityId)) ||

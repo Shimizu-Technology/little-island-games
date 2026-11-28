@@ -144,7 +144,7 @@ export type Assignment = { key: string; label: string };
 export function pendingAssignments(save: Save): Assignment[] {
   if (!save.profiles) return [];
   const live = syncProfile(save).profiles!, u = live.unassigned, rows: Assignment[] = [];
-  const activities: Record<string,string> = { 'go-fish':'Go Fish', 'crazy-eights':'Crazy Eights', racer:'Island Dash', 'word-imposter':'Secret Word', 'island-mystery':'Picnic Mystery', 'word-hunt':'Word Hunt', anagrams:'Anagrams' };
+  const activities: Record<string,string> = { 'go-fish':'Go Fish', 'crazy-eights':'Crazy Eights', racer:'Island Dash', 'word-imposter':'Secret Word', 'island-mystery':'Picnic Mystery' };
   for (const field of ['learn','sessions','board','activities'] as const) for (const game of Object.keys(u.rounds[field] ?? {})) {
     // An unowned learning round stays Family's live work; once finished or replaced there's nothing left to hand over.
     if (field === 'learn') { const family = live.people.family?.learn?.[game as LearnId]; if (family?.id !== u.rounds.learn?.[game as LearnId]?.id || finished(family!)) continue; }

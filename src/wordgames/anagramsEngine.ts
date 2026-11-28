@@ -23,10 +23,29 @@ export function generateRack(size: RackSize, seed: number): string[] {
   }
   if (!rich.length) throw new Error('No rich racks in the reviewed lexicon.');
   const word = rich[Math.floor(seededRandom(seed)() * rich.length)];
-  const rack = shuffled([...word], seed ^ 0x91f3);
-  if (rack.join('') === word) { const index = rack.findIndex(letter => letter !== rack[0]); [rack[0], rack[index]] = [rack[index], rack[0]]; }
-  return rack;
+  return scrambleRack([...word], seed ^ 0x91f3);
 }
+/** Reject every full-length answer, including another anagram of the chosen base word. */
+export function scrambleRack(letters: readonly string[], seed: number, lexicon: ReadonlySet<string> = getWordLexicon()): string[] {
+  for (let attempt = 0; attempt < 32; attempt++) {
+    const rack = shuffled(letters, seed + attempt);
+    if (!lexicon.has(rack.join(''))) return rack;
+  }
+  // Deterministic exhaustive fallback over distinct permutations (at most 7!).
+  const rack = [...letters].sort();
+  do {
+    if (!lexicon.has(rack.join(''))) return rack;
+    let i = rack.length - 2;
+    while (i >= 0 && rack[i] >= rack[i + 1]) i--;
+    if (i < 0) break;
+    let j = rack.length - 1;
+    while (rack[j] <= rack[i]) j--;
+    [rack[i], rack[j]] = [rack[j], rack[i]];
+    rack.splice(i + 1, rack.length - i - 1, ...rack.slice(i + 1).reverse());
+  } while (true);
+  throw new Error('No unsolved arrangement exists for this rack.');
+}
+
 export function selectRackTile(path: readonly number[], tile: number, size: RackSize): number[] {
   if (!Number.isInteger(tile) || tile < 0 || tile >= size) return [...path];
   return path.includes(tile) ? path.filter(i => i !== tile) : [...path, tile];

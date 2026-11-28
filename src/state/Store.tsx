@@ -1,3 +1,5 @@
+import { applyWordGameSave, withoutWordGameOwner, type WordGameExpected } from './wordGames';
+import type { WordGame, WordSession } from '../wordgames/session';
 import { prepareSessionContent, sessionContentReady, retainSessionContent, captureSessionContent, contentMessage, resumeMessage, type SessionOpenResult } from './sessionContent';
 import { challengeFor } from '../challenge/catalog';
 import { completedSignal } from '../challenge/offers';
@@ -69,6 +71,7 @@ type Store = {
   addLearner: (name: string) => boolean;
   selectLearner: (id: string) => void;
   recordWarmup: (results: PracticeResult[], config: PracticeSettings, round: string, expectedEpoch: number) => void;
+  wordGameUpdate: (game: WordGame, next: WordSession, expected: WordGameExpected) => boolean;
   activityUpdate: (game: ActivityId, next: ActivitySession, expected: ActivityExpected) => boolean;
   toggleFavorite: (topic: string) => void;
   toggleGameFavorite: (game: GameId | ActivityId | LearnId | BoardId | ArcadeId) => void;
@@ -386,6 +389,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     },
     [commit, ready, recovery]
   );
+  const wordGameUpdate = useCallback((game: WordGame, next: WordSession, expected: WordGameExpected) => {
+    if (!ready || recovery || restoring.current || uncertainWrite.current) return false;
+    const updated = applyWordGameSave(latest.current, game, next, expected, generation.current);
+    return updated !== latest.current && commit(updated);
+  }, [commit, ready, recovery]);
   const boardUpdate = useCallback((game: BoardId, next: BoardSession, expected: BoardSession | undefined, expectedEpoch: number) => {
     if (!ready || recovery || restoring.current || uncertainWrite.current) return false;
     if (next.id !== expected?.id && Object.entries(latest.current.profiles?.people ?? {}).some(([id,p]) => id !== (latest.current.learning?.active ?? 'family') && p.board?.[game]?.id === next.id)) return false;
@@ -591,7 +599,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (!ready || recovery || restoring.current || uncertainWrite.current) return false;
     const before = latest.current, removed = withoutLearner(before, id);
     if (removed === before) return false;
-    const next = removed.library ? { ...removed, library: { ...removed.library, profiles: Object.fromEntries(Object.entries(removed.library.profiles).filter(([owner]) => owner !== id)) } } : removed;
+    const pruned = withoutWordGameOwner(removed, id);
+    const next = pruned.library ? { ...pruned, library: { ...pruned.library, profiles: Object.fromEntries(Object.entries(pruned.library.profiles).filter(([owner]) => owner !== id)) } } : pruned;
     // Reject a malformed candidate before preserving drafts or replacing the family save.
     try { parseSave(encodeSave(next)); } catch { return false; }
     restoring.current = true;
@@ -835,6 +844,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         selectLearner,
         recordWarmup,
         activityUpdate,
+        wordGameUpdate,
         toggleFavorite,
         toggleGameFavorite,
         rememberPlayers,

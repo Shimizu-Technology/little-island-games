@@ -10,7 +10,7 @@ import type { ShelfId } from "../learn/home";
 // tiny shelf tiles and large lobby tiles must tell the same story.
 const ink = "#254D49", cream = "#FFF9E9", coral = "#DC8062", gold = "#E8B958", blue = "#599CB4", green = "#6B9D70", purple = "#9679B7";
 export type IslandIconId = "reading" | "numbers" | "science" | "thinking" | "coding" | "classic" | "arcade" | "explore";
-type IconId = ShelfId | "explore";
+type IconId = ShelfId | "explore" | "word-hunt" | "anagrams";
 const surfaces: Partial<Record<IconId, string>> = {
   "tic-tac-toe": "#DFECF7", "word-rescue": "#F8DFD0", memory: "#EDE2F5", checkers: "#DCECD7", maze: "#F6E8BF", numbers: "#D5EDEE",
   "go-fish": "#D6EAF2", "crazy-eights": "#F6E7BE", racer: "#DFEBCB", "island-mystery": "#E8E6C7", "word-imposter": "#E7DDF2", explore: "#DAEAF1",
@@ -121,7 +121,8 @@ function Tile({ size, surface, children }: { size: number; surface: string; chil
 export const hasGameArt = (id: string) => hasWordArt(id) || hasArcadeArt(id) || !!surfaces[id as IconId] || (learnIds.includes(id as LearnId) && !!additionalArt[id as LearnId]);
 /** Decorative inside a labelled game control; never adds a second screen-reader stop. */
 export function GameIcon({ id, size = 74 }: { id: IconId; size?: number }) {
-  if (hasWordArt(id)) return <WordGameArt id={id} size={size}/>;
+  if (hasWordArt(id)) return <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+    style={{ width: size, height: size, flexShrink: 0, borderRadius: size / 4, overflow: 'hidden', borderWidth: 1, borderColor: '#3D2B2433', alignItems: 'center', justifyContent: 'center' }}><WordGameArt id={id} size={size}/></View>;
   const surface = surfaces[id];
   if (hasArcadeArt(id)) {
     return <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"

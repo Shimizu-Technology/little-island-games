@@ -1,5 +1,10 @@
+import { elapseRound } from '../src/wordgames/clock';
 import React from 'react';
-import Activity from '../src/app/activity';
+import Activity from '../src/app/word-games';
+import { WordGamesCards } from '../src/wordgames/WordGamesCards';
+import { applyWordGameSave, validWordGames, withoutWordGameOwner } from '../src/state/wordGames';
+import { encodeSave, migrateProfiles } from '../src/state/profiles';
+import { addLearner, selectLearner } from '../src/learn/learners';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
@@ -7,18 +12,19 @@ import { WordHuntScreen } from '../src/wordgames/WordHuntScreen';
 import { AnagramsScreen } from '../src/wordgames/AnagramsScreen';
 import { HuntBoard } from '../src/wordgames/HuntBoard';
 import { emptySave, parseSave } from '../src/state/validation';
-import { applyActivitySave } from '../src/state/activityAction';
 import { validActivities } from '../src/state/activities';
-import { shelfGames, ongoing } from '../src/learn/home';
+import { shelfGames } from '../src/learn/home';
 import type { WordSession } from '../src/wordgames/session';
 import { getWordLexicon, isValidPrefix } from '../src/wordgames/lexicon';
 import { generateBoard, solveBoard, validHuntPath, traceTile, tileAtPoint } from '../src/wordgames/wordHuntEngine';
-import { generateRack, solveRack, canBuildWord, selectRackTile, shuffleRack } from '../src/wordgames/anagramsEngine';
+import { generateRack, solveRack, canBuildWord, selectRackTile, shuffleRack, scrambleRack } from '../src/wordgames/anagramsEngine';
 import { wordScore } from '../src/wordgames/scoring';
-import { createWordSession, changeSelection, submitWord, finishRound, startSecondPlayer, elapseRound, pauseRound, resumeRound, rematch, validWordSession } from '../src/wordgames/session';
+import { createWordSession, changeSelection, submitWord, finishRound, startSecondPlayer, pauseRound, resumeRound, rematch, validWordSession } from '../src/wordgames/session';
 const routeFixture=vi.hoisted(()=>({game:'word-hunt'}));
-vi.mock('expo-router',()=>({useLocalSearchParams:()=>routeFixture,useIsFocused:()=>true,router:{canGoBack:()=>false,replace:vi.fn()},Redirect:'Redirect'}));
+const navigation=vi.hoisted(()=>({push:vi.fn()}));
+vi.mock('expo-router',()=>({useLocalSearchParams:()=>routeFixture,useIsFocused:()=>true,router:{canGoBack:()=>false,replace:vi.fn(),push:navigation.push},Redirect:'Redirect'}));
 vi.mock('react-native-safe-area-context',()=>({SafeAreaView:'SafeAreaView'}));
+vi.mock('../src/components/GameIcon',()=>({GameIcon:'GameIcon'}));
 vi.mock('../src/components/SaveStatus',()=>({SaveStatus:()=>null}));
 vi.mock('../src/components/Recovery',()=>({Recovery:()=>null}));
 vi.mock('../src/cards/CardGameScreen',()=>({CardGameScreen:()=>null}));
@@ -26,7 +32,7 @@ vi.mock('../src/racer/RaceScreen',()=>({RaceScreen:()=>null}));
 vi.mock('../src/mystery/MysteryScreen',()=>({MysteryScreen:()=>null}));
 vi.mock('../src/party/PartyScreen',()=>({PartyScreen:()=>null}));
 vi.mock('../src/components/Audio',()=>({useSoundControls:()=>({play:vi.fn(),stop:vi.fn()})}));
-vi.mock('../src/state/Store',()=>({useStore:()=>({ready:true,epoch:0,save:emptySave(),activityUpdate:()=>true})}));
+vi.mock('../src/state/Store',()=>({useStore:()=>({ready:true,epoch:0,save:emptySave(),wordGameUpdate:()=>true})}));
 vi.mock('../src/practice/useRoundPractice',async()=>{
   const React=await import('react');
   return {useRoundPractice:()=>{
@@ -57,10 +63,11 @@ describe('reviewed offline word games', () => {
   it('builds only clean whole prose words, once', () => {
     const words = getWordLexicon();
 
-    expect(words.size).toBeGreaterThanOrEqual(1500);
+    expect(words.size).toBeGreaterThanOrEqual(1400);
     expect(getWordLexicon()).toBe(words);
     expect([...words].every(word => /^[A-Z]{3,8}$/.test(word))).toBe(true);
     expect(words.has('HTTPS')).toBe(false); expect(words.has('READING')).toBe(true);
+    for (const fragment of ['BLEU','ING','FUL','PRE','TELE','GEO','BIO']) expect(words.has(fragment), fragment).toBe(false);
     expect(words.has('READ.SHORT')).toBe(false); expect(words.has('V25')).toBe(false);
     expect(isValidPrefix('CA')).toBe(true); expect(isValidPrefix('ZZZZ')).toBe(false);
   });
@@ -110,43 +117,66 @@ describe('reviewed offline word games', () => {
   });
 });
 
-describe('activity persistence and integration', () => {
+describe('independent word-game persistence and integration', () => {
   for (const game of ['word-hunt','anagrams'] as const) it(`round trips ${game} with strict saves and restore guards`, () => {
     const session=game === 'word-hunt' ? createWordSession(game,5,'rush',99) : createWordSession(game,7,'pass-play',99);
-    const initial=emptySave(), saved=applyActivitySave(initial,game,session,{id:null,epoch:2},2);
+    const initial=emptySave(), saved=applyWordGameSave(initial,game,session,{owner:'family',id:null,epoch:2},2);
     expect(saved).not.toBe(initial); expect(parseSave(JSON.stringify(saved))).toEqual(saved);
-    expect(ongoing(saved,game)).toBe(true);
-    const paused=pauseRound(session), next=applyActivitySave(saved,game,paused,{id:session.id,revision:session.revision,epoch:2},2);
+    expect(saved.wordGames?.people.family[game]).toEqual(session); expect(saved.activities).toBeUndefined();
+    const paused=pauseRound(session), next=applyWordGameSave(saved,game,paused,{owner:'family',id:session.id,revision:session.revision,epoch:2},2);
     expect(parseSave(JSON.stringify(next))).toEqual(next);
-    expect(applyActivitySave(next,game,session,{id:session.id,revision:0,epoch:2},2)).toBe(next);
-    expect(applyActivitySave(next,game,session,{id:session.id,epoch:1},2)).toBe(next);
-    expect(validActivities({[game]:{...session,version:2}})).toBe(false);
-    expect(validActivities({[game]:{...session,tiles:['HTTPS']}})).toBe(false);
-    expect(validActivities({[game]:{...session,selection:[0,0]}})).toBe(false);
-    expect(validActivities({[game]:{...session,found:[['ZZZZ'],[]]}})).toBe(false);
-    expect(validActivities({[game]:{...session,hidden:'payload'}})).toBe(false);
-    expect(validActivities({[game]:{...session,result:{winner:1}}})).toBe(false);
-    expect(validActivities({[game==='word-hunt'?'anagrams':'word-hunt']:session})).toBe(false);
+    expect(applyWordGameSave(next,game,session,{owner:'family',id:session.id,revision:0,epoch:2},2)).toBe(next);
+    expect(applyWordGameSave(next,game,session,{owner:'family',id:session.id,epoch:1},2)).toBe(next);
+    expect(validWordGames({version:1,people:{family:{[game]:{...session,version:2}}}},['family'])).toBe(false);
+    expect(validWordGames({version:1,people:{family:{[game]:{...session,tiles:['HTTPS']}}}},['family'])).toBe(false);
+    expect(validWordGames({version:1,people:{family:{[game]:{...session,selection:[0,0]}}}},['family'])).toBe(false);
+    expect(validWordGames({version:1,people:{family:{[game]:{...session,found:[['ZZZZ'],[]]}}}},['family'])).toBe(false);
+    expect(validWordGames({version:1,people:{family:{[game]:{...session,hidden:'payload'}}}},['family'])).toBe(false);
+    expect(validWordGames({version:1,people:{family:{[game]:{...session,result:{winner:1}}}}},['family'])).toBe(false);
+    expect(validWordGames({version:1,people:{family:{[game==='word-hunt'?'anagrams':'word-hunt']:session}}},['family'])).toBe(false);
   });
-  it('registers both titles on the classic shelf and activity route', () => {
-    for (const id of ['word-hunt','anagrams'] as const) {
-      const game=shelfGames.find(game=>game.id===id)!; expect(game.island).toBe('classic'); expect(game.filters).toContain('Play alone'); expect(game.filters).toContain('Play together');
+  it('leaves the frozen rosters unchanged and presents dedicated cards with dedicated routes',async()=>{
+    expect(shelfGames.some(game=>(game.id as string)==='word-hunt'||(game.id as string)==='anagrams')).toBe(false);
+    expect(validActivities({'word-hunt':createWordSession('word-hunt',4,'chill',1)})).toBe(false);
+    expect(readFileSync('src/app/shelf.tsx','utf8')).toContain('<WordGamesCards/>');
+    expect(readFileSync('src/hub/EverythingScreen.tsx','utf8')).toContain('<WordGamesCards/>');
+    await act(async()=>{screen=create(<WordGamesCards/>);});
+    for(const game of ['word-hunt','anagrams'] as const){
+      await act(async()=>screen!.root.findByProps({testID:`word-game-card-${game}`}).props.onPress());
+      expect(navigation.push).toHaveBeenLastCalledWith({pathname:'/word-games',params:{game}});
     }
-    expect(readFileSync('src/app/activity.tsx','utf8')).toContain('WordHuntScreen');
-    expect(readFileSync('src/app/activity.tsx','utf8')).toContain('AnagramsScreen');
   });
+  it('keeps word sessions per learner across profile changes, encoding, restore and learner removal',()=>{
+    const old=emptySave(); expect(JSON.parse(encodeSave(old))).not.toHaveProperty('wordGames');
+    let save=migrateProfiles(old);
+    const family=createWordSession('word-hunt',4,'chill',181);
+    save=applyWordGameSave(save,'word-hunt',family,{owner:'family',id:null,epoch:1},1);
+    save={...save,learning:addLearner(save.learning,'Test learner','child-one')};
+    const child=createWordSession('word-hunt',4,'chill',182);
+    expect(applyWordGameSave(save,'word-hunt',child,{owner:'family',id:null,epoch:1},1)).toBe(save);
+    save=applyWordGameSave(save,'word-hunt',child,{owner:'child-one',id:null,epoch:1},1);
+    const restored=migrateProfiles(parseSave(encodeSave(save)));
+    expect(restored.wordGames?.people.family['word-hunt']).toEqual(family); expect(restored.wordGames?.people['child-one']['word-hunt']).toEqual(child);
+    const switched={...restored,learning:selectLearner(restored.learning,'family')};
+    expect(applyWordGameSave(switched,'word-hunt',child,{owner:'child-one',id:child.id,epoch:1},1)).toBe(switched);
+    const removed=withoutWordGameOwner(switched,'child-one'); expect(removed.wordGames?.people['child-one']).toBeUndefined(); expect(removed.wordGames?.people.family['word-hunt']).toEqual(family);
+    expect(validWordGames({version:1,people:{unknown:{}}},['family'])).toBe(false);
+  });
+
 });
 describe('real screen interactions', () => {
   it('keeps the drag surface free of disabled native buttons and maps centered pointer events', async () => {
-    const tiles=generateBoard(4,31), onTile=vi.fn(), onRelease=vi.fn(), onCancel=vi.fn();
-    await act(async()=>{screen=create(<HuntBoard tiles={tiles} size={4} path={[]} width={320} interactive onTile={onTile} onRelease={onRelease} onCancel={onCancel}/>);});
+    const tiles=generateBoard(4,31), onTile=vi.fn(), onRelease=vi.fn(), onCancel=vi.fn(), onTracingChange=vi.fn();
+    await act(async()=>{screen=create(<HuntBoard tiles={tiles} size={4} path={[]} width={320} interactive onTile={onTile} onRelease={onRelease} onCancel={onCancel} onTracingChange={onTracingChange}/>);});
     expect(screen!.root.findAllByType('Tile' as React.ElementType)).toHaveLength(0);
     const board=screen!.root.findByProps({testID:'hunt-board'});
     await act(async()=>board.props.onPanResponderGrant({nativeEvent:{locationX:40,locationY:40,pageX:60,pageY:140}}));
     await act(async()=>board.props.onPanResponderMove({nativeEvent:{locationX:120,locationY:120,pageX:140,pageY:220}}));
-    expect(onTile.mock.calls.map(call=>call[0])).toEqual([0,5]);
-    await act(async()=>board.props.onPanResponderRelease({nativeEvent:{locationX:120,locationY:120}})); expect(onRelease).toHaveBeenCalledOnce();
-    await act(async()=>board.props.onPanResponderTerminate()); expect(onCancel).toHaveBeenCalledOnce();
+    expect(onTile.mock.calls.map(call=>call[0])).toEqual([0,5]); expect(onTracingChange).toHaveBeenLastCalledWith(true);
+    await act(async()=>board.props.onPanResponderRelease({nativeEvent:{locationX:120,locationY:120}})); expect(onRelease).toHaveBeenCalledOnce(); expect(onTracingChange).toHaveBeenLastCalledWith(false);
+    await act(async()=>board.props.onPanResponderTerminate()); expect(onCancel).toHaveBeenCalledOnce(); expect(onTracingChange).toHaveBeenLastCalledWith(false);
+    await act(async()=>board.props.onPanResponderGrant({nativeEvent:{locationX:40,locationY:40}}));
+    await act(async()=>screen!.unmount()); screen=undefined; expect(onTracingChange).toHaveBeenLastCalledWith(false);
   });
   it('starts Word Hunt, taps a diagonal trail, submits, hints, pauses and reviews missed paths', async () => {
     let saved: WordSession | null = null;
@@ -214,5 +244,65 @@ describe('activity route practice integration',()=>{
     await press('Finish round'); await press(game==='word-hunt'?'Rematch Same Board':'Rematch Same Rack');
     expect(visible()).toContain('Complete practice'); await press('Complete practice');
     expect(screen!.root.findAllByProps({testID:'word-finish'})).toHaveLength(0);
+  });
+});
+
+describe('R1 regressions',()=>{
+  it('keeps native parent scrolling locked only during tracing, including cancel and unmount',async()=>{
+    routeFixture.game='word-hunt';
+    await act(async()=>{screen=create(<Activity/>);}); await press('Start Word Hunt'); await press('Complete practice');
+    const page=()=>screen!.root.findByType('ScrollView' as React.ElementType), board=()=>screen!.root.findByProps({testID:'hunt-board'});
+    expect(page().props.scrollEnabled).toBe(true);
+    await act(async()=>board().props.onPanResponderGrant({nativeEvent:{locationX:40,locationY:40}})); expect(page().props.scrollEnabled).toBe(false);
+    await act(async()=>board().props.onPanResponderRelease({nativeEvent:{locationX:40,locationY:40}})); expect(page().props.scrollEnabled).toBe(true);
+    await act(async()=>board().props.onPanResponderGrant({nativeEvent:{locationX:40,locationY:40}})); expect(page().props.scrollEnabled).toBe(false);
+    await act(async()=>board().props.onPanResponderTerminate()); expect(page().props.scrollEnabled).toBe(true);
+    await act(async()=>board().props.onPanResponderGrant({nativeEvent:{locationX:40,locationY:40}}));
+    await press('Pause'); expect(page().props.scrollEnabled).toBe(true);
+  });
+  it('unlocks the old scroll owner when a live board becomes a passive review board',async()=>{
+    const tiles=generateBoard(4,10), onTracingChange=vi.fn();
+    await act(async()=>{screen=create(<HuntBoard tiles={tiles} size={4} path={[]} width={320} interactive onTracingChange={onTracingChange}/>);});
+    await act(async()=>screen!.root.findByProps({testID:'hunt-board'}).props.onPanResponderGrant({nativeEvent:{locationX:40,locationY:40}}));
+    expect(onTracingChange).toHaveBeenLastCalledWith(true);
+    await act(async()=>screen!.update(<HuntBoard tiles={tiles} size={4} path={[]} width={320}/>));
+    expect(onTracingChange).toHaveBeenLastCalledWith(false);
+  });
+  it('paints the connector between wood and the crisp foreground glyph layer',async()=>{
+    await act(async()=>{screen=create(<HuntBoard tiles={generateBoard(4,12)} size={4} path={[0,5]} width={320}/>);});
+    const board=screen!.root.findByProps({testID:'hunt-board'}), children=board.children.filter(child=>typeof child!=='string');
+    const trail=children.findIndex(child=>child.props.testID==='hunt-trail'), letters=children.findIndex(child=>child.props.testID==='hunt-letters');
+    expect(trail).toBeGreaterThan(0); expect(letters).toBeGreaterThan(trail);
+  });
+  for(const game of ['word-hunt','anagrams'] as const) it(`marks only the selected next-round size for ${game}, and rematches use the saved size`,async()=>{
+    const session=game==='word-hunt'?finishRound(createWordSession(game,5,'chill',73)):finishRound(createWordSession(game,7,'chill',73));
+    const Component=game==='word-hunt'?WordHuntScreen:AnagramsScreen;
+    await act(async()=>{screen=create(<Component session={session} onSave={()=>{}} onBack={()=>{}} width={350}/>);});
+    const small=game==='word-hunt'?'4 × 4':'6 tiles', big=game==='word-hunt'?'5 × 5':'7 tiles';
+    const button=(label:string)=>screen!.root.findAllByType('Button' as React.ElementType).find(node=>node.props.children===label)!;
+    expect(button(big).props.selected).toBe(true); expect(button(big).props.quiet).toBe(false); expect(button(small).props.selected).toBe(false); expect(button(small).props.quiet).toBe(true);
+    await press(small); expect(button(small).props.selected).toBe(true); expect(button(big).props.quiet).toBe(true);
+    await press(game==='word-hunt'?'Rematch Same Board':'Rematch Same Rack');
+    if(game==='anagrams'){
+      const answer=screen!.root.findByProps({testID:'anagrams-answer'}), rack=screen!.root.findByProps({testID:'anagrams-rack'});
+      expect(answer.findAllByType('Tile' as React.ElementType)).toHaveLength(7);
+      expect(answer.props.style[1].maxWidth).toBe(240); expect(rack.props.style[1].maxWidth).toBe(240);
+    } else expect(screen!.root.findByType(HuntBoard).props.size).toBe(5);
+  });
+  it('never starts on a complete anagram even when a different full-length arrangement is accepted',()=>{
+    const letters=[...'SHELTER'], seed=71, first=scrambleRack(letters,seed,new Set());
+    const lexicon=new Set([letters.join(''),first.join('')]);
+    const rack=scrambleRack(letters,seed,lexicon);
+    expect(lexicon.has(rack.join(''))).toBe(false); expect([...rack].sort()).toEqual([...letters].sort());
+    expect(rack).toEqual(scrambleRack(letters,seed,lexicon));
+  });
+  it('flushes fractions of a second on pause and navigation unmount without double-charging',async()=>{
+    vi.useFakeTimers(); let saved:WordSession|null=null;
+    await act(async()=>{screen=create(<AnagramsScreen session={createWordSession('anagrams',6,'rush',19)} onSave={next=>{saved=next;}} onBack={()=>{}}/>);});
+    await press('Resume'); await act(async()=>{vi.advanceTimersByTime(350);}); await press('Pause');
+    expect(saved!.remainingMs).toBe(59650);
+    await press('Resume'); await act(async()=>{vi.advanceTimersByTime(425);});
+    await act(async()=>screen!.unmount()); screen=undefined;
+    expect(saved!.phase).toBe('paused'); expect(saved!.remainingMs).toBe(59225);
   });
 });

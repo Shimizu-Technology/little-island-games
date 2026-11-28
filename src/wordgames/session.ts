@@ -63,11 +63,6 @@ export function pauseRound<T extends WordSession>(session: T): T {
 export function resumeRound<T extends WordSession>(session: T): T {
   return session.phase !== 'paused' ? session : { ...session, phase: 'playing', revision: session.revision + 1 };
 }
-export function elapseRound<T extends WordSession>(session: T, elapsedMs: number): T {
-  if (session.phase !== 'playing' || session.mode === 'chill' || !Number.isFinite(elapsedMs) || elapsedMs <= 0) return session;
-  const next = { ...session, remainingMs: Math.max(0, session.remainingMs - Math.floor(elapsedMs)), revision: session.revision + 1 };
-  return next.remainingMs === 0 ? finishRound(next) : next;
-}
 export function matchStats(session: WordSession) {
   return [roundStats(session.found[0], session.found[1]), roundStats(session.found[1], session.found[0])];
 }

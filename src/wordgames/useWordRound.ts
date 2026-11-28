@@ -1,11 +1,13 @@
+import { elapseRound } from './clock';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, Platform } from 'react-native';
-import { elapseRound, pauseRound, type WordSession } from './session';
+import { pauseRound, type WordSession } from './session';
 export interface WordScreenProps {
   session: WordSession | null;
   onSave: (next: WordSession, previous: WordSession | null) => boolean | void;
   onBack: () => void;
   onActionFocus?: () => void;
+  onTracingChange?: (tracing: boolean) => void;
   onFeedback?: (event: 'word' | 'finish' | 'tap') => void;
   active?: boolean;
   sound?: boolean;
@@ -35,6 +37,12 @@ export function useWordRound({ session, onSave, active = true, onFeedback, sound
     const current = live.current;
     if (current?.phase === 'playing') change(pauseRound(elapseRound(current, Date.now() - last.current)));
   }, [change]);
+  useEffect(() => () => {
+    const current = live.current;
+    if (current?.phase !== 'playing') return;
+    const next = pauseRound(elapseRound(current, Date.now() - last.current));
+    if (save.current(next, current) !== false) live.current = next;
+  }, []);
   useEffect(() => { if (!active) pause(); }, [active, pause]);
   useEffect(() => {
     const sub = AppState.addEventListener('change', state => { if (state !== 'active') pause(); });
