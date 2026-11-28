@@ -66,3 +66,33 @@ Final source commit: `d57af440`. The last source edit extracts the identical `Da
 
 
 The final `npm run check:words:export` passed against export `278901cba8d6` with the existing private policy loaded (`policyDataChecked: true`): admission checked 14,374 files; the bundle guard checked 7,560 files and 72 source files. No new policy exceptions were added. Existing policy exception counts were five terms and one source unit. Final lint and typecheck both exited zero; lint retained 275 existing warnings.
+
+
+## R1 review response
+
+Reviewed head: `8644e453ed9a6747aac505e6f34035a61a375929`. Fix source: `61e3d23948cf60c38e00967542b8ef3315546009`. All seven findings were read and addressed. This records implementation and verification; the independent review remains REQUEST_CHANGES until the lead's re-review.
+
+| Finding | Change and regression evidence |
+| --- | --- |
+| R1-01 | Reduce Motion stamps both commit and settle clocks before queuing JS. Watchdogs ignore zero sentinels and use a creation-clock fallback. Move/feed tests tick native frames before delivering JS and verify one valid commit; a separate test covers zero timestamps. |
+| R1-02 | Orphan sweeps retain queued up/cancel events and recognizer-owned external pointers. Canvas touch inventory no longer cancels drawer pointers. Tests cover both concurrent drops during a delayed commit, canvas taps during -500/-100/positive drawer drags, and recovery if an external pointer itself is lost. |
+| R1-03 | Entity hits and selected-item placement precede room-hop interception. Scene portals render only in the active single room and disappear in Overview, Design, overlays, or behind an open fridge. Drag interception also checks overview/camera scale and active room. Hops cancel captures and transfer from the selected friend's actual room. Screen, real SceneView, and runtime drag regressions cover these cases. |
+| R1-04 | Grocery dragging requires a 180 ms hold; taps stay immediate. Web tiles permit native vertical panning. A Market-scoped, nonpassive touch handler cancels scrolling only during an active held carry and is removed on unmount. Tests cover configuration, unsuppressed ordinary movement, held-only prevention, and one add per drop. |
+| R1-05 | The bin cue is inset from the room edge. The static spoon element is reused across renders and angles below the face; the chef faces the stove. Pan lift is measured against the illustrated skillet rather than the retired SVG stove. Memo and paint/selection tests pass; the refreshed cooking/open-bin screenshots were inspected. |
+| R1-06 | Trash targets bypass surface-capacity admission. Valid full-Kitchen fixtures dispose food from a fridge, basket, and another room and verify valid saved outcomes. |
+| R1-07 | Unpacking opens the fridge with active state. A fully emptied staged shopping basket is removed; a basket already placed by the child is retained. Tests verify exact saved Undo restoration and preserve overflow. |
+
+Verification on the completed source:
+
+- Home, Personalization, style, native-module loading and protected Home regression run: 89 files passed, one skipped; 1,016 tests passed, two skipped. All new R1 cases passed.
+- Focused Market/runtime/model run: three files, 27 tests passed.
+- `npm run save:catalog`: passed, all 180 immutable published banks unchanged.
+- `npx tsc --noEmit` and `npx expo lint`: exit 0.
+- `npm run export:web && npm run check:words:export`: passed. Final offline export `d426b26c0d09`, 7,558 resources. Private policy checked; existing exception counts unchanged.
+- Impeccable advisory scan of changed UI files: `[]`.
+
+Browser QA used isolated Chromium, with 1024×768 Kitchen/room views and a 390×667 touch viewport. The four requested files were refreshed and inspected: `kitchen-cooking.png`, `kitchen-trash-open.png`, `kitchen-fridge-stocked.png`, and `ladder-room-hop.png`. The spoon clears the face, food sits in the skillet, the full trash label is visible, the open fridge has no portal overlay, and the empty basket bar is gone. A real drag discarded the cooked serving; Undo restored it. Unpacking two groceries produced eight fridge contents and removed the staged basket; a room hop grounded the Islander in Beach hut.
+
+The final Market build was reloaded without temporary input overrides. A held touch added one Mango and a tap added one Banana. A vertical swipe starting on a grocery then scrolled shelves 116 px, left the two-item basket unchanged, and produced ten touch-move events with no default prevention and no carry ghost. An earlier swipe attempt left scroll position unchanged; the subsequent instrumented swipe confirmed normal scrolling without changing source. Physical iOS/Android testing remains separate from browser touch emulation. The final browser had no JavaScript page errors.
+
+Kitchen/room images were captured from export `2a9138c60f5e`; final Market touch checks used `d426b26c0d09`. The intervening source edits affect Market touch scrolling only. No protected tests, Library files, word-games route, or save banks were changed. The task-owned server, browser processes, and preview tab were cleaned; lifecycle session `01a2202e-90bb-79e2-b5a6-71f457fc86f2` reports no active owned resources. The draft branch/worktree is retained for lead review.
