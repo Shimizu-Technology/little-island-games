@@ -243,7 +243,164 @@ export function guideWaypoints(from: Point, to: Point, layout: MapLayout, width:
   }
   return points;
 }
+export type MapExcursionId = 'tumon-beach' | 'cocos-island';
+export type MapHotspotRect = {
+  x: number;
+  y: number;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
+export type MapExtrasLayout = {
+  ocean: MapHotspotRect;
+  cocos: MapHotspotRect;
+  sailboat: MapHotspotRect | null;
+  dolphinReef: MapHotspotRect | null;
+  northernIslet: MapHotspotRect | null;
+  nightMoon: MapHotspotRect | null;
+  /** True in landscape or when the portrait painting crops Cocos Island out / shifts its clear slot. */
+  showCocosIslet: boolean;
+};
+/** Exact cover-transform projection matching `mapLayout` for painted Guam portrait/landscape coordinates. */
+export function mapImagePoint(normX: number, normY: number, width: number, height: number, wide: boolean): Point {
+  const imageWidth = wide ? 1280 : 720;
+  const imageHeight = wide ? 720 : 1280;
+  const imageScale = Math.max(width / imageWidth, height / imageHeight);
+  return {
+    x: 0.5 * width + (normX - 0.5) * imageWidth * imageScale,
+    y: 0.5 * height + (normY - 0.5) * imageHeight * imageScale,
+  };
+}
+type RectBox = { left: number; top: number; width: number; height: number };
+function rectsOverlap(a: RectBox, b: RectBox, pad = 2): boolean {
+  return (
+    a.left < b.left + b.width + pad &&
+    a.left + a.width + pad > b.left &&
+    a.top < b.top + b.height + pad &&
+    a.top + a.height + pad > b.top
+  );
+}
+function targetBoxes(layout: MapLayout): RectBox[] {
+  return layout.targets.map((place) => {
+    const boxWidth = Math.max(48, place.width, place.labelWidth);
+    return {
+      left: place.left + (place.width - boxWidth) / 2,
+      top: place.top,
+      width: boxWidth,
+      height: place.height,
+    };
+  });
+}
+function findClearHotspot(
+  preferred: Point,
+  sizes: readonly number[],
+  obstacles: readonly RectBox[],
+  width: number,
+  height: number
+): MapHotspotRect | null {
+  for (const size of sizes) {
+    const maxLeft = width - size - 2;
+    const maxTop = height - size - 2;
+    if (maxLeft < 2 || maxTop < 2) continue;
+    const clampLeft = (l: number) => Math.max(2, Math.min(maxLeft, l));
+    const clampTop = (t: number) => Math.max(2, Math.min(maxTop, t));
+    const initial: RectBox = {
+      left: clampLeft(preferred.x - size / 2),
+      top: clampTop(preferred.y - size / 2),
+      width: size,
+      height: size,
+    };
+    if (!obstacles.some((t) => rectsOverlap(initial, t))) {
+      return { ...initial, x: initial.left + size / 2, y: initial.top + size / 2 };
+    }
+    let best: RectBox | undefined;
+    let bestDist = Infinity;
+    const tryCandidate = (left: number, top: number) => {
+      const cand: RectBox = { left: clampLeft(left), top: clampTop(top), width: size, height: size };
+      if (obstacles.some((t) => rectsOverlap(cand, t))) return;
+      const d = Math.hypot(cand.left + size / 2 - preferred.x, cand.top + size / 2 - preferred.y);
+      if (d < bestDist) {
+        bestDist = d;
+        best = cand;
+      }
+    };
+    // Try edge-aligned placements adjacent to every obstacle first.
+    for (const t of obstacles) {
+      tryCandidate(t.left - size - 3, initial.top);
+      tryCandidate(t.left + t.width + 3, initial.top);
+      tryCandidate(initial.left, t.top - size - 3);
+      tryCandidate(initial.left, t.top + t.height + 3);
+      tryCandidate(t.left - size - 3, t.top);
+      tryCandidate(t.left + t.width + 3, t.top);
+      tryCandidate(t.left - size - 3, t.top + t.height - size);
+      tryCandidate(t.left + t.width + 3, t.top + t.height - size);
+    }
+    // Exhaustive viewport grid sweep so we always find a true non-overlapping slot if one exists.
+    const step = 8;
+    for (let y = 2; y <= maxTop + 0.01; y += step) {
+      for (let x = 2; x <= maxLeft + 0.01; x += step) {
+        tryCandidate(x, y);
+      }
+      tryCandidate(maxLeft, y);
+    }
+    for (let x = 2; x <= maxLeft + 0.01; x += step) tryCandidate(x, maxTop);
+    tryCandidate(maxLeft, maxTop);
+    if (best) {
+      return { ...best, x: best.left + size / 2, y: best.top + size / 2 };
+    }
+  }
+  return null;
+}
+/** Calibrated interactive water, Secret Cocos Island, sailboat, and Easter-egg hotspots (>=48pt, strictly non-overlapping). */
+export function mapExtrasLayout(width: number, height: number, layout = mapLayout(width, height)): MapExtrasLayout {
+  const wide = layout.wide;
+  const occupied: RectBox[] = [...targetBoxes(layout)];
+  const oceanRaw = mapImagePoint(wide ? 0.24 : 0.175, wide ? 0.88 : 0.703, width, height, wide);
+  const cocosRaw = mapImagePoint(wide ? 0.085 : 0.29, wide ? 0.875 : 0.905, width, height, wide);
+  const dolphinRaw = mapImagePoint(wide ? 0.92 : 0.88, wide ? 0.28 : 0.50, width, height, wide);
+  const northernRaw = mapImagePoint(wide ? 0.12 : 0.145, wide ? 0.14 : 0.165, width, height, wide);
+  const moonRaw = { x: width * 0.84, y: height * 0.105 };
+
+  // Reserve primary excursion targets first (Cocos & Ocean) so both always receive clear >=48pt slots.
+  const cocos = findClearHotspot(cocosRaw, [56, 48], occupied, width, height)
+    ?? { left: 4, top: Math.max(4, height - 52), width: 48, height: 48, x: 28, y: Math.max(28, height - 28) };
+  occupied.push(cocos);
+
+  const ocean = findClearHotspot(oceanRaw, [52, 48], occupied, width, height)
+    ?? { left: Math.max(4, width - 52), top: Math.max(4, height - 52), width: 48, height: 48, x: Math.max(28, width - 28), y: Math.max(28, height - 28) };
+  occupied.push(ocean);
+
+  const sailboatRaw = wide
+    ? { x: Math.min(width - 36, Math.max(82, cocos.x + 62)), y: Math.min(height - 32, cocos.y + 2) }
+    : { x: Math.max(26, Math.min(width - 26, cocos.x - 54)), y: Math.min(height - 26, cocos.y) };
+  const sailboat = findClearHotspot(sailboatRaw, [48], occupied, width, height);
+  if (sailboat) occupied.push(sailboat);
+
+  const dolphinReef = findClearHotspot(dolphinRaw, [52, 48], occupied, width, height);
+  if (dolphinReef) occupied.push(dolphinReef);
+
+  const northernIslet = findClearHotspot(northernRaw, [52, 48], occupied, width, height);
+  if (northernIslet) occupied.push(northernIslet);
+
+  const nightMoon = findClearHotspot(moonRaw, [52, 48], occupied, width, height);
+  if (nightMoon) occupied.push(nightMoon);
+
+  const cocosPaintingVisible =
+    !wide &&
+    cocosRaw.x >= 20 &&
+    cocosRaw.x <= width - 20 &&
+    cocosRaw.y >= 20 &&
+    cocosRaw.y <= height - 20 &&
+    Math.hypot(cocos.x - cocosRaw.x, cocos.y - cocosRaw.y) <= 28;
+  return { ocean, cocos, sailboat, dolphinReef, northernIslet, nightMoon, showCocosIslet: wide || !cocosPaintingVisible };
+}
 export const WALK_MS = 110, ZOOM_MS = 50;
+/** Shared excursion timing constants so one-shot glide/splash animations complete cleanly before route navigation. */
+export const COCOS_SAIL_ANIM_MS = 220;
+export const COCOS_SAIL_MS = 260;
+export const OCEAN_SPLASH_ANIM_MS = 160;
+export const OCEAN_SPLASH_MS = 180;
 /** One cancellable boundary timer. The second activation always wins immediately. */
 export function createJourney(open: (place: PlaceId) => void, schedule = (fn: () => void, ms: number) => setTimeout(fn, ms), cancel = (id: ReturnType<typeof setTimeout>) => clearTimeout(id)) {
   let timer: ReturnType<typeof setTimeout> | undefined, pending: PlaceId | null = null;
@@ -257,6 +414,7 @@ export function createJourney(open: (place: PlaceId) => void, schedule = (fn: ()
       timer = schedule(() => { clear(); open(place); }, WALK_MS + ZOOM_MS);
       return true;
     },
+    isPending: () => pending !== null,
     cancel: clear,
   };
 }

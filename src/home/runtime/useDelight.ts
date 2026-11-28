@@ -1,3 +1,4 @@
+import { isEntitySwimming, isInWaterZone } from "../waterZone";
 import { isRestingSleeper } from "./expressions";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { RoomId } from "../catalogMore";
@@ -107,6 +108,10 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
       effect("bubbles", proposal.room, proposal.contact.x, proposal.contact.y - 10);
       effect("splash", proposal.room, proposal.contact.x, proposal.contact.y);
     }
+    if (made?.item?.item === "snorkel-set" && (proposal.kind === "hand" || isInWaterZone(proposal.room, proposal.contact))) {
+      effect("bubbles", proposal.room, proposal.contact.x, proposal.contact.y - 24);
+      effect("sparkle", proposal.room, proposal.contact.x, proposal.contact.y - 18);
+    }
     if (proposal.attachment.kind === "surface") {
       const parent = before.entities[proposal.attachment.parent]?.item;
       if (parent?.item === "sink-counter" && parent.powered) effect("splash", proposal.room, proposal.contact.x, proposal.contact.y);
@@ -119,6 +124,10 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
     }
     // HD-06: friends close by turn to greet a friend set down beside them, and both smile.
     const friend = landedId ? after.entities[landedId] : undefined;
+    if (friend?.character && proposal.kind !== "staging" && isEntitySwimming(friend, after)) {
+      effect("splash", proposal.room, friend.contact.x, friend.contact.y - 6);
+      mood(friend.id, "happy", GREET_MOOD_MS);
+    }
     if (friend?.character && proposal.kind !== "staging" && !isRestingSleeper(friend)) {
       const near = greeters(after, friend).filter(g => !isRestingSleeper(after.entities[g.id]));
       for (const g of near) { cueOn(g.id, "greet", g.dir); mood(g.id, "happy", GREET_MOOD_MS); }
@@ -192,10 +201,31 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
       // Read after the toggle: `item` is the state the child just changed from.
       const on = !(item.powered ?? item.state === "active");
       if (item.item === "stove") feedback.play("knob");
-      else if (toggle === "water") {
+      else if (item.item === "sandcastle") {
+        feedback.play("shell");
+        effect("sparkle", entity.room, entity.contact.x, entity.contact.y - 54);
+        cueOn(entity.id, "hop");
+      } else if (item.item === "treasure-chest") {
+        feedback.play(on ? "shell" : "wood");
+        if (on) effect("sparkle", entity.room, entity.contact.x, entity.contact.y - 52);
+        cueOn(entity.id, on ? "hop" : "tap");
+      } else if (toggle === "water") {
         feedback.play(on ? "splash" : "pick");
         if (on) effect("splash", entity.room, entity.contact.x + 8, entity.contact.y - 108);
       } else feedback.play(toggle === "open" ? "wood" : "pick");
+      return;
+    }
+    if (item.item === "sea-turtle") {
+      effect("bubbles", entity.room, entity.contact.x, entity.contact.y - 34);
+      effect("sparkle", entity.room, entity.contact.x, entity.contact.y - 44);
+      cueOn(entity.id, "happy");
+      feedback.play("bubbles");
+      return;
+    }
+    if (item.item === "snorkel-set") {
+      effect("bubbles", entity.room, entity.contact.x, entity.contact.y - 24);
+      cueOn(entity.id, "tap");
+      feedback.play("bubbles");
       return;
     }
     if (tubs.has(item.item)) {
@@ -259,5 +289,12 @@ export function useDelight({ soundOn, reduced, cue, clearCue = () => {}, getScen
     effect("sparkle", entity.room, entity.contact.x, entity.contact.y - 160);
   }, [effect, feedback]);
 
-  return { moods, effects, poke, pickedUp, landed, ate, tapped, refilled, restocked, touchedPiece, watchCooking, reduced };
+  const palmShaken = useCallback((room: RoomId, x: number, y: number, dropped: boolean) => {
+    feedback.play("rustle");
+    if (dropped) feedback.play("plop");
+    feedback.haptic("attach");
+    effect("sparkle", room, x, y);
+  }, [effect, feedback]);
+
+  return { moods, effects, poke, pickedUp, landed, ate, tapped, refilled, restocked, palmShaken, touchedPiece, watchCooking, reduced };
 }

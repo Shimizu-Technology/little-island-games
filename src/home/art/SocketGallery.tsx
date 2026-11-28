@@ -9,7 +9,7 @@ import { SeatShape, seatSockets } from './SeatArt';
  * Character size is 224 scene units (same as home); art size is supplied by itemSize.
  */
 export function SocketGallery({ id, index = 0, mirrored = false, look = defaultLook, size = 260 }: { id: string; index?: number; mirrored?: boolean; look?: IslanderLook; size?: number }) {
-  const socket = seatSockets[id][index], pose = resolvePose('front', socket.kind === 'sit' ? 'sit-front' : socket.kind === 'lie' ? 'lie-asleep' : 'bathe');
+  const socket = seatSockets[id][index], pose = resolvePose('front', socket.kind === 'sit' ? 'sit-front' : socket.kind === 'lie' ? 'lie-asleep' : socket.kind === 'stand' ? 'idle' : 'bathe');
   const box = poseBox(pose), scale = 224 / 132 * 150 / size;
   const x = socket.at[0]*150-box.anchor[0]*scale, y = socket.at[1]*150-box.anchor[1]*scale;
   return <Svg width={size} height={size + 110} viewBox="0 -60 150 210" accessible={false}>

@@ -16,7 +16,7 @@ import type { ItemId } from "./catalog";
 export type WorldPose = "stand" | "sit" | "lie" | "bathe";
 
 /** A spot on a piece of furniture where a character settles when dropped near it. */
-export type SocketKind = "sit" | "lie" | "bathe";
+export type SocketKind = "stand" | "sit" | "lie" | "bathe";
 
 export type Socket = Readonly<{
   id: string;
@@ -56,7 +56,16 @@ export type Capability = Readonly<{
 }>;
 
 /** Art fills this per item (src/home/art). The engine reads it only through `capabilityOf`. */
-export const capabilities: Partial<Record<ItemId, Capability>> = { ...Object.fromEntries(Object.entries(seatSockets).map(([id, sockets]) => [id, { moveInPlay: true, sockets }])), ...livingCapabilities };
+export const capabilities: Partial<Record<ItemId, Capability>> = Object.fromEntries(
+  [...new Set([...Object.keys(seatSockets), ...Object.keys(livingCapabilities)])].map((id) => [
+    id,
+    {
+      moveInPlay: true,
+      ...(seatSockets[id] ? { sockets: seatSockets[id] } : {}),
+      ...livingCapabilities[id as ItemId],
+    },
+  ])
+);
 
 /**
  * The frozen Play list (MP-D6). Beds, tables and storage, the large things that hold a room

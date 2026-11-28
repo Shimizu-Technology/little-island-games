@@ -48,7 +48,7 @@ export function dropBody(i: Instance): DropBody {
   const size = itemSize(i),
     unit = 224 / 132;
   for (const socket of socketsOf(i).filter((s) => !s.id.startsWith("pet-"))) {
-    const rig = poseBox(resolvePose("front", socket.kind === "sit" ? "sit-front" : socket.kind));
+    const rig = poseBox(resolvePose("front", socket.kind === "sit" ? "sit-front" : socket.kind === "stand" ? "idle" : socket.kind));
     const x = (socket.at[0] - 0.5) * size - rig.anchor[0] * unit,
       y = (socket.at[1] - 0.85) * size - rig.anchor[1] * unit;
     left = Math.min(left, x);

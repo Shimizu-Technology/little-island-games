@@ -135,7 +135,14 @@ export function applyUndoStep(after: HomeStateV2, step: UndoStep): HomeStateV2 {
     ] };
   }
   const atmosphere = compactAtmosphere(Object.hasOwn(step, "atmosphere") ? step.atmosphere ?? undefined : after.atmosphere);
-  return { ...(atmosphere ? { atmosphere } : {}), version: after.version, ...(after.rosterVersion ? { rosterVersion: after.rosterVersion } : {}), current: after.current, rooms };
+  return {
+    ...(atmosphere ? { atmosphere } : {}),
+    ...(after.discoveredPlaces?.length ? { discoveredPlaces: after.discoveredPlaces } : {}),
+    version: after.version,
+    ...(after.rosterVersion ? { rosterVersion: after.rosterVersion } : {}),
+    current: after.current,
+    rooms,
+  };
 }
 export const undoBytes = (undo: HomeUndo) => JSON.stringify(undo).length;
 /** One saved step, its size inside the saved list, and whether undoing it brings back removed things. */

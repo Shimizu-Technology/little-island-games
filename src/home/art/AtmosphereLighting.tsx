@@ -10,6 +10,7 @@ import { WeatherOverlay } from '../runtime/WeatherOverlay';
 const windows: Record<RoomId, { x: number; y: number; width: number; height: number; round?: number }[]> = {
   'tumon-beach': [],
   'chamorro-village': [],
+  'cocos-island': [],
   home: [{ x: 174, y: 104, width: 57, height: 155 }, { x: 249, y: 104, width: 50, height: 155 }],
   kitchen: [{ x: 328, y: 99, width: 139, height: 133 }],
   treehouse: [{ x: 328, y: 106, width: 144, height: 144, round: 72 }],
@@ -45,6 +46,19 @@ const TimeLighting = React.memo(function TimeLighting({ room, time, shown, reduc
       { left: 95, top: 155, width: 630, height: 420, opacity: .07 },
       { left: 185, top: 215, width: 450, height: 300, opacity: .09 }].map((pool, n) =>
       <View key={n} style={{ position: 'absolute', left: `${pool.left / 8}%`, top: `${pool.top / 5.6}%`, width: `${pool.width / 8}%`, height: `${pool.height / 5.6}%`, borderRadius: 400, backgroundColor: '#FFD599', opacity: pool.opacity }}/>
+    )}
+    {time === 'night' && (room === 'tumon-beach' || room === 'cocos-island') && (
+      <Svg testID={`bioluminescent-shimmer-${room}`} width="100%" height="100%" viewBox="0 0 800 560" style={{ position: 'absolute' }} accessible={false}>
+        {(room === 'tumon-beach'
+          ? [[110, 310, 36], [235, 336, 48], [385, 320, 52], [530, 332, 42], [655, 312, 34], [175, 364, 30], [455, 358, 34]]
+          : [[445, 330, 42], [585, 348, 52], [705, 326, 38], [520, 412, 46], [665, 430, 50], [485, 495, 40], [630, 512, 48]]
+        ).map(([x, y, w], idx) => (
+          <React.Fragment key={idx}>
+            <Path d={`M${x - w / 2} ${y}Q${x} ${y - 4} ${x + w / 2} ${y}`} stroke="#8BF7F0" strokeWidth={3.5} strokeLinecap="round" fill="none" opacity={0.48} />
+            <Circle cx={x + (idx % 2 ? 12 : -10)} cy={y - 6} r={2.2} fill="#D9FFFA" opacity={0.78} />
+          </React.Fragment>
+        ))}
+      </Svg>
     )}
     {windows[room].map((w, n, all) => <View key={n} style={{ position: 'absolute', left: `${w.x / 8}%`, top: `${w.y / 5.6}%`, width: `${w.width / 8}%`, height: `${w.height / 5.6}%`, borderRadius: w.round ?? 1, overflow: 'hidden' }}>
       <WindowSky time={time} width={w.width} height={w.height} moon={n === all.length - 1}/>

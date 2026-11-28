@@ -1,4 +1,4 @@
-import { defaultGuamRoom, guamPlaceIds, untouchedGuamRoom } from "./locations";
+import { defaultGuamRoom, guamPlaceIds, untouchedGuamRoom, type GuamPlaceId } from "./locations";
 import { compactAtmosphere, validAtmosphere, type Atmosphere } from "./atmosphere";
 import { familySlots, type FamilySlot } from "./family";
 import { FRIDGE_STAPLES, storageCapacity, type StorageState } from './storage';
@@ -99,6 +99,8 @@ export type HomeStateV2 = {
   undo?: HomeUndo;
   /** v4 only. Grown-up access choices for this child's home (HR-03). Outside history. */
   access?: HomeAccess;
+  /** v4 only. Secret/special Guam places this child has visited & unlocked. Omitted when empty. */
+  discoveredPlaces?: readonly GuamPlaceId[];
 };
 export type HomeAccess = { largeTargets: true };
 export type HomeSave = HomeState | HomeStateV2;
@@ -221,7 +223,7 @@ export function placedInstances(room: Pick<RoomState, "instances" | "characters"
     return true;
   });
 }
-function validRoom(v: unknown, legacy = false, canonical = false, canonicalV4 = false, family = false): v is RoomState {
+function validRoom(v: unknown, legacy = false, canonical = false, canonicalV4 = false, family = false, roomId?: RoomId): v is RoomState {
   if (
     !exact(v, ["instances", "characters", "theme"]) ||
     !Array.isArray(v.instances) ||
@@ -267,7 +269,7 @@ function validRoom(v: unknown, legacy = false, canonical = false, canonicalV4 = 
     Array.isArray(v.characters) &&
     v.characters.length <= (family ? 6 : 3) &&
     new Set(v.characters.map((c) => c?.slot)).size === v.characters.length &&
-    v.characters.every((c) => validCharacter(c, items, legacy, canonical, canonicalV4, family))
+    v.characters.every((c) => validCharacter(c, items, legacy, canonical, canonicalV4, family, roomId))
   );
 }
 function validContainers(items: readonly Instance[]): boolean {
@@ -294,7 +296,7 @@ export function validHome(v: unknown): v is HomeSave {
     if (!exact(v, ["version", "scene", "instances", "characters", "theme"]) || s.scene !== "room-1") return false;
     return validRoom({ instances: s.instances, characters: s.characters, theme: s.theme }, true);
   }
-  const optional = s.version === 4 ? (["undo", "access", "rosterVersion", "atmosphere"] as const).filter((k) => Object.hasOwn(v, k)) : [];
+  const optional = s.version === 4 ? (["undo", "access", "rosterVersion", "atmosphere", "discoveredPlaces"] as const).filter((k) => Object.hasOwn(v, k)) : [];
   if (
     !exact(v, ["version", "current", "rooms", ...optional]) ||
     ![2, 3, 4].includes(s.version) ||
@@ -309,13 +311,23 @@ export function validHome(v: unknown): v is HomeSave {
   if (Object.hasOwn(v, "rosterVersion") && (s.version !== 4 || s.rosterVersion !== 1)) return false;
   if (s.version >= 4 && s.access !== undefined && !(exact(s.access, ["largeTargets"]) && s.access.largeTargets === true)) return false;
   if (Object.hasOwn(v, "atmosphere") && !validAtmosphere(s.atmosphere)) return false;
+  if (
+    Object.hasOwn(v, "discoveredPlaces") &&
+    (s.version !== 4 ||
+      !Array.isArray(s.discoveredPlaces) ||
+      s.discoveredPlaces.length === 0 ||
+      s.discoveredPlaces.length > guamPlaceIds.length ||
+      new Set(s.discoveredPlaces).size !== s.discoveredPlaces.length ||
+      !s.discoveredPlaces.every((id) => member(guamPlaceIds, id)))
+  )
+    return false;
   // Every saved undo step must rebuild a valid earlier home; one bad step makes the save invalid.
   // A step only changes the rooms it names, so only those rooms are validated again. Each rebuilt
   // home is checked before it becomes the input to the next older step, and nothing a corrupt
   // step contains can throw out of this validator (R6).
   if (s.version >= 4 && s.undo !== undefined) {
     if (!validUndoShape(s.undo, s.rosterVersion === 1)) return false;
-    let cursor: HomeStateV2 = { version: s.version, ...(s.rosterVersion ? { rosterVersion: s.rosterVersion } : {}), current: s.current, rooms: s.rooms, ...(s.atmosphere ? { atmosphere: s.atmosphere } : {}) };
+    let cursor: HomeStateV2 = { version: s.version, ...(s.rosterVersion ? { rosterVersion: s.rosterVersion } : {}), current: s.current, rooms: s.rooms, ...(s.atmosphere ? { atmosphere: s.atmosphere } : {}), ...(s.discoveredPlaces?.length ? { discoveredPlaces: s.discoveredPlaces } : {}) };
     for (let i = s.undo.steps.length - 1; i >= 0; i--) {
       const step = s.undo.steps[i];
       try {
@@ -330,7 +342,7 @@ export function validHome(v: unknown): v is HomeSave {
 }
 /** Per-room validity plus the cross-room rules, for the rooms named in `changed`. */
 function validRooms(s: HomeStateV2, changed: readonly RoomId[]): boolean {
-  if (!changed.every((id) => validRoom(s.rooms[id], false, s.version >= 3, s.version >= 4, s.rosterVersion === 1))) return false;
+  if (!changed.every((id) => validRoom(s.rooms[id], false, s.version >= 3, s.version >= 4, s.rosterVersion === 1, id))) return false;
   // Friends may live in different rooms; duplicate slots across rooms are corrupt data.
   const slots = roomIds.flatMap((id) => s.rooms[id].characters.map((c) => c.slot));
   if (new Set(slots).size !== slots.length) return false;
@@ -386,6 +398,9 @@ function compactPlaces(state: HomeStateV2): HomeStateV2 {
 export function compactHome(state: HomeStateV2): HomeStateV2 {
   if (state.atmosphere && !compactAtmosphere(state.atmosphere)) {
     const { atmosphere: _atmosphere, ...rest } = state; void _atmosphere; state = rest;
+  }
+  if (state.discoveredPlaces !== undefined && state.discoveredPlaces.length === 0) {
+    const { discoveredPlaces: _discovered, ...rest } = state; void _discovered; state = rest;
   }
   if (state.rosterVersion !== 1) return compactPlaces(state);
   state = { ...state, rooms: locationRooms(state.rooms) };
@@ -510,7 +525,8 @@ export function validCharacter(
   legacy = false,
   canonical = true,
   canonicalV4 = false,
-  family = false
+  family = false,
+  roomId?: RoomId
 ): c is Character {
   if (!c || typeof c !== "object" || (legacy && (c as Character).anchor === "seat")) return false;
   const v = c as Character;
@@ -554,6 +570,7 @@ export function validCharacter(
     (!v.socket && v.pose !== poseFor(v.anchor))
   )
     return false;
+  const minCharacterY = roomId === "tumon-beach" ? 286 : roomId === "cocos-island" ? 308 : 350;
   if (
     v.at !== undefined &&
     (!canonicalV4 ||
@@ -563,7 +580,7 @@ export function validCharacter(
       !Number.isFinite(v.at.y) ||
       v.at.x < 8 ||
       v.at.x > 792 ||
-      v.at.y < 350 ||
+      v.at.y < minCharacterY ||
       v.at.y > 552)
   )
     return false;
@@ -690,7 +707,7 @@ export function starterHome(): HomeStateV2 {
   };
   const base = upgradeHome({
     version: 3, current: "home",
-    rooms: { home, kitchen: extra("kitchen"), treehouse: extra("treehouse"), beach: extra("beach"), "tumon-beach": defaultGuamRoom("tumon-beach"), "chamorro-village": defaultGuamRoom("chamorro-village") },
+    rooms: { home, kitchen: extra("kitchen"), treehouse: extra("treehouse"), beach: extra("beach"), "tumon-beach": defaultGuamRoom("tumon-beach"), "chamorro-village": defaultGuamRoom("chamorro-village"), "cocos-island": defaultGuamRoom("cocos-island") },
   });
   return {
     ...base,
@@ -735,6 +752,8 @@ export type HomeAction = (
   | { type: "move"; id: string; x: number; y: number; on?: string }
   | { type: "tint"; id: string; tint: TintId }
   | { type: "room"; room: RoomId }
+  | { type: "discover"; place: GuamPlaceId }
+  | { type: "palm-coconut" }
   | { type: "rotate" | "mirror" | "put-away" | "toggle"; id: string }
   | {
       type: "character";

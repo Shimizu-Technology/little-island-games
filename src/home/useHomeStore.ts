@@ -22,7 +22,14 @@ function cachedEntry(before: HomeStateV2, after: HomeStateV2): UndoEntry {
   if (!entry) inner.set(after, (entry = undoEntry(undoStep(before, after), after)));
   return entry;
 }
-const bare = (state: HomeStateV2): HomeStateV2 => ({ version: state.version, ...(state.rosterVersion ? { rosterVersion: state.rosterVersion } : {}), current: state.current, rooms: state.rooms, ...(state.atmosphere ? { atmosphere: state.atmosphere } : {}) });
+const bare = (state: HomeStateV2): HomeStateV2 => ({
+  version: state.version,
+  ...(state.rosterVersion ? { rosterVersion: state.rosterVersion } : {}),
+  current: state.current,
+  rooms: state.rooms,
+  ...(state.atmosphere ? { atmosphere: state.atmosphere } : {}),
+  ...(state.discoveredPlaces?.length ? { discoveredPlaces: state.discoveredPlaces } : {}),
+});
 const entriesCache = new WeakMap<History, UndoEntry[]>();
 function savedEntries(history: History): UndoEntry[] {
   const cached = entriesCache.get(history);
@@ -86,39 +93,51 @@ export function restoredHistory(saved: HomeStateV2): History {
   const present = bare(saved);
   return { present, past: saved.undo ? undoPast(present, saved.undo) : [], future: [] };
 }
+function mergeDiscovered(target: HomeStateV2, source: HomeStateV2): HomeStateV2 {
+  const current = source.discoveredPlaces;
+  if (!current?.length) return target;
+  const existing = target.discoveredPlaces ?? [];
+  const merged = [...existing];
+  let changed = false;
+  for (const place of current) {
+    if (!merged.includes(place)) {
+      merged.push(place);
+      changed = true;
+    }
+  }
+  return changed ? { ...target, discoveredPlaces: merged } : target;
+}
 export function editHistory(
   history: History,
   action: HomeAction | { type: "undo" | "redo" },
   ownership: Ownership = {},
   computed?: HomeResult
 ): History {
-  if (action.type === "undo")
-    return history.past.length
-      ? {
-          present:
-            history.past.at(-1)!.current === history.present.current
-              ? history.past.at(-1)!
-              : { ...history.past.at(-1)!, current: history.present.current },
-          past: history.past.slice(0, -1),
-          future: [history.present, ...history.future].slice(0, 60),
-        }
-      : history;
-  if (action.type === "redo")
-    return history.future.length
-      ? {
-          present:
-            history.future[0].current === history.present.current
-              ? history.future[0]
-              : { ...history.future[0], current: history.present.current },
-          past: [...history.past, history.present].slice(-60),
-          future: history.future.slice(1),
-        }
-      : history;
+  if (action.type === "undo") {
+    if (!history.past.length) return history;
+    const restored = history.past.at(-1)!;
+    const withRoom = restored.current === history.present.current ? restored : { ...restored, current: history.present.current };
+    return {
+      present: mergeDiscovered(withRoom, history.present),
+      past: history.past.slice(0, -1),
+      future: [history.present, ...history.future].slice(0, 60),
+    };
+  }
+  if (action.type === "redo") {
+    if (!history.future.length) return history;
+    const restored = history.future[0];
+    const withRoom = restored.current === history.present.current ? restored : { ...restored, current: history.present.current };
+    return {
+      present: mergeDiscovered(withRoom, history.present),
+      past: [...history.past, history.present].slice(-60),
+      future: history.future.slice(1),
+    };
+  }
   const result = computed ?? homeReducer(history.present, action as HomeAction, ownership);
   if (result.state !== history.present) carryPanSeats(history.present, result.state, action as HomeAction);
   return result.state === history.present
     ? history
-    : action.type === "room" || action.type === "finish-action" || action.type === "cook"
+    : action.type === "room" || action.type === "discover" || action.type === "finish-action" || action.type === "cook"
       ? { ...history, present: result.state }
       : { present: result.state, past: [...history.past, history.present].slice(-60), future: [] };
 }
@@ -203,7 +222,7 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
     carryPanSeats(seed ?? current.history.present, result.state, { type: "apply-proposal", proposal });
     const start = base(current);
     const history = {
-      present: bare(result.state),
+      present: mergeDiscovered(bare(result.state), start.present),
       past: [...start.past, start.present].slice(-60),
       future: [],
     };

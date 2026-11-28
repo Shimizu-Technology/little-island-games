@@ -46,7 +46,7 @@ describe('Phase 5B family places: lossless houses, compact versioned saves and o
   it('switches all places without edits, changing the four house rooms or adding history', () => {
     let h = start('home'); const before = clone(h.present.rooms);
     for (const room of [...roomIds, ...guamPlaceIds, 'home'] as RoomId[]) { h = editHistory(h, { type: 'room', room }); expect(h.present.current).toBe(room); }
-    expect(h.present.rooms).toEqual(before); expect(h.past).toEqual([]); expect(places).toHaveLength(3);
+    expect(h.present.rooms).toEqual(before); expect(h.past).toEqual([]); expect(places).toHaveLength(4);
     for (const place of guamPlaceIds) expect(new Set([0, 1, 2, 3, 4, 5].map(slot => JSON.stringify(arrivalPoint(place, slot)))).size).toBe(6);
     expect(arrivalPoint('home', 0)).toEqual({ x: 230, y: 490 });
     for (let n = 0; n < 4; n++) expect(roomOrigin(n, locationBuilding(n))).toEqual(roomOrigin(n, buildingLayout(4)));
@@ -159,7 +159,8 @@ describe('place picker and exact game routes', () => {
       else { expect(game.name).toBe('Game Hall'); expect(game.route).toEqual({ pathname: '/shelf', params: { island: 'classic' } }); }
       await act(async () => tree!.root.findByProps({ accessibilityLabel: `Play ${game.name}` }).props.onPress()); expect(launch).toHaveBeenLastCalledWith(game.route);
     }
-    for (const id of [...roomIds, ...guamPlaceIds]) { await act(async () => tree!.root.findByProps({ accessibilityLabel: `Visit ${id === 'tumon-beach' ? 'Tumon Beach' : id === 'chamorro-village' ? 'Chamorro Village' : { home: 'My room', kitchen: 'Kitchen', treehouse: 'Tree house', beach: 'Beach hut' }[id]}` }).props.onPress()); expect(choose).toHaveBeenLastCalledWith(id); }
+    const visibleGuam = room === 'cocos-island' ? guamPlaceIds : guamPlaceIds.filter(id => id !== 'cocos-island');
+    for (const id of [...roomIds, ...visibleGuam]) { await act(async () => tree!.root.findByProps({ accessibilityLabel: `Visit ${id === 'tumon-beach' ? 'Tumon Beach' : id === 'chamorro-village' ? 'Chamorro Village' : id === 'cocos-island' ? 'Cocos Island' : { home: 'My room', kitchen: 'Kitchen', treehouse: 'Tree house', beach: 'Beach hut' }[id]}` }).props.onPress()); expect(choose).toHaveBeenLastCalledWith(id); }
     expect(readFileSync('src/app/shelf.tsx', 'utf8')).toContain("island === 'classic' ? 'Game Hall'");
   });
   it.each([360, 390])('keeps the four dock buttons within 340pt and gives full place titles their own row at %s', async width => {
@@ -167,7 +168,7 @@ describe('place picker and exact game routes', () => {
       const onPlaces = vi.fn(); await act(async () => { tree = create(<HomeChrome room={room} width={width} overview={false} designing={false} canUndo canRedo showRedo top={0} bottom={0} onPlaces={onPlaces} onGames={() => {}} onBack={() => {}} onUndo={() => {}} onRedo={() => {}} onMore={() => {}} onFind={() => {}} onFriends={() => {}} onOverview={() => {}} onDesign={() => {}} onRoom={() => {}} onHeaderLayout={() => {}}/>); });
       const pill = tree!.root.findByProps({ testID: 'home-room-pill' });
       expect(pill.parent!.findAll(n => n.props.testID === 'home-undo-button')).toHaveLength(0);
-      expect(pill.findAll(n => String(n.type) === 'Text').some(n => n.props.children === (room === 'tumon-beach' ? 'Tumon Beach' : 'Chamorro Village'))).toBe(true);
+      expect(pill.findAll(n => String(n.type) === 'Text').some(n => n.props.children === (room === 'tumon-beach' ? 'Tumon Beach' : room === 'cocos-island' ? 'Cocos Island' : 'Chamorro Village'))).toBe(true);
       const dock = tree!.root.findByProps({ testID: 'home-bottom-bar' }); const buttons = dock.findAll(n => String(n.type) === 'Pressable');
       const row = flat(dock.find(n => String(n.type) === 'View' && flat(n.props.style).gap === 8 && flat(n.props.style).flexDirection === 'row').props.style);
       expect(buttons).toHaveLength(4); expect(buttons.reduce((n, b) => n + flat(b.props.style).minWidth, 0) + row.gap * 3 + row.paddingHorizontal * 2).toBeLessThanOrEqual(340);

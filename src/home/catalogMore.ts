@@ -41,10 +41,18 @@ export type MoreItemSpec = ItemSpec & {
 /** Room scenes. "home" is the original room-1 (kept for save compatibility). */
 const houseRoomIds = ["home", "kitchen", "treehouse", "beach"] as const;
 export type HouseRoomId = (typeof houseRoomIds)[number];
-export const locationIds = [...houseRoomIds, "tumon-beach", "chamorro-village"] as const;
+export const locationIds = [...houseRoomIds, "tumon-beach", "chamorro-village", "cocos-island"] as const;
 export type RoomId = (typeof locationIds)[number];
 export const roomIds: readonly RoomId[] = houseRoomIds;
-export const roomNames: Record<RoomId, string> = { home: "My room", kitchen: "Kitchen", treehouse: "Tree house", beach: "Beach hut", "tumon-beach": "Tumon Beach", "chamorro-village": "Chamorro Village" };
+export const roomNames: Record<RoomId, string> = {
+  home: "My room",
+  kitchen: "Kitchen",
+  treehouse: "Tree house",
+  beach: "Beach hut",
+  "tumon-beach": "Tumon Beach",
+  "chamorro-village": "Chamorro Village",
+  "cocos-island": "Cocos Island",
+};
 
 /** Filled by the art slice: about 30 free items. Keys are stable item IDs (kebab-case, no clash with catalog.ts). */
 const entry = (name: string, category: MoreItemSpec["category"], footprint: readonly [number, number], options: Partial<MoreItemSpec> & Pick<MoreItemSpec, "itemSize">): MoreItemSpec => ({
@@ -54,6 +62,12 @@ const entry = (name: string, category: MoreItemSpec["category"], footprint: read
 export const moreCatalog: Record<string, MoreItemSpec> = {
   "beach-surfboard": entry("Beach Surfboard", "toys-fun", [1, 1], { itemSize: 130, small: true, tintable: false, rooms: ["tumon-beach"] }),
   "beach-blanket": entry("Beach Blanket", "beds-seats", [3, 1], { itemSize: 235, layer: "ground", tintable: false, rooms: ["tumon-beach"] }),
+  "swim-ring": entry("Hibiscus Swim Ring", "beds-seats", [2, 1], { itemSize: 126, tintable: false, rooms: ["tumon-beach", "cocos-island"] }),
+  "sandcastle": entry("Beach Sandcastle", "toys-fun", [2, 1], { itemSize: 145, tintable: false, rooms: ["tumon-beach", "cocos-island"], interactive: "The sandcastle sparkles" }),
+  "snorkel-set": entry("Snorkel & Fins", "toys-fun", [1, 1], { itemSize: 72, small: true, tintable: false, rooms: ["tumon-beach", "cocos-island"] }),
+  "treasure-chest": entry("Cocos Treasure Chest", "tables-storage", [2, 1], { itemSize: 145, tintable: false, rooms: ["cocos-island"], interactive: "The treasure chest is open" }),
+  "sea-turtle": entry("Green Sea Turtle", "toys-fun", [2, 1], { itemSize: 132, tintable: false, rooms: ["cocos-island", "tumon-beach"], interactive: "Happy turtle bubbles" }),
+  "outrigger-canoe": entry("Sakman Canoe", "beds-seats", [3, 1], { itemSize: 164, tintable: false, rooms: ["cocos-island", "tumon-beach"] }),
   "bbq-grill": entry("Island BBQ Grill", "kitchen", [2, 1], { itemSize: 185, surface: true, tintable: false, rooms: ["chamorro-village"], interactive: "The coals glow" }),
   "shaved-ice": entry("Shaved Ice", "kitchen", [1, 1], { itemSize: 62, small: true, tintable: false, rooms: ["chamorro-village"] }),
   "christmas-tree": entry("Christmas Tree", "lights", [2, 1], {itemSize: 220, free: false, tintable: false, interactive: "The holiday lights twinkle"}),

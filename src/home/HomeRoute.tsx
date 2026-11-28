@@ -20,6 +20,7 @@ import {
   wallThemes,
   type ItemId,
 } from "./catalog";
+import { locationIds, type RoomId } from "./catalogMore";
 import { HomeCharacter } from "./characterRenderer";
 import { validBadgeId } from "./HomeBadgesSheet";
 import { HomeScreen, type HomeClosetConfig, type HomeSheet } from "./HomeScreen";
@@ -42,14 +43,21 @@ function validHomeItem(value: string | undefined): string | undefined {
   return undefined;
 }
 
+function validHomeRoom(value: string | undefined): RoomId | undefined {
+  if (!value) return undefined;
+  return (locationIds as readonly string[]).includes(value) ? (value as RoomId) : undefined;
+}
+
 export function HomeRoute({
   initialSheet,
+  room,
   item,
   closetItem,
   badge,
   loadingText = "Opening your home…",
 }: {
   initialSheet?: HomeSheet;
+  room?: string | string[];
   item?: string | string[];
   closetItem?: string | string[];
   badge?: string | string[];
@@ -58,6 +66,7 @@ export function HomeRoute({
   const store = useStore();
   const owner = store.save.learning?.active ?? "family";
   const person = personFor(store.save);
+  const resolvedRoom = validHomeRoom(firstParam(room));
   const resolvedHomeItem = validHomeItem(firstParam(item));
   const resolvedClosetItemId = firstParam(closetItem);
   const resolvedClosetItem = resolvedClosetItemId
@@ -66,7 +75,7 @@ export function HomeRoute({
   const resolvedBadgeParam = firstParam(badge);
   const resolvedBadge = validBadgeId(resolvedBadgeParam) ? resolvedBadgeParam : undefined;
   // P2-1: Keep dismissed route intent consumed across learner/save-epoch remounts so an alias never replays.
-  const intentKey = `${initialSheet ?? ""}|${resolvedHomeItem ?? ""}|${resolvedClosetItem?.id ?? ""}|${resolvedBadge ?? ""}`;
+  const intentKey = `${initialSheet ?? ""}|${resolvedRoom ?? ""}|${resolvedHomeItem ?? ""}|${resolvedClosetItem?.id ?? ""}|${resolvedBadge ?? ""}`;
   const [consumedIntentKey, setConsumedIntentKey] = useState<string | null>(null);
   const intentConsumed = consumedIntentKey === intentKey;
   const consumeIntent = useCallback(() => {
@@ -134,6 +143,7 @@ export function HomeRoute({
       initialState={person.home}
       completedRounds={rounds}
       unlockSeasonalPacks={store.save.settings.unlockSeasonalPacks ?? false}
+      initialRoom={intentConsumed ? undefined : resolvedRoom}
       initialItem={intentConsumed ? undefined : resolvedHomeItem}
       initialSheet={intentConsumed ? undefined : initialSheet}
       initialClosetItem={intentConsumed ? undefined : resolvedClosetItem}

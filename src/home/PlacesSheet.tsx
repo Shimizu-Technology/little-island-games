@@ -4,11 +4,15 @@ import { Sheet } from '../ui/Sheet';
 import { Text } from '../ui/Text';
 import { illustratedRooms } from './art/illustrated';
 import { roomIds, roomNames, type RoomId } from './catalogMore';
-import { gamesHere, isGuamPlace, type PlaceGame } from './locations';
+import { gamesHere, isGuamPlace, type GuamPlaceId, type PlaceGame } from './locations';
 
-export function PlacesSheet({ room, onRoom, onGame, onClose }: {
-  room: RoomId; onRoom: (room: RoomId) => void; onGame: (route: PlaceGame['route']) => void; onClose: () => void;
+export function PlacesSheet({ room, discoveredPlaces = [], onRoom, onGame, onClose }: {
+  room: RoomId; discoveredPlaces?: readonly GuamPlaceId[]; onRoom: (room: RoomId) => void; onGame: (route: PlaceGame['route']) => void; onClose: () => void;
 }) {
+  const cocosUnlocked = room === 'cocos-island' || discoveredPlaces.includes('cocos-island');
+  const visibleGuamPlaces: readonly GuamPlaceId[] = cocosUnlocked
+    ? (['tumon-beach', 'chamorro-village', 'cocos-island'] as const)
+    : (['tumon-beach', 'chamorro-village'] as const);
   return <Sheet visible title="Places" closeLabel="Close Places" onClose={onClose} mode="large" heightRatio={.76} scroll compactHeader>
     <View testID="home-places-sheet" style={{ gap: 14, paddingBottom: 20 }}>
       {isGuamPlace(room) && <View testID="home-games-here-rail" style={{ gap: 6 }}>
@@ -25,10 +29,20 @@ export function PlacesSheet({ room, onRoom, onGame, onClose }: {
         style={{ minHeight: 48, flexBasis: "46%", flexGrow: 1, padding: 12, borderRadius: 14, backgroundColor: room === id ? '#DAEAE0' : '#F2EBDD' }}>
         <Text variant="caption">{id === 'beach' ? 'Beach deck' : roomNames[id]}</Text>
       </Pressable>)}</View>
-      {(['tumon-beach', 'chamorro-village'] as const).map(id => <Pressable key={id} accessibilityRole="button" accessibilityLabel={`Visit ${roomNames[id]}`} accessibilityState={{ selected: room === id }} onPress={() => onRoom(id)}
+      {visibleGuamPlaces.map(id => <Pressable key={id} testID={`places-card-${id}`} accessibilityRole="button" accessibilityLabel={`Visit ${roomNames[id]}`} accessibilityState={{ selected: room === id }} onPress={() => onRoom(id)}
         style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 8, minHeight: 84, borderRadius: 18, backgroundColor: pressed || room === id ? '#DAEAE0' : '#F2EBDD' })}>
         <Image source={illustratedRooms[id]()} resizeMode="cover" style={{ width: 88, height: 64, borderRadius: 12 }}/>
-        <View style={{ flex: 1, gap: 3 }}><Text variant="caption">{roomNames[id]}</Text><Text variant="small" style={{ fontSize: 12 }}>{id === 'tumon-beach' ? 'Beach & Reef' : 'Night Market · Fiesta'}</Text></View>
+        <View style={{ flex: 1, gap: 3 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <Text variant="caption">{roomNames[id]}</Text>
+            {id === 'cocos-island' && <View testID="places-secret-badge" style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10, backgroundColor: '#F6DC8C' }}>
+              <Text variant="small" style={{ fontSize: 11, color: '#4A3328' }}>★ Secret</Text>
+            </View>}
+          </View>
+          <Text variant="small" style={{ fontSize: 12 }}>
+            {id === 'tumon-beach' ? 'Beach & Ocean' : id === 'cocos-island' ? 'Secret Lagoon · Islan Danò' : 'Night Market · Fiesta'}
+          </Text>
+        </View>
       </Pressable>)}
     </View>
   </Sheet>;

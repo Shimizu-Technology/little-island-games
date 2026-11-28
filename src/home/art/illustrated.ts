@@ -4,6 +4,7 @@ import type { ImageSourcePropType } from 'react-native';
 export const illustratedRooms = {
   'tumon-beach': (): ImageSourcePropType => require('../../../assets/art/home/places/tumon-beach.webp'),
   'chamorro-village': (): ImageSourcePropType => require('../../../assets/art/home/places/chamorro-village.webp'),
+  'cocos-island': (): ImageSourcePropType => require('../../../assets/art/home/places/cocos-island.webp'),
   'home': (): ImageSourcePropType => require('../../../assets/home/rooms/home.webp'),
   'kitchen': (): ImageSourcePropType => require('../../../assets/home/rooms/kitchen.webp'),
   'treehouse': (): ImageSourcePropType => require('../../../assets/home/rooms/treehouse.webp'),
@@ -12,6 +13,13 @@ export const illustratedRooms = {
 export const illustratedProps = {
   'beach-blanket': (): ImageSourcePropType => require('../../../assets/art/home/places/beach-blanket.webp'),
   'surfboard': (): ImageSourcePropType => require('../../../assets/art/home/places/surfboard.webp'),
+  'swim-ring': (): ImageSourcePropType => require('../../../assets/art/home/places/swim-ring.webp'),
+  'sandcastle': (): ImageSourcePropType => require('../../../assets/art/home/places/sandcastle.webp'),
+  'snorkel-set': (): ImageSourcePropType => require('../../../assets/art/home/places/snorkel-set.webp'),
+  'treasure-chest-open': (): ImageSourcePropType => require('../../../assets/art/home/places/treasure-chest-open.webp'),
+  'treasure-chest-closed': (): ImageSourcePropType => require('../../../assets/art/home/places/treasure-chest-closed.webp'),
+  'sea-turtle': (): ImageSourcePropType => require('../../../assets/art/home/places/sea-turtle.webp'),
+  'outrigger-canoe': (): ImageSourcePropType => require('../../../assets/art/home/places/outrigger-canoe.webp'),
   'bbq-grill': (): ImageSourcePropType => require('../../../assets/art/home/places/bbq-grill.webp'),
   'shaved-ice': (): ImageSourcePropType => require('../../../assets/art/home/places/shaved-ice.webp'),
   'christmas-tree': (): ImageSourcePropType => require('../../../assets/art/home/seasonal/christmas-tree.webp'),
@@ -42,6 +50,7 @@ export type IllustratedProp = keyof typeof illustratedProps;
 /** Aliases project existing catalog identities; saves and footprints are unchanged. */
 export function paintedProp(id: string): IllustratedProp | undefined {
   if (id === "beach-surfboard") return "surfboard";
+  if (id === "treasure-chest") return "treasure-chest-closed";
   if (id in illustratedProps) return id as IllustratedProp;
   if (['lamp', 'floor-lamp', 'table-lamp'].includes(id)) return 'lamp';
   if (['plant', 'potted-fern', 'banana-plant'].includes(id)) return 'monstera';

@@ -10,6 +10,7 @@ import type { HomeState } from "../model";
 import type { RoomId } from "../catalogMore";
 import { BadgeGlyph } from "../../badges/BadgeArt";
 import { tracks, type BadgeId } from "../../badges/engine";
+import { isGuamPlace } from "../locations";
 import { RoomTrim } from "./RoomFinish";
 import { CottageFascia } from "./ShellDetails";
 
@@ -106,7 +107,7 @@ function lanternPiece(id: string, x: number, string = x): StagePiece {
     <Circle cx={x + 5} cy={153} r={10} fill="#FFF2BC"/></G> };
 }
 export const stagePieces: Record<Room, readonly StagePiece[]> = {
-  'tumon-beach': [], 'chamorro-village': [],
+  'tumon-beach': [], 'chamorro-village': [], 'cocos-island': [],
   home: [
     ...shelfPieces("home-shelf", 516, 224),
     plantPiece("home-plant", 732, 303),
@@ -169,7 +170,7 @@ function VectorRoom({ room, theme, badges = [], live = false }: { room: Room; th
     <Path d="M0 352H800V560H0Z" fill={paint("floor")} stroke={ink} strokeWidth={3}/>
     <Rect y={352} width={800} height={208} fill={theme.floor === "island-breeze" || theme.floor === "game-room"?paint(theme.floor):"none"}/>
     <Rect y={352} width={800} height={208} fill={paint("floor-lines")}/>
-    <RoomTrim room={room === "tumon-beach" || room === "chamorro-village" ? "beach" : room} prefix={prefix}/>
+    <RoomTrim room={isGuamPlace(room) ? "beach" : room} prefix={prefix}/>
     <CottageFascia room={room}/>
     <Path d="M0 351H800" stroke={ivory} strokeWidth={13}/>
     <Path d="M0 360H800" stroke={wood} strokeWidth={6}/>
@@ -230,7 +231,7 @@ const EMPTY_BADGES: readonly BadgeId[] = [];
 const RoomPainting = React.memo(function RoomPainting({ room, theme, badges = EMPTY_BADGES, live = false }: StageProps) {
   const [paintedRoom, setPaintedRoom] = React.useState<Room>();
   return <>
-    {paintedRoom !== room && room !== "tumon-beach" && room !== "chamorro-village" && <VectorRoom room={room} theme={theme} badges={badges} live={live}/>}
+    {paintedRoom !== room && !isGuamPlace(room) && <VectorRoom room={room} theme={theme} badges={badges} live={live}/>}
     <Image testID={`painted-room-${room}`} source={illustratedRooms[room]()} onLoad={() => setPaintedRoom(room)} onError={() => setPaintedRoom(undefined)} resizeMode="cover" fadeDuration={0}
       accessible={false} style={{ position: 'absolute', width: '100%', height: '100%' }}/>
   </>;
