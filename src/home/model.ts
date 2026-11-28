@@ -223,7 +223,7 @@ export function placedInstances(room: Pick<RoomState, "instances" | "characters"
     return true;
   });
 }
-function validRoom(v: unknown, legacy = false, canonical = false, canonicalV4 = false, family = false): v is RoomState {
+function validRoom(v: unknown, legacy = false, canonical = false, canonicalV4 = false, family = false, roomId?: RoomId): v is RoomState {
   if (
     !exact(v, ["instances", "characters", "theme"]) ||
     !Array.isArray(v.instances) ||
@@ -269,7 +269,7 @@ function validRoom(v: unknown, legacy = false, canonical = false, canonicalV4 = 
     Array.isArray(v.characters) &&
     v.characters.length <= (family ? 6 : 3) &&
     new Set(v.characters.map((c) => c?.slot)).size === v.characters.length &&
-    v.characters.every((c) => validCharacter(c, items, legacy, canonical, canonicalV4, family))
+    v.characters.every((c) => validCharacter(c, items, legacy, canonical, canonicalV4, family, roomId))
   );
 }
 function validContainers(items: readonly Instance[]): boolean {
@@ -342,7 +342,7 @@ export function validHome(v: unknown): v is HomeSave {
 }
 /** Per-room validity plus the cross-room rules, for the rooms named in `changed`. */
 function validRooms(s: HomeStateV2, changed: readonly RoomId[]): boolean {
-  if (!changed.every((id) => validRoom(s.rooms[id], false, s.version >= 3, s.version >= 4, s.rosterVersion === 1))) return false;
+  if (!changed.every((id) => validRoom(s.rooms[id], false, s.version >= 3, s.version >= 4, s.rosterVersion === 1, id))) return false;
   // Friends may live in different rooms; duplicate slots across rooms are corrupt data.
   const slots = roomIds.flatMap((id) => s.rooms[id].characters.map((c) => c.slot));
   if (new Set(slots).size !== slots.length) return false;
@@ -525,7 +525,8 @@ export function validCharacter(
   legacy = false,
   canonical = true,
   canonicalV4 = false,
-  family = false
+  family = false,
+  roomId?: RoomId
 ): c is Character {
   if (!c || typeof c !== "object" || (legacy && (c as Character).anchor === "seat")) return false;
   const v = c as Character;
@@ -569,6 +570,7 @@ export function validCharacter(
     (!v.socket && v.pose !== poseFor(v.anchor))
   )
     return false;
+  const minCharacterY = roomId === "tumon-beach" ? 286 : roomId === "cocos-island" ? 308 : 350;
   if (
     v.at !== undefined &&
     (!canonicalV4 ||
@@ -578,7 +580,7 @@ export function validCharacter(
       !Number.isFinite(v.at.y) ||
       v.at.x < 8 ||
       v.at.x > 792 ||
-      v.at.y < 350 ||
+      v.at.y < minCharacterY ||
       v.at.y > 552)
   )
     return false;

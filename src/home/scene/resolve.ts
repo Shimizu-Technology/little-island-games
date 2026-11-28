@@ -364,7 +364,9 @@ function exactFloorMove(index: RoomIndex, subject: SceneEntity, point: RoomPoint
   "worklet";
   const slot = subject.character?.slot;
   if (slot === undefined && !(subject.body?.portable && (!subject.children.length || subject.body.container) && subject.body.layer !== "wall")) return;
-  const contact = slot !== undefined ? standingContact(point, slot) : roomPoint(Math.max(8, Math.min(792, point.x)), Math.max(350, Math.min(552, point.y)));
+  const beachMinY = index.room === "tumon-beach" ? 286 : index.room === "cocos-island" ? 308 : 350;
+  const waterProp = !!subject.item && (subject.item.item === "swim-ring" || subject.item.item === "outrigger-canoe" || subject.item.item === "beach-surfboard" || subject.item.item === "sea-turtle");
+  const contact = slot !== undefined ? standingContact(point, slot, beachMinY) : roomPoint(Math.max(8, Math.min(792, point.x)), Math.max(waterProp ? beachMinY : 350, Math.min(552, point.y)));
   // The exact contact decides containment and visibility. The bounded grid cell only decides
   // occupancy, including the legal floor strip above row zero and the room edges.
   const y = Math.max(0, Math.min(12 - (subject.body?.h ?? 1), Math.round((contact.y - 386) / 14.4)));
@@ -372,7 +374,7 @@ function exactFloorMove(index: RoomIndex, subject: SceneEntity, point: RoomPoint
   const cell = gridCell(x, y);
   if (!floorCellAllowed(index, subject, group, cell)) return;
   if (slot !== undefined) {
-    if ((index.floor.find((location) => location.cell.x === x && location.cell.y === y)?.blockers ?? []).some((id) => !group.some((e) => e.id === id) && !index.entities[id]?.body?.underfoot)) return;
+    if (contact.y >= 350 && (index.floor.find((location) => location.cell.x === x && location.cell.y === y)?.blockers ?? []).some((id) => !group.some((e) => e.id === id) && !index.entities[id]?.body?.underfoot)) return;
     if (occludedFraction(translatedBounds(anchorsFor(slot, "stand", "front").bounds, contact), contact.y + 1, index.occlusionBands) > 0.25) return;
   }
   const exact = rootMove(subject, index.room, { kind: "floor", room: index.room, at: contact }, contact, slot !== undefined ? "stand" : subject.base, subject.facing, cell);

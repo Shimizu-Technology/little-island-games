@@ -36,12 +36,12 @@ export function contained(bounds: Bounds): boolean {
     bounds.top + bounds.height <= 552 + 1e-7
   );
 }
-export function standingContact(point: RoomPoint, slot: Character["slot"]): RoomPoint {
+export function standingContact(point: RoomPoint, slot: Character["slot"], minY = 350): RoomPoint {
   "worklet";
   const bounds = anchorsFor(slot, "stand", "front").bounds;
   return roomPoint(
     Math.max(8 - bounds.left, Math.min(792 - bounds.left - bounds.width, point.x)),
-    Math.max(350, Math.min(540, 552 - bounds.top - bounds.height, point.y))
+    Math.max(minY, Math.min(540, 552 - bounds.top - bounds.height, point.y))
   );
 }
 /** Acyclic descendants, stable across source-array reordering. */

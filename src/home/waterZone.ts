@@ -1,28 +1,62 @@
 import type { RoomId } from './catalogMore';
 import type { Scene, SceneEntity } from './scene/types';
 
+function lerpCurve(value: number, knots: readonly (readonly [number, number])[]): number {
+  if (value <= knots[0][0]) return knots[0][1];
+  for (let i = 1; i < knots.length; i++) {
+    const [x0, y0] = knots[i - 1];
+    const [x1, y1] = knots[i];
+    if (value <= x1) {
+      const t = (value - x0) / Math.max(1e-6, x1 - x0);
+      return y0 + (y1 - y0) * t;
+    }
+  }
+  return knots[knots.length - 1][1];
+}
+
 /**
- * Pure geometric water bounds calibrated to the turquoise lagoon/shallows of
+ * Pure geometric water bounds pixel-calibrated to the wet turquoise lagoon/foam shorelines of
  * `tumon-beach.webp` and `cocos-island.webp` in the 800×560 room coordinate space.
  */
+const TUMON_SHORE_KNOTS: readonly (readonly [number, number])[] = [
+  [0, 354],
+  [100, 354],
+  [380, 346],
+  [540, 326],
+  [660, 314],
+  [755, 296],
+];
+
+const COCOS_SHORE_KNOTS: readonly (readonly [number, number])[] = [
+  [256, 310],
+  [276, 310],
+  [296, 205],
+  [324, 316],
+  [340, 448],
+  [360, 530],
+  [404, 612],
+  [468, 620],
+  [500, 526],
+  [532, 432],
+  [560, 340],
+];
+
+export function waterFloorMinY(room: RoomId): number {
+  "worklet";
+  if (room === 'tumon-beach') return 286;
+  if (room === 'cocos-island') return 308;
+  return 350;
+}
+
 export function waterShoreY(room: RoomId, x: number): number | undefined {
   if (room !== 'tumon-beach') return undefined;
-  const clampedX = Math.max(0, Math.min(800, x));
-  if (clampedX <= 520) return 425;
-  const t = (clampedX - 520) / (780 - 520);
-  return 425 - Math.max(0, Math.min(1, t)) * 33;
+  const clampedX = Math.max(0, Math.min(755, x));
+  return lerpCurve(clampedX, TUMON_SHORE_KNOTS);
 }
 
 export function cocosShoreX(y: number): number {
-  const clampedY = Math.max(260, Math.min(560, y));
-  if (clampedY <= 405) {
-    // Upper bay curve sweeping right from x=220 at y=280 to the sandy point at (485, 405).
-    const t = Math.max(0, Math.min(1, (clampedY - 280) / (405 - 280)));
-    return 220 + t * 265;
-  }
-  // Lower crescent sweeping back left from (485, 405) down to (300, 560).
-  const t = Math.max(0, Math.min(1, (clampedY - 405) / (560 - 405)));
-  return 485 - t * 185;
+  const clampedY = Math.max(256, Math.min(560, y));
+  return lerpCurve(clampedY, COCOS_SHORE_KNOTS);
 }
 
 export function isBeachWaterRoom(room: RoomId): boolean {
@@ -31,12 +65,12 @@ export function isBeachWaterRoom(room: RoomId): boolean {
 
 export function isInWaterZone(room: RoomId, point: { x: number; y: number }): boolean {
   if (room === 'tumon-beach') {
-    if (point.x < 12 || point.x > 785 || point.y < 245) return false;
+    if (point.x < 12 || point.x > 755 || point.y < 248) return false;
     const shoreY = waterShoreY(room, point.x)!;
     return point.y <= shoreY;
   }
   if (room === 'cocos-island') {
-    if (point.x < 220 || point.x > 792 || point.y < 270 || point.y > 556) return false;
+    if (point.x < 200 || point.x > 792 || point.y < 256 || point.y > 556) return false;
     return point.x >= cocosShoreX(point.y);
   }
   return false;

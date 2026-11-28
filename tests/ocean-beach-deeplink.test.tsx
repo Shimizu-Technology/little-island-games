@@ -221,4 +221,37 @@ describe('Deep-linking /island-home?room=tumon-beach & cocos-island', () => {
     });
     expect(tree!.root.findAllByProps({ testID: 'cocos-discovery-toast' })).toHaveLength(0);
   });
+
+  it('retains Cocos Island discovery after leaving to My Room and tapping Undo/Redo in HomeScreen (R1-01)', async () => {
+    const persisted: HomeStateV2[] = [];
+    const persist = vi.fn((next: HomeStateV2) => {
+      persisted.push(next);
+      return true;
+    });
+
+    await act(async () => {
+      tree = create(
+        <HomeScreen
+          initialState={starterHome()}
+          initialRoom="cocos-island"
+          persist={persist}
+        />
+      );
+    });
+    expect(persisted.at(-1)?.discoveredPlaces).toContain('cocos-island');
+
+    // Switch back to My Room, then Undo the arrival transfer -> discoveredPlaces MUST keep 'cocos-island'!
+    await act(async () => harness.chrome.onRoom('home'));
+    expect(harness.chrome.room).toBe('home');
+    await act(async () => harness.chrome.onUndo());
+    const afterUndo = persisted.at(-1)!;
+    expect(validHome(afterUndo)).toBe(true);
+    expect(afterUndo.current).toBe('home');
+    expect(afterUndo.discoveredPlaces).toEqual(['cocos-island']);
+
+    await act(async () => harness.chrome.onRedo());
+    const afterRedo = persisted.at(-1)!;
+    expect(validHome(afterRedo)).toBe(true);
+    expect(afterRedo.discoveredPlaces).toEqual(['cocos-island']);
+  });
 });
